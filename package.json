@@ -1,0 +1,43 @@
+{
+	"name": "finance-assets",
+	"version": "1.0.0",
+	"description": "Finance Assets Unified Monorepo (NestJS API + Next.js Web)",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev:service": "pnpm --filter api dev",
+		"dev:web": "pnpm --filter web dev",
+		"build:service": "pnpm --filter @lib/db build && pnpm --filter api build",
+		"build:web": "pnpm --filter web build",
+		"build:db": "pnpm --filter @lib/db build",
+		"lint": "biome lint --write .",
+		"format": "biome format --write .",
+		"check": "biome check --write .",
+		"check-versions": "node script.mjs"
+	},
+	"dependencies": {
+		"@finance-assets-web/env": "workspace:*",
+		"@lib/db": "workspace:*",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.9",
+		"@finance-assets-web/config": "workspace:*",
+		"@types/node": "^25.5.0",
+		"typescript": "catalog:"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@nestjs/core",
+			"@prisma/client",
+			"@prisma/engines",
+			"@swc/core",
+			"msgpackr-extract",
+			"msw",
+			"prisma",
+			"sharp"
+		]
+	},
+	"packageManager": "pnpm@11.0.9"
+}

@@ -1,0 +1,20 @@
+{
+	"mcpServers": {
+		"next-devtools": {
+			"command": "npx",
+			"args": ["-y", "next-devtools-mcp@latest"]
+		},
+		"neon": {
+			"command": "npx",
+			"args": ["-y", "mcp-remote@latest", "https://mcp.neon.tech/mcp"]
+		},
+		"context7": {
+			"command": "docker",
+			"args": ["run", "-i", "--rm", "mcp/context7"]
+		},
+		"playwright": {
+			"command": "docker",
+			"args": ["run", "-i", "--rm", "mcp/playwright"]
+		}
+	}
+}

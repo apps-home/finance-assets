@@ -1,0 +1,13 @@
+node_modules
+.git
+.github
+.next
+dist
+.turbo
+*.log
+.env
+.env.*
+!.env.example
+README.md
+AGENTS.md
+monorepo-plan.md
