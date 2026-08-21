@@ -88,6 +88,8 @@ jobs:
               --name finance-assets-api \
               --restart unless-stopped \
               --network public_network \
+              --label "com.docker.compose.project=finance-assets" \
+              --label "com.docker.compose.service=service" \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               -e PORT=3333 \
               -e R2_ACCOUNT_ID="${{ secrets.R2_ACCOUNT_ID }}" \

@@ -96,6 +96,8 @@ jobs:
               --name finance-assets-web \
               --restart unless-stopped \
               --network public_network \
+              --label "com.docker.compose.project=finance-assets" \
+              --label "com.docker.compose.service=web" \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               -e BETTER_AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET }}" \
               -e BETTER_AUTH_URL="${{ vars.BETTER_AUTH_URL }}" \
