@@ -7,20 +7,18 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@11.0.9 --activate
 
-# Copia arquivos de configuração da RAIZ
+# Copia arquivos de configuração da RAIZ e manifestos para cache das dependências
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-
-# Copia todos os pacotes do workspace (necessários para o build)
-COPY packages/lib-db ./packages/lib-db
-COPY packages/env ./packages/env
-COPY packages/config ./packages/config
-
-# Copia a aplicação web
-COPY apps/web ./apps/web
+COPY packages/lib-db/package.json ./packages/lib-db/
+COPY packages/env/package.json ./packages/env/
+COPY packages/config/package.json ./packages/config/
+COPY apps/web/package.json ./apps/web/
+COPY apps/service/package.json ./apps/service/
 
 RUN pnpm install --frozen-lockfile
 
-# Gera o Prisma Client (CRITICO: Sem isso o build falha)
+# Copia schema do Prisma e gera o Prisma Client (CRITICO: Sem isso o build falha)
+COPY packages/lib-db/src/prisma ./packages/lib-db/src/prisma
 WORKDIR /app/packages/lib-db
 RUN pnpm exec prisma generate --schema=./src/prisma/schema.prisma
 
@@ -30,12 +28,18 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@11.0.9 --activate
 
+# Copia dependências e prisma client gerado do stage deps
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
-COPY --from=deps /app/apps ./apps
+COPY --from=deps /app/packages/lib-db/src/prisma/generated ./packages/lib-db/src/prisma/generated
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+
+# Copia código-fonte dos pacotes e da aplicação web
+COPY packages/lib-db ./packages/lib-db
+COPY packages/env ./packages/env
+COPY packages/config ./packages/config
+COPY apps/web ./apps/web
 
 # Recebe os argumentos do GitHub Actions
 ARG NEXT_PUBLIC_SERVER_URL
