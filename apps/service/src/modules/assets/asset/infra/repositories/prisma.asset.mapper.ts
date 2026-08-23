@@ -1,4 +1,5 @@
 import { Asset as PrismaAsset } from '@lib/db'
+
 import { Asset } from '../../domain/asset.entity'
 
 export class PrismaAssetMapper {

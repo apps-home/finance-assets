@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+
 import { CategoryModule } from '../assets/categories/category.module'
 import { CreateBudgetUseCase } from './application/use-cases/create-budget'
 import { DeleteBudgetUseCase } from './application/use-cases/delete-budget'

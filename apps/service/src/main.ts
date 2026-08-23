@@ -2,6 +2,7 @@ import 'dotenv/config'
 
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+
 import { AppModule } from './app.module'
 import { EnvService } from './infra/env/env.service'
 
@@ -13,9 +14,9 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
-    'https://finance.apps-store.app',
-    'http://localhost:3000' // se precisar rodar dev local
-  ],
+      'https://finance.apps-store.app',
+      'http://localhost:3000' // se precisar rodar dev local
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'user-id']

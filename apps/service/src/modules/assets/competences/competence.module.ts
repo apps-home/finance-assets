@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+
 import { DeleteCompetenceUseCase } from './application/use-cases/delete-competence'
 import { FindAvailableYearsUseCase } from './application/use-cases/find-available-years'
 import { FindCompetencesByCategoryUseCase } from './application/use-cases/find-competences-by-category'

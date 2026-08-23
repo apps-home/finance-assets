@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common'
+
 import { Either, right } from '@/core/utils/Either'
+
 import { CompetenceRepository } from '../../domain/competence.repository'
 
 type FindAvailableYearsResponse = Either<Error, number[]>

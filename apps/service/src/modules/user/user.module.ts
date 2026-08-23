@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+
 import { DownloadUserAvatarUseCase } from './application/use-cases/download-avatar'
 import { FindUserByIdUseCase } from './application/use-cases/find-user'
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email'

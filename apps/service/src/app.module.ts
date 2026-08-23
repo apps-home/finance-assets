@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+
 import { InfraModule } from './infra/infra.module'
 import { AssetModule } from './modules/assets/asset/asset.module'
 import { CategoryModule } from './modules/assets/categories/category.module'

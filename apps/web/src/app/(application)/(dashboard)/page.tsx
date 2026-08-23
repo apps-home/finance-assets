@@ -7,30 +7,30 @@ import { getCurrentUser } from '@/shared/lib/current-user'
 import DashboardClient from './DashboardClient'
 
 export interface MonthData {
-	month: string
-	monthIndex: number
-	[key: string]: string | number
+  month: string
+  monthIndex: number
+  [key: string]: string | number
 }
 
 async function DashboardContent() {
-	const user = await getCurrentUser()
+  const user = await getCurrentUser()
 
-	if (!user) {
-		redirect('/sign-in')
-	}
+  if (!user) {
+    redirect('/sign-in')
+  }
 
-	return <DashboardClient />
+  return <DashboardClient />
 }
 
 export default function DashboardPage() {
-	return (
-		<Suspense>
-			<DashboardContent />
-		</Suspense>
-	)
+  return (
+    <Suspense>
+      <DashboardContent />
+    </Suspense>
+  )
 }
 
 export const metadata: Metadata = {
-	title: 'Finance Assets | Dashboard',
-	description: 'Finance Assets'
+  title: 'Finance Assets | Dashboard',
+  description: 'Finance Assets'
 }

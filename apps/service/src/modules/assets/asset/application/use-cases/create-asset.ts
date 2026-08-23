@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+
 import { DomainError } from '@/core/domain/errors/domain-error'
 import { AssetEvent, AssetEventPayload } from '@/core/domain/events/asset.event'
 import { DomainEventPublisher } from '@/core/domain/events/domain-event-publisher.interface'

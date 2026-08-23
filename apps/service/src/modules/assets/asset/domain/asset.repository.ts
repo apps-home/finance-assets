@@ -1,4 +1,5 @@
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+
 import { Asset } from './asset.entity'
 import { FindAllAssetsParams } from './dto/find-all-assets-params.dto'
 

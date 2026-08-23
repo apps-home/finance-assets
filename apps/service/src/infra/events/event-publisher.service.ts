@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
+
 import { DomainEventPublisher } from '@/core/domain/events/domain-event-publisher.interface'
 
 @Injectable()

@@ -1,4 +1,5 @@
 import { Prisma } from '@lib/db'
+
 import { User } from '../../domain/user.entity'
 
 export class PrismaUserMapper {

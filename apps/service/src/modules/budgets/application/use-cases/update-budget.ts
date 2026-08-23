@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
+
 import { DomainError } from '@/core/domain/errors/domain-error'
 import { Either, left, right } from '@/core/utils/Either'
+
 import { BudgetRepository } from '../../domain/budget.repository'
 import { UpdateBudgetPayload } from '../../domain/dto/update-budget.dto'
 import { BudgetNotFoundError } from '../errors/budget-not-found.error'

@@ -29,9 +29,11 @@
 .alchemy
 
 # Environment & local files
-.env*
-!.env.example
-.DS_Store
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local.DS_Store
 *.pem
 *.local
 

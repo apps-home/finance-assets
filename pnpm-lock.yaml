@@ -34,7 +34,7 @@ importers:
         version: 4.4.3
     devDependencies:
       '@biomejs/biome':
-        specifier: ^2.4.9
+        specifier: ^2.5.9
         version: 2.5.9
       '@finance-assets-web/config':
         specifier: workspace:*

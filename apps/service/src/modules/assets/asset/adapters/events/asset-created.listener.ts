@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
+
 import { AssetEvent, AssetEventPayload } from '@/core/domain/events/asset.event'
+
 import { UpdateAssetPriceUseCase } from '../../application/use-cases/update-asset-price'
 
 @Injectable()

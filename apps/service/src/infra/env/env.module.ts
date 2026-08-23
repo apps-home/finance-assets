@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+
 import { envSchema } from './env.schema'
 import { EnvService } from './env.service'
 
@@ -7,7 +8,7 @@ import { EnvService } from './env.service'
 @Module({
   imports: [
     ConfigModule.forRoot({
-      validate: env => envSchema.parse(env),
+      validate: (env) => envSchema.parse(env),
       isGlobal: true
     })
   ],

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common'
+
 import { Either, left, right } from '@/core/utils/Either'
+
 import { CompetenceRepository } from '../../domain/competence.repository'
 import { CompetenceNotFoundError } from '../errors/competence-not-found.error'
 

@@ -1,11 +1,13 @@
 import { ReadableStream } from 'node:stream/web'
 import { Injectable } from '@nestjs/common'
+
 import { DomainStorage } from '@/core/domain/storage/domain-storage.interface'
 import {
   StorageBucket,
   StorageFolder
 } from '@/core/domain/storage/storage.constant'
 import { Either, left, right } from '@/core/utils/Either'
+
 import { UserRepository } from '../../domain/user.repository'
 import { UserNotFoundError } from '../errors/user-not-found.error'
 

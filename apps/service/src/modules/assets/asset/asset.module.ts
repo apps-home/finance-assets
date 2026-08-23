@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
+
 import { MarketDataModule } from '@/infra/http/external/market-data/market-data.module'
 import { CategoryModule } from '@/modules/assets/categories/category.module'
+
 import { AssetCreatedListener } from './adapters/events/asset-created.listener'
 import { UpdateAssetPriceProcessor } from './adapters/jobs/update-asset-price.processor'
 import { UpdateAssetPricesCron } from './adapters/schedules/update-asset-prices.cron'

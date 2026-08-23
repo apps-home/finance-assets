@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+
 import { CronModule } from './cron/cron.module'
 import { EnvModule } from './env/env.module'
 import { EventModule } from './events/event.module'

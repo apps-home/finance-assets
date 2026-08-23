@@ -1,7 +1,9 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Logger } from '@nestjs/common'
 import { Job } from 'bullmq'
+
 import { JOBS, QUEUES } from '@/core/domain/queue/queue.constants'
+
 import { UpdateAssetPriceUseCase } from '../../application/use-cases/update-asset-price'
 import {
   AssetPriceQueueJobData,

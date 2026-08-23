@@ -1,5 +1,6 @@
 import { FinanceAssets } from '@lib/db'
 import { Inject, Injectable } from '@nestjs/common'
+
 import { Competence } from '../../domain/competence.entity'
 import { CompetenceRepository } from '../../domain/competence.repository'
 import { PrismaCompetenceMapper } from './prisma.competence.mapper'
@@ -48,7 +49,7 @@ export class PrismaCompetenceRepository implements CompetenceRepository {
       orderBy: { year: 'desc' }
     })
 
-    return competences.map(c => c.year)
+    return competences.map((c) => c.year)
   }
 
   async save(competence: Competence): Promise<void> {

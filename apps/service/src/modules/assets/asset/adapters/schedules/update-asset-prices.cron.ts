@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
+
 import { DomainJobPublisher } from '@/core/domain/queue/domain-job-publisher.interface'
 import { JOBS, QUEUES } from '@/core/domain/queue/queue.constants'
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+
 import { FindAllWithTickerAssetsUseCase } from '../../application/use-cases/find-all-with-ticker-assets'
 
 /**
@@ -55,7 +57,7 @@ export class UpdateAssetPricesCron {
 
     await this.jobPublisher.publishBulk(
       QUEUES.ASSET_PRICE_UPDATE,
-      assets.map(asset => {
+      assets.map((asset) => {
         const categoryType = asset.categoryType
         const delayPerRequest = PROVIDER_DELAY_MS[categoryType] ?? 0
 

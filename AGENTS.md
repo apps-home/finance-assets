@@ -52,5 +52,3 @@ finance-assets/
 - Deploys run on push to `main` (with path filters) or manual trigger via `workflow_dispatch`.
 - Builds are created via Docker with root context (`context: .`).
 - Images are published to GitHub Container Registry (`ghcr.io`).
-- Containers run on an Oracle Cloud VM attached to `public_network`.
-- `docker-compose.yml` is **not** used for deployment.

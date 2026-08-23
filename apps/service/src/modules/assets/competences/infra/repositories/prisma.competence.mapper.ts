@@ -1,4 +1,5 @@
 import { AssetCategoryCompetence } from '@lib/db'
+
 import { Competence } from '../../domain/competence.entity'
 
 export class PrismaCompetenceMapper {

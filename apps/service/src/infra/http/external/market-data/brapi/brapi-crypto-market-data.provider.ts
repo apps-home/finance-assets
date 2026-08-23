@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios'
 import { Injectable, Logger } from '@nestjs/common'
 import { firstValueFrom } from 'rxjs'
+
 import {
   MarketDataProvider,
   MarketQuote
@@ -107,7 +108,7 @@ export class BrapiCryptoMarketDataProvider implements MarketDataProvider {
     const previousMonthYear = previousMonth.getFullYear()
 
     const previousMonthEntries = historicalData
-      .filter(entry => {
+      .filter((entry) => {
         const entryDate = new Date(entry.date * 1000)
         return (
           entryDate.getMonth() === previousMonthNum &&

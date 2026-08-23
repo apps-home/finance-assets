@@ -11,7 +11,9 @@ import {
   Query,
   Req
 } from '@nestjs/common'
+
 import { DomainError } from '@/core/domain/errors/domain-error'
+
 import { CategoryNotFoundError } from '../application/errors/category-not-found.error'
 import { CreateCategoryUseCase } from '../application/use-cases/create-category'
 import { DeleteCategoryUseCase } from '../application/use-cases/delete-category'

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common'
+
 import { Either, left, right } from '@/core/utils/Either'
+
 import { CategoryRepository } from '../../domain/category.repository'
 import { CategoryNotFoundError } from '../errors/category-not-found.error'
 

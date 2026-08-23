@@ -1,0 +1,18 @@
+services:
+  app:
+    image: ghcr.io/${OWNER_REPO}/finance-assets-web:${IMAGE_TAG}
+    container_name: finance-assets-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL
+      - BETTER_AUTH_SECRET
+      - BETTER_AUTH_URL
+      - N8N_URL
+    networks:
+      - public_network
+
+networks:
+  public_network:
+    external: true

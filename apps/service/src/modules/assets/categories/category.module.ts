@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+
 import { CreateCategoryUseCase } from './application/use-cases/create-category'
 import { DeleteCategoryUseCase } from './application/use-cases/delete-category'
 import { FindAllCategoriesUseCase } from './application/use-cases/find-all-categories'

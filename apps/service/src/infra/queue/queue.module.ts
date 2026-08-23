@@ -1,11 +1,13 @@
 import { BullModule } from '@nestjs/bullmq'
 import { Global, Module } from '@nestjs/common'
+
 import { DomainJobPublisher } from '@/core/domain/queue/domain-job-publisher.interface'
+
 import { QUEUES } from '../../core/domain/queue/queue.constants'
 import { EnvService } from '../env/env.service'
 import { JobPublisherService } from './job-publisher.service'
 
-const ALL_QUEUES = Object.values(QUEUES).map(name => ({ name }))
+const ALL_QUEUES = Object.values(QUEUES).map((name) => ({ name }))
 
 @Global()
 @Module({

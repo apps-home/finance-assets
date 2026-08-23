@@ -1,6 +1,8 @@
 import { FinanceAssets } from '@lib/db'
 import { Inject, Injectable } from '@nestjs/common'
+
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+
 import { Asset } from '../../domain/asset.entity'
 import {
   AssetRepository,
@@ -71,7 +73,7 @@ export class PrismaAssetRepository implements AssetRepository {
       include: { category: true }
     })
 
-    return assets.map(record => ({
+    return assets.map((record) => ({
       asset: PrismaAssetMapper.toDomain(record),
       categoryType: record.category.type as CategoryType
     }))

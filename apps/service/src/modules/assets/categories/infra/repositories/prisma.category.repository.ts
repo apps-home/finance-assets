@@ -1,5 +1,6 @@
 import { FinanceAssets } from '@lib/db'
 import { Inject, Injectable } from '@nestjs/common'
+
 import { Category } from '../../domain/category.entity'
 import { CategoryRepository } from '../../domain/category.repository'
 import { FindAllCategoriesParams } from '../../domain/dto/find-all-categories-params.dto'
@@ -53,7 +54,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
           deleteMany: {
             year: { notIn: category.years }
           },
-          connectOrCreate: category.years.map(year => ({
+          connectOrCreate: category.years.map((year) => ({
             where: {
               categoryId_year: {
                 categoryId: category.id,

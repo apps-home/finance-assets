@@ -2,6 +2,7 @@ import {
   AssetCategoryCompetence,
   AssetCategory as PrismaAssetCategory
 } from '@lib/db'
+
 import { Category, CategoryType } from '../../domain/category.entity'
 
 type CategoryWithCompetences = PrismaAssetCategory & {
@@ -19,7 +20,7 @@ export class PrismaCategoryMapper {
         : null,
       currency: raw.currency,
       userId: raw.userId,
-      years: raw.competences.map(c => c.year).sort((a, b) => a - b),
+      years: raw.competences.map((c) => c.year).sort((a, b) => a - b),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     })
@@ -36,7 +37,7 @@ export class PrismaCategoryMapper {
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
       competences: {
-        connectOrCreate: category.years.map(year => ({
+        connectOrCreate: category.years.map((year) => ({
           where: {
             categoryId_year: {
               categoryId: category.id,

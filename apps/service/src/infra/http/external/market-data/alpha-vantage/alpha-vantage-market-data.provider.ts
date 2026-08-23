@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios'
 import { Injectable, Logger } from '@nestjs/common'
 import { firstValueFrom } from 'rxjs'
+
 import {
   MarketDataProvider,
   MarketQuote
@@ -118,7 +119,7 @@ export class AlphaVantageMarketDataProvider implements MarketDataProvider {
     const previousMonthNum = previousMonth.getMonth()
     const previousMonthYear = previousMonth.getFullYear()
 
-    const previousMonthDates = sortedDates.filter(dateStr => {
+    const previousMonthDates = sortedDates.filter((dateStr) => {
       const date = new Date(dateStr)
       return (
         date.getMonth() === previousMonthNum &&

@@ -12,6 +12,7 @@ import {
   Max,
   Min
 } from 'class-validator'
+
 import { CategoryType } from '../domain/category.entity'
 
 export class CreateCategoryDTO {

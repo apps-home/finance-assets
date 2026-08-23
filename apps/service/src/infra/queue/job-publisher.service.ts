@@ -2,6 +2,7 @@ import { getQueueToken } from '@nestjs/bullmq'
 import { Injectable } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { Queue } from 'bullmq'
+
 import { DomainJobPublisher } from '@/core/domain/queue/domain-job-publisher.interface'
 
 @Injectable()

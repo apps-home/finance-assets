@@ -12,6 +12,7 @@ import {
   UseInterceptors
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
+
 import { DownloadUserAvatarUseCase } from '../application/use-cases/download-avatar'
 import { FindUserByIdUseCase } from '../application/use-cases/find-user'
 import { FindUserByEmailUseCase } from '../application/use-cases/find-user-by-email'

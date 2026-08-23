@@ -1,3 +1,3 @@
 export interface NodeResponse {
-	message: string
+  message: string
 }
