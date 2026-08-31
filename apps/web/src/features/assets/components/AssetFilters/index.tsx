@@ -2,7 +2,7 @@
 
 import { LayoutGrid, RotateCcw, Search, Table as TableIcon } from 'lucide-react'
 
-import type { Category } from '@/features/categories/api/types'
+import { Category, CategoryType } from '@/features/categories/api/types'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import {
@@ -30,12 +30,12 @@ interface AssetFiltersProps {
   className?: string
 }
 
-const CATEGORY_TYPES: { value: string; label: string }[] = [
+const CATEGORY_TYPES: { value: CategoryType | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'Todos os Tipos' },
-  { value: 'FIXED', label: 'Renda Fixa' },
-  { value: 'VARIABLE_BR', label: 'Ações BR' },
-  { value: 'VARIABLE_US', label: 'Ações EUA' },
-  { value: 'CRYPTO', label: 'Cripto' }
+  { value: CategoryType.FIXED, label: 'Renda Fixa' },
+  { value: CategoryType.VARIABLE_BR, label: 'Ações BR' },
+  { value: CategoryType.VARIABLE_US, label: 'Ações EUA' },
+  { value: CategoryType.CRYPTO, label: 'Cripto' }
 ]
 
 const STATUS_OPTIONS = [
@@ -95,12 +95,12 @@ export function AssetFilters({
           />
         </div>
 
-        <div className="w-45">
+        <div className="w-full min-w-45 sm:w-auto">
           <Select
             value={selectedCategory}
             onValueChange={(v) => v && onCategoryChange(v)}
           >
-            <SelectTrigger className="h-9 text-xs">
+            <SelectTrigger className="h-9 w-full min-w-45 text-xs">
               <SelectValue>{selectedCategoryLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent className="w-full">
@@ -120,12 +120,12 @@ export function AssetFilters({
           </Select>
         </div>
 
-        <div className="w-37.5">
+        <div className="w-full min-w-37.5 sm:w-auto">
           <Select
             value={selectedType}
             onValueChange={(v) => v && onTypeChange(v)}
           >
-            <SelectTrigger className="h-9 text-xs">
+            <SelectTrigger className="h-9 w-full min-w-37.5 text-xs">
               <SelectValue>{selectedTypeLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent className="w-full">
@@ -142,12 +142,12 @@ export function AssetFilters({
           </Select>
         </div>
 
-        <div className="w-35">
+        <div className="w-full min-w-35 sm:w-auto">
           <Select
             value={selectedStatus}
             onValueChange={(v) => v && onStatusChange(v)}
           >
-            <SelectTrigger className="h-9 text-xs">
+            <SelectTrigger className="h-9 w-full min-w-35 text-xs">
               <SelectValue>{selectedStatusLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent className="w-full">

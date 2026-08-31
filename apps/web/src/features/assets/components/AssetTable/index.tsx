@@ -2,6 +2,7 @@
 
 import { Building2, CircleOff, Pencil, Trash2 } from 'lucide-react'
 
+import { CategoryType } from '@/features/categories/api/types'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -13,6 +14,7 @@ import {
   TableRow
 } from '@/shared/components/ui/table'
 import { cn } from '@/shared/lib/utils'
+import { CURRENCIES } from '@/shared/utils/currencies'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import {
   calcPercentageChange,
@@ -28,18 +30,20 @@ interface AssetTableProps {
   className?: string
 }
 
-const CATEGORY_TYPE_COLORS: Record<string, string> = {
-  FIXED: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  VARIABLE_BR: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  VARIABLE_US: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  CRYPTO: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
+  [CategoryType.FIXED]:
+    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  [CategoryType.VARIABLE_BR]: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+  [CategoryType.VARIABLE_US]:
+    'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  [CategoryType.CRYPTO]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
 }
 
-const CATEGORY_TYPE_LABELS: Record<string, string> = {
-  FIXED: 'Renda Fixa',
-  VARIABLE_BR: 'Ações BR',
-  VARIABLE_US: 'Ações EUA',
-  CRYPTO: 'Cripto'
+const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
+  [CategoryType.FIXED]: 'Renda Fixa',
+  [CategoryType.VARIABLE_BR]: 'Ações Nacionais',
+  [CategoryType.VARIABLE_US]: 'Ações Internacionais',
+  [CategoryType.CRYPTO]: 'Criptomoedas'
 }
 
 export function AssetTable({
@@ -109,7 +113,8 @@ export function AssetTable({
                 )
               : null
 
-            const catType = asset.category?.type || 'FIXED'
+            const catType = asset.category?.type || CategoryType.FIXED
+            const currency = asset.category?.currency || CURRENCIES[catType]
 
             return (
               <TableRow
@@ -172,7 +177,7 @@ export function AssetTable({
 
                 <TableCell className="text-right font-medium text-foreground text-xs tabular-nums">
                   {asset.averagePrice != null
-                    ? formatCurrency(asset.averagePrice)
+                    ? formatCurrency(asset.averagePrice, currency)
                     : '—'}
                 </TableCell>
 
@@ -180,7 +185,7 @@ export function AssetTable({
                   {asset.currentClosePrice != null ? (
                     <div className="flex flex-col items-end">
                       <span className="font-semibold text-foreground">
-                        {formatCurrency(asset.currentClosePrice)}
+                        {formatCurrency(asset.currentClosePrice, currency)}
                       </span>
                       {percentagePriceChange !== null && (
                         <span
@@ -202,13 +207,13 @@ export function AssetTable({
 
                 <TableCell className="text-right font-medium text-foreground text-xs tabular-nums">
                   {asset.investedValue != null
-                    ? formatCurrency(asset.investedValue)
+                    ? formatCurrency(asset.investedValue, currency)
                     : '—'}
                 </TableCell>
 
                 <TableCell className="text-right font-semibold text-foreground text-xs tabular-nums">
                   {asset.currentBalance != null
-                    ? formatCurrency(asset.currentBalance)
+                    ? formatCurrency(asset.currentBalance, currency)
                     : '—'}
                 </TableCell>
 
@@ -224,7 +229,7 @@ export function AssetTable({
                         )}
                       >
                         {isPositivePL ? '+' : ''}
-                        {formatCurrency(asset.profitLoss!)}
+                        {formatCurrency(asset.profitLoss!, currency)}
                       </span>
                       {asset.profitabilityPercentage != null && (
                         <span

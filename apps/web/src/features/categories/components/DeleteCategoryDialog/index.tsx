@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { deleteCategory } from '@/features/categories/api'
-import type { Category } from '@/features/categories/api/types'
+import  { Category } from '@/features/categories/api/types'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,

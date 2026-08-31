@@ -2,7 +2,7 @@
 
 import { Target } from 'lucide-react'
 
-import type { Category } from '@/features/categories/api/types'
+import { Category, CategoryType } from '@/features/categories/api/types'
 import {
   Card,
   CardContent,
@@ -15,18 +15,18 @@ interface AllocationOverviewProps {
   categories: Category[]
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  FIXED: 'bg-emerald-500',
-  VARIABLE_BR: 'bg-blue-500',
-  VARIABLE_US: 'bg-violet-500',
-  CRYPTO: 'bg-amber-500'
+const TYPE_COLORS: Record<CategoryType, string> = {
+  [CategoryType.FIXED]: 'bg-emerald-500',
+  [CategoryType.VARIABLE_BR]: 'bg-blue-500',
+  [CategoryType.VARIABLE_US]: 'bg-violet-500',
+  [CategoryType.CRYPTO]: 'bg-amber-500'
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  FIXED: 'Renda Fixa',
-  VARIABLE_BR: 'Ações BR',
-  VARIABLE_US: 'Ações EUA',
-  CRYPTO: 'Cripto'
+const TYPE_LABELS: Record<CategoryType, string> = {
+  [CategoryType.FIXED]: 'Renda Fixa',
+  [CategoryType.VARIABLE_BR]: 'Ações BR',
+  [CategoryType.VARIABLE_US]: 'Ações EUA',
+  [CategoryType.CRYPTO]: 'Cripto'
 }
 
 export function AllocationOverview({ categories }: AllocationOverviewProps) {

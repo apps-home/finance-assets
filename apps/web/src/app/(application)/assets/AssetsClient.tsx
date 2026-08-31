@@ -4,15 +4,16 @@ import { Briefcase, FilterX, PlusIcon } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { useMemo, useState } from 'react'
 
-import type { CreateAssetDTO } from '@/features/assets/api/types'
+import { CreateAssetDTO } from '@/features/assets/api/types'
 import { AssetCard } from '@/features/assets/components/AssetCard'
 import { AssetFilters } from '@/features/assets/components/AssetFilters'
 import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
 import { AssetSummaryCards } from '@/features/assets/components/AssetSummaryCards'
 import { AssetTable } from '@/features/assets/components/AssetTable'
 import { DeleteAssetDialog } from '@/features/assets/components/DeleteAssetDialog'
+import { DollarRateBadge } from '@/features/assets/components/DollarRateBadge'
 import { useAssets } from '@/features/assets/hooks/use-assets'
-import type { AssetWithCategory } from '@/features/assets/types'
+import { AssetWithCategory } from '@/features/assets/types'
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 
@@ -164,13 +165,13 @@ export default function AssetsClient() {
             </div>
           </div>
 
-          <Button
-            onClick={handleOpenCreate}
-            className="gap-2 self-start md:self-auto"
-          >
-            <PlusIcon className="size-4" />
-            Novo Ativo
-          </Button>
+          <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+            <DollarRateBadge />
+            <Button onClick={handleOpenCreate} className="gap-2">
+              <PlusIcon className="size-4" />
+              Novo Ativo
+            </Button>
+          </div>
         </div>
 
         <AssetSummaryCards assets={filteredAssets} />

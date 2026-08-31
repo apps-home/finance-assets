@@ -4,7 +4,8 @@ import { Edit, Loader2, Save, X } from 'lucide-react'
 import { useState } from 'react'
 
 import type { MonthData } from '@/app/(application)/(dashboard)/page'
-import type { Category } from '@/features/categories/api/types'
+import  { Category } from '@/features/categories/api/types'
+import { CategoryType } from '@/features/categories/api/types'
 import type { CreateBudgetDTO } from '@/infrastructure/api/budgets/types'
 import { getCurrencyData } from '@/infrastructure/services/external/get-currency'
 import { Button } from '@/shared/components/ui/button'
@@ -13,7 +14,11 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatCurrencyInput } from '../../utils/format-currency-input'
 import { parseValue } from '../../utils/parse-value'
 
-const VARIABLE_TYPES = ['VARIABLE_BR', 'VARIABLE_US', 'CRYPTO']
+const VARIABLE_TYPES: CategoryType[] = [
+  CategoryType.VARIABLE_BR,
+  CategoryType.VARIABLE_US,
+  CategoryType.CRYPTO
+]
 
 interface FinancialTableProps {
   data: MonthData[]

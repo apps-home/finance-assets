@@ -6,10 +6,10 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { createAsset } from '@/features/assets/api'
-import type { CreateAssetDTO } from '@/features/assets/api/types'
+import { CreateAssetDTO } from '@/features/assets/api/types'
 import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
 import { listCategories } from '@/features/categories/api'
-import type { Category } from '@/features/categories/api/types'
+import { Category, CategoryType } from '@/features/categories/api/types'
 import { AllocationOverview } from '@/features/categories/components/AllocationOverview'
 import { CategoryCard } from '@/features/categories/components/CategoryCard'
 import { CategoryFormDialog } from '@/features/categories/components/CategoryFormDialog'
@@ -19,12 +19,12 @@ import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 
-const FILTER_TABS = [
+const FILTER_TABS: { value: CategoryType | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'Todos' },
-  { value: 'FIXED', label: 'Renda Fixa' },
-  { value: 'VARIABLE_BR', label: 'Ações BR' },
-  { value: 'VARIABLE_US', label: 'Ações EUA' },
-  { value: 'CRYPTO', label: 'Cripto' }
+  { value: CategoryType.FIXED, label: 'Renda Fixa' },
+  { value: CategoryType.VARIABLE_BR, label: 'Ações BR' },
+  { value: CategoryType.VARIABLE_US, label: 'Ações EUA' },
+  { value: CategoryType.CRYPTO, label: 'Cripto' }
 ]
 
 export default function CategoriesClient() {

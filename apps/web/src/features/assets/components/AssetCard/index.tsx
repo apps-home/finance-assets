@@ -10,11 +10,13 @@ import {
 } from 'lucide-react'
 
 import { AssetPriceInfo } from '@/features/assets/components/AssetPriceInfo'
+import { CategoryType } from '@/features/categories/api/types'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
 import { Separator } from '@/shared/components/ui/separator'
 import { cn } from '@/shared/lib/utils'
+import { CURRENCIES } from '@/shared/utils/currencies'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
 
@@ -27,18 +29,20 @@ interface AssetCardProps {
   className?: string
 }
 
-const CATEGORY_TYPE_COLORS: Record<string, string> = {
-  FIXED: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  VARIABLE_BR: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  VARIABLE_US: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  CRYPTO: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
+  [CategoryType.FIXED]:
+    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  [CategoryType.VARIABLE_BR]: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+  [CategoryType.VARIABLE_US]:
+    'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  [CategoryType.CRYPTO]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
 }
 
-const CATEGORY_TYPE_LABELS: Record<string, string> = {
-  FIXED: 'Renda Fixa',
-  VARIABLE_BR: 'Ações BR',
-  VARIABLE_US: 'Ações EUA',
-  CRYPTO: 'Cripto'
+const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
+  [CategoryType.FIXED]: 'Renda Fixa',
+  [CategoryType.VARIABLE_BR]: 'Ações BR',
+  [CategoryType.VARIABLE_US]: 'Ações EUA',
+  [CategoryType.CRYPTO]: 'Cripto'
 }
 
 export function AssetCard({
@@ -50,7 +54,8 @@ export function AssetCard({
   const hasPL = asset.profitLoss != null && asset.profitLoss !== 0
   const isPositivePL = hasPL && asset.profitLoss! > 0
   const isNegativePL = hasPL && asset.profitLoss! < 0
-  const catType = asset.category?.type || 'FIXED'
+  const catType = asset.category?.type || CategoryType.FIXED
+  const currency = asset.category?.currency || CURRENCIES[catType]
 
   return (
     <Card
@@ -83,7 +88,7 @@ export function AssetCard({
               <Badge
                 variant="secondary"
                 className={cn(
-                  'border-0 text-[10px]',
+                  'w-fit border-0 px-1.5 py-0 text-[10px]',
                   CATEGORY_TYPE_COLORS[catType]
                 )}
               >
@@ -144,7 +149,7 @@ export function AssetCard({
             </span>
             <p className="font-semibold text-foreground text-xs tabular-nums">
               {asset.averagePrice != null
-                ? formatCurrency(asset.averagePrice)
+                ? formatCurrency(asset.averagePrice, currency)
                 : '—'}
             </p>
           </div>
@@ -154,7 +159,7 @@ export function AssetCard({
             </span>
             <p className="font-medium text-foreground text-xs tabular-nums">
               {asset.investedValue != null
-                ? formatCurrency(asset.investedValue)
+                ? formatCurrency(asset.investedValue, currency)
                 : '—'}
             </p>
           </div>
@@ -164,7 +169,7 @@ export function AssetCard({
             </span>
             <p className="font-semibold text-foreground text-xs tabular-nums">
               {asset.currentBalance != null
-                ? formatCurrency(asset.currentBalance)
+                ? formatCurrency(asset.currentBalance, currency)
                 : '—'}
             </p>
           </div>
@@ -174,6 +179,7 @@ export function AssetCard({
           <AssetPriceInfo
             currentClosePrice={asset.currentClosePrice}
             lastMonthClosePrice={asset.lastMonthClosePrice}
+            currency={currency}
           />
         )}
 
@@ -200,7 +206,7 @@ export function AssetCard({
                   ) : (
                     <TrendingDown className="size-3" />
                   )}
-                  {formatCurrency(Math.abs(asset.profitLoss!))}
+                  {formatCurrency(Math.abs(asset.profitLoss!), currency)}
                 </Badge>
                 {asset.profitabilityPercentage != null && (
                   <span

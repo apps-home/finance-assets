@@ -27,7 +27,7 @@ import type {
   CreateAssetDTO,
   UpdateAssetDTO
 } from '@/features/assets/api/types'
-import type { Category } from '@/features/categories/api/types'
+import { Category, CategoryType } from '@/features/categories/api/types'
 import { AssetFormDialog } from '@/features/categories/components/AssetFormDialog'
 import { AssetPriceInfo } from '@/features/categories/components/AssetPriceInfo'
 import { DeleteAssetDialog } from '@/features/categories/components/DeleteAssetDialog'
@@ -51,25 +51,25 @@ interface CategoryDetailCardProps {
   onDelete: (category: Category) => void
 }
 
-const CATEGORY_TYPE_COLORS: Record<string, string> = {
-  FIXED: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  VARIABLE_BR: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  VARIABLE_US: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  CRYPTO: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
+  [CategoryType.FIXED]: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  [CategoryType.VARIABLE_BR]: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+  [CategoryType.VARIABLE_US]: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  [CategoryType.CRYPTO]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
 }
 
-const CATEGORY_TYPE_BG: Record<string, string> = {
-  FIXED: 'bg-emerald-500',
-  VARIABLE_BR: 'bg-blue-500',
-  VARIABLE_US: 'bg-violet-500',
-  CRYPTO: 'bg-amber-500'
+const CATEGORY_TYPE_BG: Record<CategoryType, string> = {
+  [CategoryType.FIXED]: 'bg-emerald-500',
+  [CategoryType.VARIABLE_BR]: 'bg-blue-500',
+  [CategoryType.VARIABLE_US]: 'bg-violet-500',
+  [CategoryType.CRYPTO]: 'bg-amber-500'
 }
 
-const CATEGORY_TYPE_LABELS: Record<string, string> = {
-  FIXED: 'Renda Fixa',
-  VARIABLE_BR: 'Ações Brasil',
-  VARIABLE_US: 'Ações EUA',
-  CRYPTO: 'Cripto'
+const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
+  [CategoryType.FIXED]: 'Renda Fixa',
+  [CategoryType.VARIABLE_BR]: 'Ações Brasil',
+  [CategoryType.VARIABLE_US]: 'Ações EUA',
+  [CategoryType.CRYPTO]: 'Cripto'
 }
 
 const CURRENCY_LABELS: Record<string, string> = {

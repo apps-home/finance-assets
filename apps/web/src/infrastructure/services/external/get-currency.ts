@@ -56,3 +56,19 @@ export async function getCurrencyData(
     }
   }
 }
+
+export async function getCurrencyQuote(
+  currency = 'USD'
+): Promise<CurrencyDataResponse | null> {
+  try {
+    const response = await fetch(`/api/get-currency?currency=${currency}`)
+    if (!response.ok) {
+      return null
+    }
+    const data: CurrencyDataResponse = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching currency quote:', error)
+    return null
+  }
+}

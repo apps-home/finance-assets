@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import type { CreateAssetDTO } from '@/features/assets/api/types'
-import type { Category } from '@/features/categories/api/types'
+import  { Category } from '@/features/categories/api/types'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import {

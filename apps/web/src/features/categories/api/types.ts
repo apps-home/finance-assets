@@ -1,4 +1,9 @@
-export type CategoryType = 'VARIABLE_BR' | 'VARIABLE_US' | 'CRYPTO' | 'FIXED'
+export enum CategoryType {
+  VARIABLE_BR = 'VARIABLE_BR',
+  VARIABLE_US = 'VARIABLE_US',
+  CRYPTO = 'CRYPTO',
+  FIXED = 'FIXED'
+}
 
 export interface Category {
   id: string

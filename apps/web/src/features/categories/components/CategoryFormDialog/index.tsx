@@ -6,11 +6,8 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { createCategory, updateCategory } from '@/features/categories/api'
-import type {
-  Category,
-  CategoryType,
-  UpdateCategoryDTO
-} from '@/features/categories/api/types'
+import  { Category, UpdateCategoryDTO } from '@/features/categories/api/types'
+import { CategoryType } from '@/features/categories/api/types'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -39,10 +36,10 @@ const CURRENCIES = [
 ]
 
 const CATEGORY_TYPES: { value: CategoryType; label: string }[] = [
-  { value: 'FIXED', label: 'Renda Fixa' },
-  { value: 'VARIABLE_BR', label: 'Renda Variável Brasil' },
-  { value: 'VARIABLE_US', label: 'Renda Variável EUA' },
-  { value: 'CRYPTO', label: 'Criptomoedas' }
+  { value: CategoryType.FIXED, label: 'Renda Fixa' },
+  { value: CategoryType.VARIABLE_BR, label: 'Renda Variável Brasil' },
+  { value: CategoryType.VARIABLE_US, label: 'Renda Variável EUA' },
+  { value: CategoryType.CRYPTO, label: 'Criptomoedas' }
 ]
 
 const MIN_YEAR = 2020
@@ -68,7 +65,7 @@ export function CategoryFormDialog({
       return {
         name: category.name,
         currency: category.currency,
-        type: category.type || ('FIXED' as CategoryType),
+        type: category.type || CategoryType.FIXED,
         years: category.years || [],
         targetPercentage: category.targetPercentage ?? null
       }
@@ -76,7 +73,7 @@ export function CategoryFormDialog({
     return {
       name: '',
       currency: 'BRL',
-      type: 'FIXED' as CategoryType,
+      type: CategoryType.FIXED,
       years: [new Date().getFullYear()] as number[],
       targetPercentage: null as number | null
     }

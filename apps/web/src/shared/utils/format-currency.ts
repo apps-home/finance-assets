@@ -1,5 +1,9 @@
-export const formatCurrency = (value: number) =>
+export const formatCurrency = (
+  value: number,
+  currency: string = 'BRL'
+) =>
   new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL'
+    currency: currency?.toUpperCase() || 'BRL'
   }).format(value)
+
