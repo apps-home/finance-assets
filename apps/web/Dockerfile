@@ -1,11 +1,11 @@
-# Build stage
-FROM node:22-alpine AS base
+# Base stage usando a plataforma do host (BUILDPLATFORM) para execução nativa sem emulação QEMU
+FROM --platform=$BUILDPLATFORM node:22-alpine AS base
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@11.0.9 --activate
 
-# 1. Estágio de Dependências
+# 1. Estágio de Dependências (nativamente em $BUILDPLATFORM)
 FROM base AS deps
 WORKDIR /app
-
-RUN corepack enable && corepack prepare pnpm@11.0.9 --activate
 
 # Copia arquivos de configuração da RAIZ e manifestos para cache das dependências
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -21,14 +21,15 @@ RUN pnpm install --frozen-lockfile
 COPY packages/lib-db/src/prisma ./packages/lib-db/src/prisma
 WORKDIR /app/packages/lib-db
 RUN pnpm exec prisma generate --schema=./src/prisma/schema.prisma
+WORKDIR /app
 
-# 2. Estágio de Build
-FROM base AS builder
+# 2. Estágio de Build (nativamente em $BUILDPLATFORM)
+FROM --platform=$BUILDPLATFORM node:22-alpine AS builder
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@11.0.9 --activate
 
-# Copia dependências e prisma client gerado do stage deps
+# Copia node_modules e artefatos do Prisma do estágio deps
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/lib-db/src/prisma/generated ./packages/lib-db/src/prisma/generated
 COPY --from=deps /app/package.json ./package.json
@@ -51,17 +52,14 @@ ENV NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 ENV NEXT_PUBLIC_AVATAR_URL=$NEXT_PUBLIC_AVATAR_URL
 
-# Build do Next.js
-WORKDIR /app/apps/web
-
 ENV NEXT_TELEMETRY_DISABLED=1
 # Skip server env validation during build (validated at runtime)
 ENV SKIP_ENV_VALIDATION=true
 
-RUN pnpm build
+RUN cd /app/apps/web && pnpm build
 
-# 3. Estágio Final (Runner)
-FROM base AS runner
+# 3. Estágio Final (Runner: imagem alvo linux/arm64 no CI)
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Production stage
@@ -87,4 +85,3 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "apps/web/server.js"]
-
