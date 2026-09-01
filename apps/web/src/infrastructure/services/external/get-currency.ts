@@ -38,7 +38,9 @@ export async function getCurrencyData(
     })
 
     if (!response.ok) {
-      console.log(`HTTP error! status: ${response}`)
+      console.log(
+        `HTTP error! status: ${response.status} ${response.statusText}`
+      )
       return 1
     }
 
