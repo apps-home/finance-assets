@@ -21,7 +21,7 @@ WORKDIR /app/packages/lib-db
 RUN pnpm exec prisma generate --schema=./src/prisma/schema.prisma
 
 # 2. Estágio de Build (nativamente em $BUILDPLATFORM)
-FROM deps AS builder
+FROM --platform=$BUILDPLATFORM deps AS builder
 WORKDIR /app
 
 COPY packages/lib-db ./packages/lib-db
@@ -29,11 +29,8 @@ COPY packages/env ./packages/env
 COPY packages/config ./packages/config
 COPY apps/service ./apps/service
 
-WORKDIR /app/packages/lib-db
-RUN pnpm build
-
-WORKDIR /app/apps/service
-RUN pnpm build
+RUN cd /app/packages/lib-db && pnpm build && \
+    cd /app/apps/service && pnpm build
 
 # 3. Estágio de Dependências de Produção (nativamente em $BUILDPLATFORM)
 FROM base AS prod-deps
@@ -59,8 +56,10 @@ RUN apk add --no-cache libc6-compat
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs
 
-# Copia dependências de produção preparadas no prod-deps
+# Copia dependências de produção preparadas no prod-deps (raiz e workspaces)
 COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/apps/service/node_modules ./apps/service/node_modules
+COPY --from=prod-deps /app/packages/lib-db/node_modules ./packages/lib-db/node_modules
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Copia lib-db compilado e Prisma Client gerado
