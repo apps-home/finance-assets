@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   reactCompiler: true,
   cacheComponents: true,
+  partialPrefetching: true,
   transpilePackages: ['@t3-oss/env-nextjs', '@t3-oss/env-core', '@lib/db'],
   ...(process.env.NODE_ENV === 'development' && {
     allowedDevOrigins: ['10.0.2.124', 'local.dev.terraviva', '192.168.0.4']
