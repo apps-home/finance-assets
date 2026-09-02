@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
 
     let apiUrl: string
 
-    if (month && year) {
+    const isHistorical = !!(month && year)
+
+    if (isHistorical) {
       // Buscar cotação histórica do mês/ano específico
       const { startDate, endDate } = getMonthDateRange(
         parseInt(month, 10),
@@ -29,7 +31,9 @@ export async function GET(req: NextRequest) {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
+      },
+      // Cotações históricas são imutáveis; cotação atual revalida a cada 1 hora
+      next: isHistorical ? { revalidate: false } : { revalidate: 3600 }
     })
 
     if (!res.ok) {

@@ -33,9 +33,7 @@ export async function getCurrencyData(
       params.append('year', options.year.toString())
     }
 
-    const response = await fetch(`/api/get-currency?${params.toString()}`, {
-      cache: 'no-store'
-    })
+    const response = await fetch(`/api/get-currency?${params.toString()}`)
 
     if (!response.ok) {
       console.log(
