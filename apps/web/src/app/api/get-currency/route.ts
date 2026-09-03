@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { getMonthDateRange } from '@/shared/utils/get-month-date-range'
 
 export async function GET(req: NextRequest) {
+  const API_KEY = process.env.AWESOME_API_TOKEN
+
   try {
     const { searchParams } = req.nextUrl
 
@@ -21,10 +23,10 @@ export async function GET(req: NextRequest) {
         parseInt(year, 10)
       )
       // Busca os fechamentos do mês inteiro, ordenados do mais recente para o mais antigo
-      apiUrl = `https://economia.awesomeapi.com.br/json/daily/${currency}-BRL/?start_date=${startDate}&end_date=${endDate}`
+      apiUrl = `https://economia.awesomeapi.com.br/json/daily/${currency}-BRL/?start_date=${startDate}&end_date=${endDate}&token=${API_KEY}`
     } else {
       // Buscar cotação atual (comportamento padrão)
-      apiUrl = `https://economia.awesomeapi.com.br/json/daily/${currency}-BRL/15`
+      apiUrl = `https://economia.awesomeapi.com.br/json/daily/${currency}-BRL/15?token=${API_KEY}`
     }
 
     const res = await fetch(apiUrl, {
