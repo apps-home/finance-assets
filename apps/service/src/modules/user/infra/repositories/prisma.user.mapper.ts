@@ -1,4 +1,4 @@
-import { Prisma } from '@lib/db'
+import type { Prisma } from '@lib/db'
 
 import { User } from '../../domain/user.entity'
 

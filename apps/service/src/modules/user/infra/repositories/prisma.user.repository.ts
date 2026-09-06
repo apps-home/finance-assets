@@ -1,4 +1,4 @@
-import { Auth } from '@lib/db'
+import type { Auth } from '@lib/db'
 import { Inject, Injectable } from '@nestjs/common'
 
 import { User } from '../../domain/user.entity'

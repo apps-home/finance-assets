@@ -1,4 +1,4 @@
-import {
+import type {
   AssetCategoryCompetence,
   AssetCategory as PrismaAssetCategory
 } from '@lib/db'

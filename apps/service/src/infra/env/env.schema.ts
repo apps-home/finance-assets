@@ -16,7 +16,10 @@ export const envSchema = z.object({
   // Cloudflare R2
   R2_ACCOUNT_ID: z.string('R2_ACCOUNT_ID is required'),
   R2_ACCESS_KEY_ID: z.string('R2_ACCESS_KEY_ID is required'),
-  R2_SECRET_ACCESS_KEY: z.string('R2_SECRET_ACCESS_KEY is required')
+  R2_SECRET_ACCESS_KEY: z.string('R2_SECRET_ACCESS_KEY is required'),
+
+  // n8n Webhook
+  N8N_URL: z.url('N8N_URL is required')
 })
 
 export type Env = z.infer<typeof envSchema>

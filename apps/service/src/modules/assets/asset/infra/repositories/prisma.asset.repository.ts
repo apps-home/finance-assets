@@ -1,4 +1,4 @@
-import { FinanceAssets } from '@lib/db'
+import type { FinanceAssets } from '@lib/db'
 import { Inject, Injectable } from '@nestjs/common'
 
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
@@ -6,7 +6,8 @@ import { CategoryType } from '@/modules/assets/categories/domain/category.entity
 import { Asset } from '../../domain/asset.entity'
 import {
   AssetRepository,
-  AssetWithCategoryType
+  AssetWithCategoryType,
+  AssetWithUserDetails
 } from '../../domain/asset.repository'
 import { FindAllAssetsParams } from '../../domain/dto/find-all-assets-params.dto'
 import { PrismaAssetMapper } from './prisma.asset.mapper'
@@ -76,6 +77,34 @@ export class PrismaAssetRepository implements AssetRepository {
     return assets.map((record) => ({
       asset: PrismaAssetMapper.toDomain(record),
       categoryType: record.category.type as CategoryType
+    }))
+  }
+
+  async findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]> {
+    const assets = await this.prisma.asset.findMany({
+      where: { isActive: true },
+      include: {
+        category: {
+          include: {
+            user: true
+          }
+        }
+      }
+    })
+
+    return assets.map((record) => ({
+      asset: PrismaAssetMapper.toDomain(record),
+      category: {
+        id: record.category.id,
+        name: record.category.name,
+        type: record.category.type as CategoryType,
+        currency: record.category.currency
+      },
+      user: {
+        id: record.category.user.id,
+        name: record.category.user.name,
+        email: record.category.user.email
+      }
     }))
   }
 }

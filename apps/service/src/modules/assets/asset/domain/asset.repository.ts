@@ -8,10 +8,26 @@ export interface AssetWithCategoryType {
   categoryType: CategoryType
 }
 
+export interface AssetWithUserDetails {
+  asset: Asset
+  category: {
+    id: string
+    name: string
+    type: CategoryType
+    currency: string
+  }
+  user: {
+    id: string
+    name: string
+    email: string
+  }
+}
+
 export abstract class AssetRepository {
   abstract list(params: FindAllAssetsParams): Promise<Asset[]>
   abstract save(asset: Asset): Promise<void>
   abstract findById(id: string): Promise<Asset | null>
   abstract delete(id: string): Promise<void>
   abstract findAllWithTicker(): Promise<AssetWithCategoryType[]>
+  abstract findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]>
 }

@@ -1,4 +1,4 @@
-import { Asset as PrismaAsset } from '@lib/db'
+import type { Asset as PrismaAsset } from '@lib/db'
 
 import { Asset } from '../../domain/asset.entity'
 
