@@ -4,17 +4,17 @@ import { Cron } from '@nestjs/schedule'
 import { EnvService } from '@/infra/env/env.service'
 
 import {
-  NotifyAssetLossUseCase,
-  UserLossNotificationPayload
-} from '../../application/use-cases/notify-asset-loss'
+  NotifyAssetVariationsUseCase,
+  UserVariationsNotificationPayload
+} from '../../application/use-cases/notify-asset-variations'
 
 @Injectable()
-export class NotifyAssetLossCron {
-  private readonly logger = new Logger(NotifyAssetLossCron.name)
+export class NotifyAssetVariationsCron {
+  private readonly logger = new Logger(NotifyAssetVariationsCron.name)
   private isRunning = false
 
   constructor(
-    private readonly notifyAssetLossUseCase: NotifyAssetLossUseCase,
+    private readonly notifyAssetVariationsUseCase: NotifyAssetVariationsUseCase,
     private readonly envService: EnvService
   ) {}
 
@@ -26,30 +26,32 @@ export class NotifyAssetLossCron {
   })
   async handleCron(): Promise<void> {
     if (this.isRunning) {
-      this.logger.log('Asset loss notification cron job is already running.')
+      this.logger.log(
+        'Asset variation notification cron job is already running.'
+      )
       return
     }
 
     this.isRunning = true
-    this.logger.log('Starting weekday asset loss check cron job...')
+    this.logger.log('Starting weekday asset variation check cron job...')
 
     try {
-      const result = await this.notifyAssetLossUseCase.execute()
+      const result = await this.notifyAssetVariationsUseCase.execute()
 
       if (result.isLeft()) {
         this.logger.error(
-          'Failed to execute asset loss evaluation',
+          'Failed to execute asset variation evaluation',
           result.value
         )
         return
       }
 
-      const { totalAssetsEvaluated, totalDroppedAssets, userAlerts } =
+      const { totalAssetsEvaluated, totalGainers, totalLosers, userAlerts } =
         result.value
 
       if (userAlerts.length === 0) {
         this.logger.log(
-          `Asset loss check finished: ${totalAssetsEvaluated} evaluated, 0 dropped > 5%. Webhook not triggered.`
+          `Asset variation check finished: ${totalAssetsEvaluated} evaluated, 0 passed the 5% margin threshold. Webhook not triggered.`
         )
         return
       }
@@ -57,14 +59,14 @@ export class NotifyAssetLossCron {
       const webhookUrl = this.envService.get('N8N_URL')
 
       this.logger.log(
-        `Asset loss check found ${totalDroppedAssets} dropped asset(s) for ${userAlerts.length} user(s). Dispatching to n8n: ${webhookUrl}`
+        `Asset variation check found ${totalGainers} gain(s) and ${totalLosers} drop(s) for ${userAlerts.length} user(s). Dispatching to n8n: ${webhookUrl}`
       )
 
       for (const alert of userAlerts) {
-        await this.dispatchToN8n(webhookUrl, alert)
+        await this.dispatchToN8n(`${webhookUrl}/assets/notify`, alert)
       }
     } catch (error) {
-      this.logger.error('Unexpected error in NotifyAssetLossCron', error)
+      this.logger.error('Unexpected error in NotifyAssetVariationsCron', error)
     } finally {
       this.isRunning = false
     }
@@ -72,11 +74,11 @@ export class NotifyAssetLossCron {
 
   private async dispatchToN8n(
     webhookUrl: string,
-    payload: UserLossNotificationPayload
+    payload: UserVariationsNotificationPayload
   ): Promise<void> {
     try {
       this.logger.log(
-        `Dispatching n8n webhook for user ${payload.user.email} (${payload.assets.length} dropped assets)...`
+        `Dispatching n8n webhook for user ${payload.user.email} (${payload.gainers.length} gainers, ${payload.losers.length} losers)...`
       )
 
       const response = await fetch(webhookUrl, {
