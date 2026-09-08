@@ -12,7 +12,6 @@ COPY packages/lib-db/package.json ./packages/lib-db/
 COPY packages/env/package.json ./packages/env/
 COPY packages/config/package.json ./packages/config/
 COPY apps/service/package.json ./apps/service/
-COPY apps/web/package.json ./apps/web/
 
 RUN pnpm install --frozen-lockfile
 
@@ -41,7 +40,6 @@ COPY packages/lib-db/package.json ./packages/lib-db/
 COPY packages/env/package.json ./packages/env/
 COPY packages/config/package.json ./packages/config/
 COPY apps/service/package.json ./apps/service/
-COPY apps/web/package.json ./apps/web/
 
 RUN pnpm install --prod --frozen-lockfile
 
@@ -60,7 +58,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/apps/service/node_modules ./apps/service/node_modules
 COPY --from=prod-deps /app/packages/lib-db/node_modules ./packages/lib-db/node_modules
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml ./
 
 # Copia lib-db compilado e Prisma Client gerado
 COPY --from=builder /app/packages/lib-db/dist ./packages/lib-db/dist
