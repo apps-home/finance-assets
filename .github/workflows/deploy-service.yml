@@ -100,6 +100,7 @@ jobs:
               -e REDIS_HOST="${{ vars.REDIS_HOST }}" \
               -e REDIS_PORT="${{ vars.REDIS_PORT }}" \
               -e REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
+              -e N8N_URL="${{ vars.N8N_URL }}" \
               ghcr.io/${{ github.repository_owner }}/finance-assets-api:${{ inputs.version || 'latest' }}
 
             # 5. Limpeza de imagens antigas sem uso
