@@ -63,7 +63,7 @@ export class NotifyAssetVariationsCron {
       )
 
       for (const alert of userAlerts) {
-        await this.dispatchToN8n(`${webhookUrl}/assets/notify`, alert)
+        await this.dispatchToN8n(`${webhookUrl}/webhook/assets/notify`, alert)
       }
     } catch (error) {
       this.logger.error('Unexpected error in NotifyAssetVariationsCron', error)
