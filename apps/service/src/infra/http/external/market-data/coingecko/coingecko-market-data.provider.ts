@@ -6,6 +6,7 @@ import {
   MarketDataProvider,
   MarketQuote
 } from '@/core/http/external/market-data/market-data.provider'
+import { EnvService } from '@/infra/env/env.service'
 
 interface CoinGeckoMarketChartResponse {
   prices: [number, number][]
@@ -26,7 +27,8 @@ const TICKER_TO_COINGECKO_ID: Record<string, string> = {
   LTC: 'litecoin',
   UNI: 'uniswap',
   ATOM: 'cosmos',
-  BNB: 'binancecoin'
+  BNB: 'binancecoin',
+  MUSD: 'usd-coin'
 }
 
 @Injectable()
@@ -34,10 +36,24 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
   private readonly logger = new Logger(CoinGeckoMarketDataProvider.name)
   private readonly baseUrl = 'https://api.coingecko.com/api/v3'
 
-  constructor(private readonly httpService: HttpService) {}
+  private readonly COINGECKO_API_KEY: string
+
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly env: EnvService
+  ) {
+    this.COINGECKO_API_KEY = this.env.get('COINGECKO_API_KEY')
+  }
 
   async fetchQuote(ticker: string): Promise<MarketQuote | null> {
     try {
+      if (!this.COINGECKO_API_KEY) {
+        this.logger.warn(
+          'COINGECKO_API_KEY is required for crypto quotes. Skipping.'
+        )
+        return null
+      }
+
       const coinId = this.resolveCoinId(ticker)
 
       if (!coinId) {
@@ -58,7 +74,8 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
             params: {
               vs_currency: 'brl',
               days: '90',
-              interval: 'daily'
+              interval: 'daily',
+              x_cg_demo_api_key: this.COINGECKO_API_KEY
             }
           }
         )

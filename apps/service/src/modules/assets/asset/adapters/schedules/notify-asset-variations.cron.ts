@@ -1,12 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 
-import { EnvService } from '@/infra/env/env.service'
+import { N8nProvider } from '@/infra/http/n8n/n8n.provider'
 
-import {
-  NotifyAssetVariationsUseCase,
-  UserVariationsNotificationPayload
-} from '../../application/use-cases/notify-asset-variations'
+import { NotifyAssetVariationsUseCase } from '../../application/use-cases/notify-asset-variations'
 
 @Injectable()
 export class NotifyAssetVariationsCron {
@@ -15,7 +12,7 @@ export class NotifyAssetVariationsCron {
 
   constructor(
     private readonly notifyAssetVariationsUseCase: NotifyAssetVariationsUseCase,
-    private readonly envService: EnvService
+    private readonly n8nProvider: N8nProvider
   ) {}
 
   /**
@@ -56,54 +53,34 @@ export class NotifyAssetVariationsCron {
         return
       }
 
-      const webhookUrl = this.envService.get('N8N_URL')
-
       this.logger.log(
-        `Asset variation check found ${totalGainers} gain(s) and ${totalLosers} drop(s) for ${userAlerts.length} user(s). Dispatching to n8n: ${webhookUrl}`
+        `Asset variation check found ${totalGainers} gain(s) and ${totalLosers} drop(s) for ${userAlerts.length} user(s). Dispatching to n8n...`
       )
 
       for (const alert of userAlerts) {
-        await this.dispatchToN8n(`${webhookUrl}/webhook/assets/notify`, alert)
+        this.logger.log(
+          `Dispatching n8n webhook for user ${alert.user.email} (${alert.gainers.length} gainers, ${alert.losers.length} losers)...`
+        )
+
+        const response = await this.n8nProvider.triggerWebhook(
+          'assets/notify',
+          alert
+        )
+
+        if (!response.ok) {
+          this.logger.warn(
+            `n8n webhook responded with status ${response.status}: ${response.errorText ?? 'Unknown error'}`
+          )
+        } else {
+          this.logger.log(
+            `n8n webhook successfully notified for user ${alert.user.email} (status ${response.status})`
+          )
+        }
       }
     } catch (error) {
       this.logger.error('Unexpected error in NotifyAssetVariationsCron', error)
     } finally {
       this.isRunning = false
-    }
-  }
-
-  private async dispatchToN8n(
-    webhookUrl: string,
-    payload: UserVariationsNotificationPayload
-  ): Promise<void> {
-    try {
-      this.logger.log(
-        `Dispatching n8n webhook for user ${payload.user.email} (${payload.gainers.length} gainers, ${payload.losers.length} losers)...`
-      )
-
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => '')
-        this.logger.warn(
-          `n8n webhook responded with status ${response.status}: ${errorText}`
-        )
-      } else {
-        this.logger.log(
-          `n8n webhook successfully notified for user ${payload.user.email} (status ${response.status})`
-        )
-      }
-    } catch (error) {
-      this.logger.error(
-        `Failed to send payload to n8n webhook (${webhookUrl}) for user ${payload.user.email}:`,
-        error instanceof Error ? error.message : error
-      )
     }
   }
 }

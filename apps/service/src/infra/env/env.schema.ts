@@ -12,6 +12,7 @@ export const envSchema = z.object({
   // Market Data
   ALPHA_VANTAGE_API_KEY: z.string('ALPHA_VANTAGE_API_KEY is required'),
   BRAPI_TOKEN: z.string('BRAPI_TOKEN is required'),
+  COINGECKO_API_KEY: z.string('COINGECKO_API_KEY is required'),
 
   // Cloudflare R2
   R2_ACCOUNT_ID: z.string('R2_ACCOUNT_ID is required'),
