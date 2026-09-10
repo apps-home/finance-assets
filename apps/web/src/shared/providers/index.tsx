@@ -2,6 +2,7 @@
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
+import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { Toaster } from '@/shared/components/ui/sonner'
 import { QueryClientProvider } from '@/shared/providers/query-client'
 import { ThemeProvider } from '@/shared/providers/theme-provider'
@@ -15,7 +16,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <QueryClientProvider>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        <NuqsAdapter>
+          <TooltipProvider>{children}</TooltipProvider>
+        </NuqsAdapter>
       </QueryClientProvider>
       <Toaster richColors />
     </ThemeProvider>

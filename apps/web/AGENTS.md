@@ -409,6 +409,7 @@ pnpm check-versions
 ### ✅ Do
 
 - Use `pnpm dlx shadcn@latest add <name>` to install shadcn components
+- Use `Tooltip`, `TooltipTrigger`, and `TooltipContent` from `@/shared/components/ui/tooltip` for icon buttons, action hints, and truncated texts instead of native HTML `title`
 - Use `cn()` from `@/shared/lib/utils` for all dynamic classNames
 - Use design tokens (`bg-primary`, `text-muted-foreground`, etc.) — never hardcode colors
 - Use `lucide-react` for icons
@@ -423,6 +424,7 @@ pnpm check-versions
 
 ### ❌ Don't
 
+- Don't use native HTML `title` attribute for tooltips or action hints — always use shadcn `Tooltip` from `@/shared/components/ui/tooltip`
 - Don't manually create files in `src/components/ui/` — use shadcn CLI
 - Don't use `npx` — use `pnpm dlx`
 - Don't use `React.FC` or `React.forwardRef` — use modern function components

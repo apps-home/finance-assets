@@ -52,9 +52,11 @@ interface CategoryDetailCardProps {
 }
 
 const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
-  [CategoryType.FIXED]: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  [CategoryType.FIXED]:
+    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
   [CategoryType.VARIABLE_BR]: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  [CategoryType.VARIABLE_US]: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  [CategoryType.VARIABLE_US]:
+    'bg-violet-500/15 text-violet-600 dark:text-violet-400',
   [CategoryType.CRYPTO]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
 }
 

@@ -6,8 +6,11 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { createCategory, updateCategory } from '@/features/categories/api'
-import  { Category, UpdateCategoryDTO } from '@/features/categories/api/types'
-import { CategoryType } from '@/features/categories/api/types'
+import {
+  Category,
+  CategoryType,
+  UpdateCategoryDTO
+} from '@/features/categories/api/types'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,

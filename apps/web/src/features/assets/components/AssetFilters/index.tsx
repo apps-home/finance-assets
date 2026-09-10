@@ -12,6 +12,11 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui/select'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 
 interface AssetFiltersProps {
@@ -178,24 +183,36 @@ export function AssetFilters({
       </div>
 
       <div className="flex items-center gap-1 self-end rounded-lg border border-border bg-muted/20 p-0.5 lg:self-auto">
-        <Button
-          variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-          size="icon"
-          className="size-8"
-          onClick={() => onViewModeChange('table')}
-          title="Visualização em Tabela"
-        >
-          <TableIcon className="size-4" />
-        </Button>
-        <Button
-          variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
-          size="icon"
-          className="size-8"
-          onClick={() => onViewModeChange('cards')}
-          title="Visualização em Cards"
-        >
-          <LayoutGrid className="size-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="size-8"
+                onClick={() => onViewModeChange('table')}
+              >
+                <TableIcon className="size-4" />
+              </Button>
+            }
+          />
+          <TooltipContent>Visualização em Tabela</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="size-8"
+                onClick={() => onViewModeChange('cards')}
+              >
+                <LayoutGrid className="size-4" />
+              </Button>
+            }
+          />
+          <TooltipContent>Visualização em Cards</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   )

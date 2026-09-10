@@ -13,6 +13,11 @@ import {
   TableHeader,
   TableRow
 } from '@/shared/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { CURRENCIES } from '@/shared/utils/currencies'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -132,12 +137,16 @@ export function AssetTable({
                     >
                       {asset.ticker || asset.name.substring(0, 3).toUpperCase()}
                     </Badge>
-                    <span
-                      className="truncate font-medium text-foreground text-xs"
-                      title={asset.name}
-                    >
-                      {asset.name}
-                    </span>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <span className="truncate font-medium text-foreground text-xs">
+                            {asset.name}
+                          </span>
+                        }
+                      />
+                      <TooltipContent>{asset.name}</TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
 
@@ -171,7 +180,9 @@ export function AssetTable({
 
                 <TableCell className="text-right font-medium text-foreground text-xs tabular-nums">
                   {asset.quantity != null
-                    ? asset.quantity.toLocaleString('pt-BR')
+                    ? asset.quantity.toLocaleString('pt-BR', {
+                        maximumFractionDigits: 3
+                      })
                     : '—'}
                 </TableCell>
 
@@ -270,24 +281,36 @@ export function AssetTable({
 
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7"
-                      onClick={() => onEdit(asset)}
-                      title="Editar Ativo"
-                    >
-                      <Pencil className="size-3.5 text-muted-foreground" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7 text-destructive hover:text-destructive/80"
-                      onClick={() => onDelete(asset)}
-                      title="Remover Ativo"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7"
+                            onClick={() => onEdit(asset)}
+                          >
+                            <Pencil className="size-3.5 text-muted-foreground" />
+                          </Button>
+                        }
+                      />
+                      <TooltipContent>Editar Ativo</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 text-destructive hover:text-destructive/80"
+                            onClick={() => onDelete(asset)}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        }
+                      />
+                      <TooltipContent>Remover Ativo</TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>

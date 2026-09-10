@@ -20,6 +20,22 @@ export const apiClient = axios.create({
 // Interceptor de requisição - adiciona token de autenticação
 apiClient.interceptors.request.use(
   async (config) => {
+    // if (typeof window === 'undefined') {
+    //   const token = await auth.api.getAccessToken()
+    //   const session = await auth.api.getSession()
+
+    //   if (
+    //     token.accessToken &&
+    //     typeof token.accessToken === 'string' &&
+    //     session
+    //   ) {
+    //     config.headers.Authorization = `Bearer ${token.accessToken}`
+    //     config.headers['user-id'] = session?.user?.id
+    //   }
+
+    //   return config
+    // }
+
     const session = await authClient.getSession()
     const token = session?.data?.session?.token
 

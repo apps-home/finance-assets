@@ -74,8 +74,10 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
             params: {
               vs_currency: 'brl',
               days: '90',
-              interval: 'daily',
-              x_cg_demo_api_key: this.COINGECKO_API_KEY
+              interval: 'daily'
+            },
+            headers: {
+              'x-cg-demo-api-key': this.COINGECKO_API_KEY
             }
           }
         )

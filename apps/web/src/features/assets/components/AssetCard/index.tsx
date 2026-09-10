@@ -15,6 +15,11 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
 import { Separator } from '@/shared/components/ui/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { CURRENCIES } from '@/shared/utils/currencies'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -75,12 +80,16 @@ export function AssetCard({
             {asset.ticker || asset.name.substring(0, 3).toUpperCase()}
           </Badge>
           <div>
-            <h3
-              className="truncate font-semibold text-foreground text-sm"
-              title={asset.name}
-            >
-              {asset.name}
-            </h3>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <h3 className="truncate font-semibold text-foreground text-sm">
+                    {asset.name}
+                  </h3>
+                }
+              />
+              <TooltipContent>{asset.name}</TooltipContent>
+            </Tooltip>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className="font-medium text-muted-foreground text-xs">
                 {asset.category?.name || '—'}
@@ -114,22 +123,36 @@ export function AssetCard({
               Inativo
             </Badge>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={() => onEdit(asset)}
-          >
-            <Pencil className="size-3.5 text-muted-foreground" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-destructive hover:text-destructive/80"
-            onClick={() => onDelete(asset)}
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  onClick={() => onEdit(asset)}
+                >
+                  <Pencil className="size-3.5 text-muted-foreground" />
+                </Button>
+              }
+            />
+            <TooltipContent>Editar Ativo</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-destructive hover:text-destructive/80"
+                  onClick={() => onDelete(asset)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              }
+            />
+            <TooltipContent>Remover Ativo</TooltipContent>
+          </Tooltip>
         </div>
       </CardHeader>
 

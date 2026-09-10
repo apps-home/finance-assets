@@ -13,8 +13,7 @@ import {
 import Link from 'next/link'
 
 import { listAssetsByCategory } from '@/features/assets/api'
-import  { Category } from '@/features/categories/api/types'
-import { CategoryType } from '@/features/categories/api/types'
+import { Category, CategoryType } from '@/features/categories/api/types'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -26,6 +25,11 @@ import {
 } from '@/shared/components/ui/card'
 import { Separator } from '@/shared/components/ui/separator'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
@@ -39,9 +43,11 @@ interface CategoryCardProps {
 }
 
 const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
-  [CategoryType.FIXED]: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  [CategoryType.FIXED]:
+    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
   [CategoryType.VARIABLE_BR]: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  [CategoryType.VARIABLE_US]: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  [CategoryType.VARIABLE_US]:
+    'bg-violet-500/15 text-violet-600 dark:text-violet-400',
   [CategoryType.CRYPTO]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
 }
 
@@ -137,24 +143,36 @@ export function CategoryCard({
         </div>
 
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={() => onEdit(category)}
-            title="Editar Categoria"
-          >
-            <Edit2 className="size-3.5 text-muted-foreground" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-destructive hover:text-destructive/80"
-            onClick={() => onDelete(category)}
-            title="Excluir Categoria"
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  onClick={() => onEdit(category)}
+                >
+                  <Edit2 className="size-3.5 text-muted-foreground" />
+                </Button>
+              }
+            />
+            <TooltipContent>Editar Categoria</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-destructive hover:text-destructive/80"
+                  onClick={() => onDelete(category)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              }
+            />
+            <TooltipContent>Excluir Categoria</TooltipContent>
+          </Tooltip>
         </div>
       </CardHeader>
 
