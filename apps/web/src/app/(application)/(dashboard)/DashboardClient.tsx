@@ -3,7 +3,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   ArrowUpRightFromSquare,
-  Download,
   Loader2,
   Sparkles,
   TrendingUp,
@@ -268,20 +267,20 @@ export default function DashboardPageClient() {
                 setSelectedYear(value)
               }}
             >
-              <TabsList variant="line">
+              <TabsList variant="line" className="gap-5">
                 {(availableYears || [])
                   .sort((a, b) => b - a)
                   .map((year) => (
-                    <TabsTrigger key={year} value={String(year)}>
+                    <TabsTrigger
+                      key={year}
+                      value={String(year)}
+                      className="cursor-pointer font-semibold text-sm"
+                    >
                       {year}
                     </TabsTrigger>
                   ))}
               </TabsList>
             </Tabs>
-            <Button onClick={() => {}} variant="default">
-              <Download className="size-4" />
-              Exportar CSV
-            </Button>
           </div>
         </div>
 
