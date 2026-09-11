@@ -3,6 +3,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   ArrowUpRightFromSquare,
+  ChevronDown,
+  Coins,
+  Landmark,
   Loader2,
   Sparkles,
   TrendingUp,
@@ -13,14 +16,23 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { listAvailableYears, listCategories } from '@/features/categories/api'
+import { CategoryType } from '@/features/categories/api/types'
 import { CategoryBreakdown } from '@/features/dashboard/components/CategoryBreakdown'
 import { FinancialChart } from '@/features/dashboard/components/FinancialChart'
 import { FinancialTable } from '@/features/dashboard/components/FinancialTable'
 import { InsightsDialog } from '@/features/dashboard/components/InsightsDialog'
 import { StatCard } from '@/features/dashboard/components/StatCard'
 import { createBudget, listBudgets } from '@/infrastructure/api/budgets'
-import { Button } from '@/shared/components/ui/button'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button, buttonVariants } from '@/shared/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/shared/components/ui/dropdown-menu'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
+import { cn } from '@/shared/lib/utils'
 import { queryClient } from '@/shared/providers/query-client'
 import { MONTH_NAMES } from '@/shared/utils/month-names'
 
@@ -133,21 +145,14 @@ export default function DashboardPageClient() {
         growth: 0,
         totalBonds: 0,
         totalStocks: 0,
+        totalDividends: 0,
         referenceMonth: ''
       }
 
     const currentMonthData = getLatestMonthWithData
 
-    const reservaCategoryNames = categories
-      .filter(
-        (cat) =>
-          cat.name.toLowerCase().includes('reserva') ||
-          cat.name.toLowerCase().includes('renda') ||
-          cat.name.toLowerCase().includes('lci') ||
-          cat.name.toLowerCase().includes('lca') ||
-          cat.name.toLowerCase().includes('cdb') ||
-          cat.name.toLowerCase().includes('tesouro')
-      )
+    const fixedCategoryNames = categories
+      .filter((cat) => cat.type === CategoryType.FIXED)
       .map((cat) => cat.name)
 
     let totalBonds = 0
@@ -160,7 +165,7 @@ export default function DashboardPageClient() {
         !key.endsWith('_dividend')
       ) {
         const value = currentMonthData[key] as number
-        if (reservaCategoryNames.includes(key)) {
+        if (fixedCategoryNames.includes(key)) {
           totalBonds += value
         } else {
           totalStocks += value
@@ -196,14 +201,19 @@ export default function DashboardPageClient() {
     const growth =
       totalFirst > 0 ? ((totalCurrent - totalFirst) / totalFirst) * 100 : 0
 
+    const totalDividends = budgets.reduce((acc, budget) => {
+      return acc + (budget.dividendAmount ? Number(budget.dividendAmount) : 0)
+    }, 0)
+
     return {
       total: totalCurrent,
       growth,
       totalBonds,
       totalStocks,
+      totalDividends,
       referenceMonth: currentMonthData.month as string
     }
-  }, [dashboardData, categories, getLatestMonthWithData])
+  }, [dashboardData, categories, getLatestMonthWithData, budgets])
 
   const categoryChartData = useMemo(() => {
     if (!dashboardData.length || !getLatestMonthWithData) return []
@@ -284,7 +294,7 @@ export default function DashboardPageClient() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Patrimônio Total"
             subtitle={stats.referenceMonth}
@@ -297,13 +307,19 @@ export default function DashboardPageClient() {
             title="Total em Renda Fixa"
             subtitle={stats.referenceMonth}
             value={stats.totalBonds}
-            icon={TrendingUp}
+            icon={Landmark}
           />
           <StatCard
             title="Total em Renda Variável"
             subtitle={stats.referenceMonth}
             value={stats.totalStocks}
             icon={TrendingUp}
+          />
+          <StatCard
+            title="Dividendos Recebidos"
+            subtitle={selectedYear}
+            value={stats.totalDividends}
+            icon={Coins}
           />
         </div>
 
@@ -316,37 +332,62 @@ export default function DashboardPageClient() {
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="mb-8">
-              <h2 className="font-semibold text-2xl">Detalhamento Mensal</h2>
-              <p className="mt-1 text-muted-foreground text-sm">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2.5">
+                <h2 className="font-semibold text-2xl tracking-tight">
+                  Detalhamento Mensal
+                </h2>
+                <Badge
+                  variant="outline"
+                  className="font-medium text-muted-foreground text-xs"
+                >
+                  {selectedYear}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground text-xs">
                 {categories.length > 0
-                  ? 'Clique no ícone de edição para alterar valores'
+                  ? 'Passe o mouse ou clique em qualquer célula para editar aportes e dividendos'
                   : `Nenhuma categoria encontrada para ${selectedYear}`}
               </p>
             </div>
             {categories.length > 0 && (
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setInsightsMode('year')
-                    setInsightsOpen(true)
-                  }}
-                >
-                  <Sparkles className="size-4 text-yellow-600" />
-                  Gerar Insights do ano
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setInsightsMode('month')
-                    setInsightsOpen(true)
-                  }}
-                >
-                  <Sparkles className="size-4 text-yellow-600" />
-                  Gerar Insights do mês
-                </Button>
+              <div className="flex items-center gap-2.5">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={cn(
+                      buttonVariants({ variant: 'outline', size: 'sm' }),
+                      'h-9 gap-2 text-xs'
+                    )}
+                  >
+                    <Sparkles className="size-3.5 text-amber-500" />
+                    Gerar Insights
+                    <ChevronDown className="size-3 opacity-60" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setInsightsMode('month')
+                        setInsightsOpen(true)
+                      }}
+                      className="gap-2 text-xs"
+                    >
+                      <Sparkles className="size-3.5 text-amber-500" />
+                      Insights do mês ({stats.referenceMonth || 'Atual'})
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setInsightsMode('year')
+                        setInsightsOpen(true)
+                      }}
+                      className="gap-2 text-xs"
+                    >
+                      <Sparkles className="size-3.5 text-amber-500" />
+                      Insights do ano ({selectedYear})
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <Link href="/categories">
                   <Button variant="default">
                     Criar Categoria

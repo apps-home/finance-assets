@@ -24,7 +24,13 @@ export const auth = betterAuth({
       await n8nApiClient.post('/webhook/send-reset-password', {
         data
       })
-    }
+    },
+    autoSignIn: true
+  },
+  rateLimit: {
+    enabled: true,
+    max: 5, //tentativas por minuto
+    window: 60 * 1000 // 1 minuto
   },
   plugins: [nextCookies()]
 })

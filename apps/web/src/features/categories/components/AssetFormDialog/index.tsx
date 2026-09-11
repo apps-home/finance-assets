@@ -17,6 +17,8 @@ import {
 } from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
+import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
+import { parseValue } from '@/shared/utils/parse-value'
 
 interface AssetFormDefaults {
   name: string
@@ -62,7 +64,9 @@ export function AssetFormDialog({
       )
       setAveragePrice(
         defaultValues.averagePrice != null
-          ? String(defaultValues.averagePrice)
+          ? formatCurrencyInput(
+              Math.round(defaultValues.averagePrice * 100).toString()
+            )
           : ''
       )
       setBroker(defaultValues.broker || '')
@@ -83,7 +87,8 @@ export function AssetFormDialog({
     if (!name.trim()) return
 
     const parsedQuantity = quantity ? Number(quantity) : undefined
-    const parsedAveragePrice = averagePrice ? Number(averagePrice) : undefined
+    const parsedAveragePrice =
+      averagePrice.trim() !== '' ? parseValue(averagePrice) : undefined
 
     await onSubmit({
       name: name.trim(),
@@ -156,12 +161,12 @@ export function AssetFormDialog({
               <Label htmlFor="asset-avg-price">Preço Médio</Label>
               <Input
                 id="asset-avg-price"
-                type="number"
-                step="any"
-                min="0"
-                placeholder="Ex: 25.50"
+                type="text"
+                placeholder="0,00"
                 value={averagePrice}
-                onChange={(e) => setAveragePrice(e.target.value)}
+                onChange={(e) =>
+                  setAveragePrice(formatCurrencyInput(e.target.value))
+                }
                 disabled={isPending}
               />
             </div>

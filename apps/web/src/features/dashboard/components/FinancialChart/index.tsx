@@ -140,6 +140,8 @@ export function FinancialChart({ data }: FinancialChartProps) {
             tickLine={false}
             axisLine={{ stroke: 'var(--border)', strokeOpacity: 0.5 }}
             dy={10}
+            tickFormatter={(value: string) => value.slice(0, 3)}
+            interval={0}
           />
           <YAxis
             stroke="var(--border)"

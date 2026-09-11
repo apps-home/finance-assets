@@ -1,6 +1,8 @@
 export const formatCurrencyInput = (value: string): string => {
   const numbers = value.replace(/\D/g, '')
 
+  if (!numbers) return ''
+
   const cents = parseInt(numbers, 10) || 0
 
   const reais = (cents / 100).toFixed(2)
