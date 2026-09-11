@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import {
@@ -12,12 +12,11 @@ import type {
   UpdateAssetDTO
 } from '@/features/assets/api/types'
 import { listCategories } from '@/features/categories/api'
+import { queryClient } from '@/shared/providers/query-client'
 
 import type { AssetWithCategory } from '../types'
 
 export function useAssets(selectedCategoryId?: string) {
-  const queryClient = useQueryClient()
-
   const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
     queryKey: ['all-categories'],
     queryFn: () => listCategories()

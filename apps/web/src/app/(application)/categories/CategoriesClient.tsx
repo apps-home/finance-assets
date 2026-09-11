@@ -1,11 +1,11 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import { ChartBarStacked, PlusIcon, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import { createAsset } from '@/features/assets/api'
+import { createAsset, listAssetsByCategory } from '@/features/assets/api'
 import { CreateAssetDTO } from '@/features/assets/api/types'
 import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
 import { listCategories } from '@/features/categories/api'
@@ -15,9 +15,12 @@ import { CategoryCard } from '@/features/categories/components/CategoryCard'
 import { CategoryFormDialog } from '@/features/categories/components/CategoryFormDialog'
 import { DeleteCategoryDialog } from '@/features/categories/components/DeleteCategoryDialog'
 import { Button } from '@/shared/components/ui/button'
+import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
+import { queryClient } from '@/shared/providers/query-client'
 
 const FILTER_TABS: { value: CategoryType | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'Todos' },
@@ -28,8 +31,8 @@ const FILTER_TABS: { value: CategoryType | 'ALL'; label: string }[] = [
 ]
 
 export default function CategoriesClient() {
-  const queryClient = useQueryClient()
   const [selectedFilter, setSelectedFilter] = useState('ALL')
+  const [onlyWithAssets, setOnlyWithAssets] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
@@ -45,6 +48,26 @@ export default function CategoriesClient() {
     queryFn: () => listCategories(),
     placeholderData: (prev) => prev
   })
+
+  const assetQueries = useQueries({
+    queries: categories.map((cat) => ({
+      queryKey: ['assets', cat.id],
+      queryFn: () => listAssetsByCategory(cat.id),
+      staleTime: 1000 * 60 * 5
+    }))
+  })
+
+  const categoryAssetCounts = useMemo(() => {
+    const map = new Map<string, number>()
+    categories.forEach((cat, index) => {
+      const query = assetQueries[index]
+      map.set(cat.id, query?.data?.length ?? 0)
+    })
+    return map
+  }, [categories, assetQueries])
+
+  const isAssetsLoading =
+    onlyWithAssets && assetQueries.some((q) => q.isLoading)
 
   const { mutateAsync: handleCreateAsset, isPending: isCreatingAsset } =
     useMutation({
@@ -72,7 +95,9 @@ export default function CategoriesClient() {
     const matchesType = selectedFilter === 'ALL' || cat.type === selectedFilter
     const matchesSearch =
       !searchQuery || cat.name.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesType && matchesSearch
+    const assetCount = categoryAssetCounts.get(cat.id) ?? 0
+    const matchesAssets = !onlyWithAssets || assetCount > 0
+    return matchesType && matchesSearch && matchesAssets
   })
 
   const handleEdit = (category: Category) => {
@@ -95,7 +120,7 @@ export default function CategoriesClient() {
     setAssetModalCategory(category)
   }
 
-  if (isLoading) {
+  if (isLoading || isAssetsLoading) {
     return (
       <div className="bg-background px-6 pt-4 pb-12">
         <div className="mx-auto max-w-screen-2xl space-y-8">
@@ -150,19 +175,35 @@ export default function CategoriesClient() {
           </div>
         </div>
 
-        <Tabs value={selectedFilter} onValueChange={setSelectedFilter}>
-          <TabsList variant="line">
-            {FILTER_TABS.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="cursor-pointer text-xs"
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-col gap-8 sm:flex-row sm:items-center">
+          <Tabs value={selectedFilter} onValueChange={setSelectedFilter}>
+            <TabsList variant="line">
+              {FILTER_TABS.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="cursor-pointer text-xs"
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="only-with-assets"
+              checked={onlyWithAssets}
+              onCheckedChange={(checked) => setOnlyWithAssets(Boolean(checked))}
+            />
+            <Label
+              htmlFor="only-with-assets"
+              className="cursor-pointer font-medium text-muted-foreground text-xs hover:text-foreground"
+            >
+              Apenas com ativos
+            </Label>
+          </div>
+        </div>
 
         {selectedFilter === 'ALL' && categories.length > 0 && (
           <AllocationOverview categories={categories} />
@@ -178,7 +219,9 @@ export default function CategoriesClient() {
             </h3>
             <p className="max-w-sm text-muted-foreground text-xs">
               {selectedFilter === 'ALL'
-                ? 'Você ainda não possui categorias cadastradas. Crie sua primeira categoria para começar.'
+                ? onlyWithAssets
+                  ? 'Nenhuma categoria com ativos encontrada. Desmarque o filtro ou cadastre novos ativos.'
+                  : 'Você ainda não possui categorias cadastradas. Crie sua primeira categoria para começar.'
                 : `Nenhuma categoria do tipo "${FILTER_TABS.find((t) => t.value === selectedFilter)?.label}" encontrada.`}
             </p>
             {selectedFilter === 'ALL' && (

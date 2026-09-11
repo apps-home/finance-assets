@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   Briefcase,
   Building2,
@@ -27,7 +27,13 @@ import type {
   CreateAssetDTO,
   UpdateAssetDTO
 } from '@/features/assets/api/types'
-import { Category, CategoryType } from '@/features/categories/api/types'
+import { Category } from '@/features/categories/api/types'
+import {
+  CATEGORY_TYPE_BG,
+  CATEGORY_TYPE_COLORS,
+  CATEGORY_TYPE_LABELS,
+  CURRENCY_LABELS
+} from '@/features/categories/utils'
 import { AssetFormDialog } from '@/features/categories/components/AssetFormDialog'
 import { AssetPriceInfo } from '@/features/categories/components/AssetPriceInfo'
 import { DeleteAssetDialog } from '@/features/categories/components/DeleteAssetDialog'
@@ -42,6 +48,7 @@ import {
 import { Separator } from '@/shared/components/ui/separator'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { cn } from '@/shared/lib/utils'
+import { queryClient } from '@/shared/providers/query-client'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
 
@@ -51,42 +58,11 @@ interface CategoryDetailCardProps {
   onDelete: (category: Category) => void
 }
 
-const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
-  [CategoryType.FIXED]:
-    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  [CategoryType.VARIABLE_BR]: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  [CategoryType.VARIABLE_US]:
-    'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  [CategoryType.CRYPTO]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-}
-
-const CATEGORY_TYPE_BG: Record<CategoryType, string> = {
-  [CategoryType.FIXED]: 'bg-emerald-500',
-  [CategoryType.VARIABLE_BR]: 'bg-blue-500',
-  [CategoryType.VARIABLE_US]: 'bg-violet-500',
-  [CategoryType.CRYPTO]: 'bg-amber-500'
-}
-
-const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
-  [CategoryType.FIXED]: 'Renda Fixa',
-  [CategoryType.VARIABLE_BR]: 'Ações Brasil',
-  [CategoryType.VARIABLE_US]: 'Ações EUA',
-  [CategoryType.CRYPTO]: 'Cripto'
-}
-
-const CURRENCY_LABELS: Record<string, string> = {
-  BRL: 'R$',
-  USD: '$',
-  EUR: '€',
-  GBP: '£'
-}
-
 export function CategoryDetailCard({
   category,
   onEdit,
   onDelete
 }: CategoryDetailCardProps) {
-  const queryClient = useQueryClient()
   const categoryType = category.type
 
   const [formOpen, setFormOpen] = useState(false)

@@ -3,6 +3,10 @@
 import { Building2, CircleOff, Pencil, Trash2 } from 'lucide-react'
 
 import { CategoryType } from '@/features/categories/api/types'
+import {
+  CATEGORY_TYPE_COLORS,
+  CATEGORY_TYPE_LABELS
+} from '@/features/categories/utils'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -33,22 +37,6 @@ interface AssetTableProps {
   onEdit: (asset: AssetWithCategory) => void
   onDelete: (asset: AssetWithCategory) => void
   className?: string
-}
-
-const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
-  [CategoryType.FIXED]:
-    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  [CategoryType.VARIABLE_BR]: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  [CategoryType.VARIABLE_US]:
-    'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  [CategoryType.CRYPTO]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-}
-
-const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
-  [CategoryType.FIXED]: 'Renda Fixa',
-  [CategoryType.VARIABLE_BR]: 'Ações Nacionais',
-  [CategoryType.VARIABLE_US]: 'Ações Internacionais',
-  [CategoryType.CRYPTO]: 'Criptomoedas'
 }
 
 export function AssetTable({
@@ -181,7 +169,7 @@ export function AssetTable({
                 <TableCell className="text-right font-medium text-foreground text-xs tabular-nums">
                   {asset.quantity != null
                     ? asset.quantity.toLocaleString('pt-BR', {
-                        maximumFractionDigits: 3
+                        maximumFractionDigits: 5
                       })
                     : '—'}
                 </TableCell>

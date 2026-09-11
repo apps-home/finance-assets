@@ -13,7 +13,13 @@ import {
 import Link from 'next/link'
 
 import { listAssetsByCategory } from '@/features/assets/api'
-import { Category, CategoryType } from '@/features/categories/api/types'
+import { Category } from '@/features/categories/api/types'
+import {
+  CATEGORY_TYPE_BG,
+  CATEGORY_TYPE_COLORS,
+  CATEGORY_TYPE_LABELS,
+  CURRENCY_LABELS
+} from '@/features/categories/utils'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -40,36 +46,6 @@ interface CategoryCardProps {
   onDelete: (category: Category) => void
   onAddAsset?: (category: Category) => void
   className?: string
-}
-
-const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
-  [CategoryType.FIXED]:
-    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  [CategoryType.VARIABLE_BR]: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  [CategoryType.VARIABLE_US]:
-    'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  [CategoryType.CRYPTO]: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-}
-
-const CATEGORY_TYPE_BG: Record<CategoryType, string> = {
-  [CategoryType.FIXED]: 'bg-emerald-500',
-  [CategoryType.VARIABLE_BR]: 'bg-blue-500',
-  [CategoryType.VARIABLE_US]: 'bg-violet-500',
-  [CategoryType.CRYPTO]: 'bg-amber-500'
-}
-
-const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
-  [CategoryType.FIXED]: 'Renda Fixa',
-  [CategoryType.VARIABLE_BR]: 'Ações Brasil',
-  [CategoryType.VARIABLE_US]: 'Ações EUA',
-  [CategoryType.CRYPTO]: 'Cripto'
-}
-
-const CURRENCY_LABELS: Record<string, string> = {
-  BRL: 'R$',
-  USD: '$',
-  EUR: '€',
-  GBP: '£'
 }
 
 export function CategoryCard({
@@ -270,7 +246,7 @@ export function CategoryCard({
         {category.years && category.years.length > 0 && (
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              Anos:
+              Competências:
             </span>
             <div className="flex flex-wrap gap-1">
               {category.years

@@ -144,6 +144,7 @@ export function FinancialTable({
             growthDiff: number
             growthPercentage: number | null
             yieldPercentage: number
+            monthlyYieldPercentage: number
           }
         >,
         overall: {
@@ -164,6 +165,7 @@ export function FinancialTable({
         growthDiff: number
         growthPercentage: number | null
         yieldPercentage: number
+        monthlyYieldPercentage: number
       }
     > = {}
 
@@ -173,6 +175,8 @@ export function FinancialTable({
       let totalDividends = 0
       let initialValue: number | null = null
       let finalValue: number | null = null
+      let activeMonthsCount = 0
+      let totalMonthlyYield = 0
 
       data.forEach((row) => {
         const val =
@@ -185,6 +189,10 @@ export function FinancialTable({
         totalDividends += divVal
 
         if (val > 0) {
+          activeMonthsCount += 1
+          if (divVal > 0) {
+            totalMonthlyYield += (divVal / val) * 100
+          }
           if (initialValue === null) {
             initialValue = val
           }
@@ -207,13 +215,17 @@ export function FinancialTable({
       const yieldPercentage =
         resolvedFinal > 0 ? (totalDividends / resolvedFinal) * 100 : 0
 
+      const monthlyYieldPercentage =
+        activeMonthsCount > 0 ? totalMonthlyYield / activeMonthsCount : 0
+
       categoryStats[cat.name] = {
         totalDividends,
         initialValue: resolvedInitial,
         finalValue: resolvedFinal,
         growthDiff,
         growthPercentage,
-        yieldPercentage
+        yieldPercentage,
+        monthlyYieldPercentage
       }
     })
 
@@ -538,8 +550,9 @@ export function FinancialTable({
                         {formatCurrency(catStat.totalDividends)}
                       </span>
                       {catStat.yieldPercentage > 0 && (
-                        <span className="mt-0.5 inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 font-medium font-mono text-primary text-xs">
-                          DY: {catStat.yieldPercentage.toFixed(2)}%
+                        <span className="mt-0.5 inline-flex items-center whitespace-nowrap rounded bg-primary/10 px-1.5 py-0.5 font-medium font-mono text-primary text-xs">
+                          DY: {catStat.yieldPercentage.toFixed(2)}% a.a. •{' '}
+                          {catStat.monthlyYieldPercentage.toFixed(2)}% a.m.
                         </span>
                       )}
                     </div>
