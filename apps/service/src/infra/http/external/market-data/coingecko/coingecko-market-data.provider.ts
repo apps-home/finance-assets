@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios'
 import { Injectable, Logger } from '@nestjs/common'
+import { isAxiosError } from 'axios'
 import { firstValueFrom } from 'rxjs'
 
 import {
@@ -34,7 +35,8 @@ const TICKER_TO_COINGECKO_ID: Record<string, string> = {
 @Injectable()
 export class CoinGeckoMarketDataProvider implements MarketDataProvider {
   private readonly logger = new Logger(CoinGeckoMarketDataProvider.name)
-  private readonly baseUrl = 'https://api.coingecko.com/api/v3'
+  private baseUrl = 'https://api.coingecko.com/api/v3'
+  private authHeader = 'x-cg-demo-api-key'
 
   private readonly COINGECKO_API_KEY: string
 
@@ -42,18 +44,14 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
     private readonly httpService: HttpService,
     private readonly env: EnvService
   ) {
-    this.COINGECKO_API_KEY = this.env.get('COINGECKO_API_KEY')
+    const rawKey = this.env.get('COINGECKO_API_KEY')
+    this.COINGECKO_API_KEY = rawKey
+      ? rawKey.trim().replace(/^['"](.*)['"]$/, '$1')
+      : ''
   }
 
   async fetchQuote(ticker: string): Promise<MarketQuote | null> {
     try {
-      if (!this.COINGECKO_API_KEY) {
-        this.logger.warn(
-          'COINGECKO_API_KEY is required for crypto quotes. Skipping.'
-        )
-        return null
-      }
-
       const coinId = this.resolveCoinId(ticker)
 
       if (!coinId) {
@@ -67,23 +65,87 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
         `Fetching crypto quote for ${ticker} (${coinId}) from CoinGecko...`
       )
 
-      const { data } = await firstValueFrom(
-        this.httpService.get<CoinGeckoMarketChartResponse>(
-          `${this.baseUrl}/coins/${coinId}/market_chart`,
-          {
-            params: {
-              vs_currency: 'brl',
-              days: '90',
-              interval: 'daily'
-            },
-            headers: {
-              'x-cg-demo-api-key': this.COINGECKO_API_KEY
-            }
-          }
-        )
-      )
+      let responseData: CoinGeckoMarketChartResponse
 
-      const prices = data?.prices
+      const headers: Record<string, string> = {}
+      if (this.COINGECKO_API_KEY) {
+        headers[this.authHeader] = this.COINGECKO_API_KEY
+      }
+
+      try {
+        const { data } = await firstValueFrom(
+          this.httpService.get<CoinGeckoMarketChartResponse>(
+            `${this.baseUrl}/coins/${coinId}/market_chart`,
+            {
+              params: {
+                vs_currency: 'brl',
+                days: '90',
+                interval: 'daily'
+              },
+              ...(Object.keys(headers).length > 0 && { headers })
+            }
+          )
+        )
+        responseData = data
+      } catch (requestError) {
+        // Case 1: CoinGecko error 10010: Pro key used on Demo endpoint -> switch to Pro API
+        if (
+          isAxiosError(requestError) &&
+          (requestError.response?.data as { status?: { error_code?: number } })
+            ?.status?.error_code === 10010
+        ) {
+          this.logger.warn(
+            'CoinGecko key identified as PRO key (error 10010). Switching to pro-api.coingecko.com and retrying...'
+          )
+          this.baseUrl = 'https://pro-api.coingecko.com/api/v3'
+          this.authHeader = 'x-cg-pro-api-key'
+
+          const { data } = await firstValueFrom(
+            this.httpService.get<CoinGeckoMarketChartResponse>(
+              `${this.baseUrl}/coins/${coinId}/market_chart`,
+              {
+                params: {
+                  vs_currency: 'brl',
+                  days: '90',
+                  interval: 'daily'
+                },
+                headers: {
+                  [this.authHeader]: this.COINGECKO_API_KEY
+                }
+              }
+            )
+          )
+          responseData = data
+        } else if (
+          isAxiosError(requestError) &&
+          requestError.response?.status === 401 &&
+          this.COINGECKO_API_KEY
+        ) {
+          // Case 2: Key was rejected (401). Fallback to public keyless API to ensure prices update.
+          const errorDetails = JSON.stringify(requestError.response?.data)
+          this.logger.warn(
+            `CoinGecko API key was rejected (401: ${errorDetails}). Retrying ${ticker} via public keyless endpoint...`
+          )
+
+          const { data } = await firstValueFrom(
+            this.httpService.get<CoinGeckoMarketChartResponse>(
+              `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart`,
+              {
+                params: {
+                  vs_currency: 'brl',
+                  days: '90',
+                  interval: 'daily'
+                }
+              }
+            )
+          )
+          responseData = data
+        } else {
+          throw requestError
+        }
+      }
+
+      const prices = responseData?.prices
 
       if (!prices || prices.length === 0) {
         this.logger.warn(
@@ -104,10 +166,18 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
         lastMonthPrice: lastMonthPrice ?? currentPrice
       }
     } catch (error) {
-      this.logger.error(
-        `Failed to fetch crypto quote from CoinGecko for coin: ${ticker}`,
-        error instanceof Error ? error.message : error
-      )
+      if (isAxiosError(error)) {
+        const status = error.response?.status
+        const details = JSON.stringify(error.response?.data)
+        this.logger.error(
+          `Failed to fetch crypto quote from CoinGecko for coin: ${ticker} [Status: ${status}] Details: ${details}`
+        )
+      } else {
+        this.logger.error(
+          `Failed to fetch crypto quote from CoinGecko for coin: ${ticker}`,
+          error instanceof Error ? error.message : error
+        )
+      }
       return null
     }
   }

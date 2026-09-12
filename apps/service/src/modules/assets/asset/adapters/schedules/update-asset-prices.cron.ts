@@ -15,9 +15,9 @@ import { FindAllWithTickerAssetsUseCase } from '../../application/use-cases/find
  * - FIXED: no external API call, no delay needed.
  */
 const PROVIDER_DELAY_MS: Record<CategoryType, number> = {
-  [CategoryType.VARIABLE_US]: 15_000,
-  [CategoryType.VARIABLE_BR]: 5_000,
-  [CategoryType.CRYPTO]: 10_000,
+  [CategoryType.VARIABLE_US]: 18_000,
+  [CategoryType.VARIABLE_BR]: 8_000,
+  [CategoryType.CRYPTO]: 20_000,
   [CategoryType.FIXED]: 0
 }
 
