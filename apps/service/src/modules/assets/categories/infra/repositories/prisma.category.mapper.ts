@@ -15,9 +15,8 @@ export class PrismaCategoryMapper {
       id: raw.id,
       name: raw.name,
       type: raw.type as CategoryType,
-      targetPercentage: raw.targetPercentage
-        ? Number(raw.targetPercentage)
-        : null,
+      targetPercentage:
+        raw.targetPercentage != null ? Number(raw.targetPercentage) : null,
       currency: raw.currency,
       userId: raw.userId,
       years: raw.competences.map((c) => c.year).sort((a, b) => a - b),

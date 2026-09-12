@@ -46,11 +46,12 @@ export class CreateCategoryDTO {
   type?: CategoryType
 
   @IsOptional()
-  @Transform(({ value }) => {
-    if (value === null || value === undefined || value === '') {
+  @Transform(({ value, obj }) => {
+    const raw = value !== undefined ? value : obj?.targetPercent
+    if (raw === null || raw === undefined || raw === '') {
       return null
     }
-    return Number(value)
+    return Number(raw)
   })
   @IsNumber(
     { allowNaN: false, allowInfinity: false, maxDecimalPlaces: 2 },
@@ -88,7 +89,7 @@ export class FindAllCategoriesParamsDTO {
   @IsInt({ message: 'O ano deve ser um número inteiro' })
   @Transform(({ value }) => {
     const parsed = parseInt(value, 10)
-    return isNaN(parsed) ? undefined : parsed
+    return Number.isNaN(parsed) ? undefined : parsed
   })
   year?: number
 

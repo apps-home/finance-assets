@@ -49,6 +49,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
         name: category.name,
         type: category.type,
         currency: category.currency,
+        targetPercentage: category.targetPercentage,
         updatedAt: category.updatedAt,
         competences: {
           deleteMany: {

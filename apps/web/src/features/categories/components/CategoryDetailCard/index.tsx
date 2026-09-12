@@ -28,15 +28,15 @@ import type {
   UpdateAssetDTO
 } from '@/features/assets/api/types'
 import { Category } from '@/features/categories/api/types'
+import { AssetFormDialog } from '@/features/categories/components/AssetFormDialog'
+import { AssetPriceInfo } from '@/features/categories/components/AssetPriceInfo'
+import { DeleteAssetDialog } from '@/features/categories/components/DeleteAssetDialog'
 import {
   CATEGORY_TYPE_BG,
   CATEGORY_TYPE_COLORS,
   CATEGORY_TYPE_LABELS,
   CURRENCY_LABELS
 } from '@/features/categories/utils'
-import { AssetFormDialog } from '@/features/categories/components/AssetFormDialog'
-import { AssetPriceInfo } from '@/features/categories/components/AssetPriceInfo'
-import { DeleteAssetDialog } from '@/features/categories/components/DeleteAssetDialog'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
