@@ -1,11 +1,12 @@
 import { PartialType } from '@nestjs/mapped-types'
-import { Transform, Type } from 'class-transformer'
+import { Transform } from 'class-transformer'
 import {
   IsBoolean,
   IsNotEmpty,
   IsNumber,
   IsOptional,
-  IsString
+  IsString,
+  ValidateIf
 } from 'class-validator'
 
 export class CreateAssetDTO {
@@ -19,34 +20,45 @@ export class CreateAssetDTO {
   })
   name: string
 
+  @IsOptional()
   @IsString({ message: 'O ticker deve ser um texto válido' })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value.trim()
     }
-    return undefined
+    return value
   })
-  ticker: string
+  ticker?: string
 
   @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined)
   @IsNumber({}, { message: 'A quantidade deve ser um número válido' })
-  @Type(() => Number)
-  quantity?: number
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return null
+    const num = Number(value)
+    return Number.isNaN(num) ? value : num
+  })
+  quantity?: number | null
 
   @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined)
   @IsNumber({}, { message: 'O preço médio deve ser um número válido' })
-  @Type(() => Number)
-  averagePrice?: number
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return null
+    const num = Number(value)
+    return Number.isNaN(num) ? value : num
+  })
+  averagePrice?: number | null
 
   @IsOptional()
-  @IsString({ message: 'A corretora deve ser um texto válido' })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
-      return value.trim()
+      const trimmed = value.trim()
+      return trimmed.length > 0 ? trimmed : null
     }
-    return undefined
+    return null
   })
-  broker?: string
+  broker?: string | null
 
   @IsOptional()
   @IsBoolean({ message: 'O status ativo deve ser verdadeiro ou falso' })

@@ -15,19 +15,19 @@ export interface Asset {
 
 export interface CreateAssetDTO {
   name: string
-  ticker?: string
-  quantity?: number
-  averagePrice?: number
-  broker?: string
+  ticker?: string | null
+  quantity?: number | null
+  averagePrice?: number | null
+  broker?: string | null
   isActive?: boolean
 }
 
 export interface UpdateAssetDTO {
   name?: string
-  ticker?: string
-  quantity?: number
-  averagePrice?: number
-  broker?: string
+  ticker?: string | null
+  quantity?: number | null
+  averagePrice?: number | null
+  broker?: string | null
   isActive?: boolean
 }
 

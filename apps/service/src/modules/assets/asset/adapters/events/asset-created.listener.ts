@@ -23,7 +23,7 @@ export class AssetCreatedListener {
 
     try {
       await this.updateAssetPriceUseCase.execute({
-        assetId,
+        assetIds: [assetId],
         ticker,
         categoryType
       })

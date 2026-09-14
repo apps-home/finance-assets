@@ -2,7 +2,7 @@ import { Asset, AssetProps } from './asset.entity'
 
 export interface AssetDomainDTO {
   name: string
-  ticker: string
+  ticker?: string
   quantity?: number | null
   averagePrice?: number | null
   broker?: string | null
@@ -21,7 +21,7 @@ export class AssetMapper {
   static toDomain(raw: AssetDomainDTO): Asset {
     return Asset.create({
       name: raw.name,
-      ticker: raw.ticker,
+      ticker: raw.ticker || '',
       quantity: raw.quantity ?? null,
       averagePrice: raw.averagePrice ?? null,
       broker: raw.broker ?? null,
@@ -55,7 +55,7 @@ export class AssetMapper {
       id: asset.id,
       categoryId: asset.categoryId,
       name: asset.name,
-      ticker: asset.ticker,
+      ticker: asset.ticker || '',
       quantity: asset.quantity,
       averagePrice: asset.averagePrice,
       broker: asset.broker,

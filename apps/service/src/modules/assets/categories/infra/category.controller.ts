@@ -12,7 +12,7 @@ import {
   Req
 } from '@nestjs/common'
 
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 
 import { CategoryNotFoundError } from '../application/errors/category-not-found.error'
 import { CreateCategoryUseCase } from '../application/use-cases/create-category'
@@ -47,7 +47,7 @@ export class CategoryController {
       const error = result.value
 
       switch (error.constructor) {
-        case DomainError:
+        case PayloadError:
           throw new BadRequestException(error.message)
         default:
           throw new InternalServerErrorException('Unexpected error')
@@ -108,7 +108,7 @@ export class CategoryController {
 
       switch (error.constructor) {
         case CategoryNotFoundError:
-        case DomainError:
+        case PayloadError:
           throw new BadRequestException(error.message)
         default:
           throw new InternalServerErrorException('Unexpected error')

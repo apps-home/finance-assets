@@ -145,14 +145,7 @@ export default function SignUpPage() {
                 disabled={isPending}
               />
               <Label htmlFor="terms" className="cursor-pointer">
-                Aceito os{' '}
-                <a href="/terms" className="text-primary hover:underline">
-                  termos de uso
-                </a>{' '}
-                e{' '}
-                <a href="/privacy" className="text-primary hover:underline">
-                  política de privacidade
-                </a>
+                Aceito os termos de uso e política de privacidade
               </Label>
             </div>
           </CardContent>

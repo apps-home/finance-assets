@@ -7,16 +7,25 @@ import { CategoryType } from '@/modules/assets/categories/domain/category.entity
 import { AlphaVantageMarketDataProvider } from './alpha-vantage/alpha-vantage-market-data.provider'
 import { BrapiMarketDataProvider } from './brapi/brapi-market-data.provider'
 import { CoinGeckoMarketDataProvider } from './coingecko/coingecko-market-data.provider'
+import { UsMarketDataFallbackProvider } from './fallback-us-market-data.provider'
+import { PolygonMarketDataProvider } from './polygon/polygon-market-data.provider'
 
 @Injectable()
 export class MarketDataFactory implements MarketDataGateway {
   private readonly logger = new Logger(MarketDataFactory.name)
+  private readonly usMarketDataProvider: MarketDataProvider
 
   constructor(
     private readonly brapiProvider: BrapiMarketDataProvider,
     private readonly coingeckoProvider: CoinGeckoMarketDataProvider,
-    private readonly alphaVantageProvider: AlphaVantageMarketDataProvider
-  ) {}
+    private readonly alphaVantageProvider: AlphaVantageMarketDataProvider,
+    private readonly polygonProvider: PolygonMarketDataProvider
+  ) {
+    this.usMarketDataProvider = new UsMarketDataFallbackProvider(
+      this.polygonProvider,
+      this.alphaVantageProvider
+    )
+  }
 
   getProvider(categoryType: CategoryType): MarketDataProvider | null {
     switch (categoryType) {
@@ -30,7 +39,7 @@ export class MarketDataFactory implements MarketDataGateway {
         return this.brapiProvider
 
       case CategoryType.VARIABLE_US:
-        return this.alphaVantageProvider
+        return this.usMarketDataProvider
 
       case CategoryType.CRYPTO:
         return this.coingeckoProvider

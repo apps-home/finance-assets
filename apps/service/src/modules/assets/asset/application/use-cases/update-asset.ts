@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common'
 
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Either, left, right } from '@/core/utils/Either'
 
 import { AssetRepository } from '../../domain/asset.repository'
 import { UpdateAssetPayload } from '../../domain/dto/update-asset.dto'
 import { AssetNotFoundError } from '../errors/asset-not-found.error'
 
-type UpdateAssetResponse = Either<AssetNotFoundError | DomainError, void>
+type UpdateAssetResponse = Either<AssetNotFoundError | PayloadError, void>
 
 @Injectable()
 export class UpdateAssetUseCase {
@@ -26,7 +26,7 @@ export class UpdateAssetUseCase {
     try {
       existingAsset.update(data)
     } catch (error) {
-      if (error instanceof DomainError) {
+      if (error instanceof PayloadError) {
         return left(error)
       }
 

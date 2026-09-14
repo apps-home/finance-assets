@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common'
 
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Either, left, right } from '@/core/utils/Either'
 
 import { CategoryMapper } from '../../domain/category.mapper'
 import { CategoryRepository } from '../../domain/category.repository'
 import { CreateCategoryPayload } from '../../domain/dto/create-category.dto'
 
-type CreateCategoryResponse = Either<DomainError, void>
+type CreateCategoryResponse = Either<PayloadError, void>
 
 @Injectable()
 export class CreateCategoryUseCase {
@@ -21,7 +21,7 @@ export class CreateCategoryUseCase {
 
       return right(void 0)
     } catch (error) {
-      if (error instanceof DomainError) {
+      if (error instanceof PayloadError) {
         return left(error)
       }
 

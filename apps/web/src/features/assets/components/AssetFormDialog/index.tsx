@@ -107,22 +107,22 @@ export function AssetFormDialog({
 
     if (!name.trim() || !categoryId) return
 
-    const parsedQuantity = quantity ? Number(quantity) : undefined
+    const parsedQuantity = quantity.trim() !== '' ? Number(quantity) : null
     const parsedAveragePrice =
-      averagePrice.trim() !== '' ? parseValue(averagePrice) : undefined
+      averagePrice.trim() !== '' ? parseValue(averagePrice) : null
 
     await onSubmit(categoryId, {
       name: name.trim(),
-      ticker: ticker.trim() || undefined,
+      ticker: ticker.trim(),
       quantity:
         parsedQuantity != null && !Number.isNaN(parsedQuantity)
           ? parsedQuantity
-          : undefined,
+          : null,
       averagePrice:
         parsedAveragePrice != null && !Number.isNaN(parsedAveragePrice)
           ? parsedAveragePrice
-          : undefined,
-      broker: broker.trim() || undefined,
+          : null,
+      broker: broker.trim() || null,
       isActive
     })
   }

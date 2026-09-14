@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Either, left, right } from '@/core/utils/Either'
 import { CategoryRepository } from '@/modules/assets/categories/domain/category.repository'
 
@@ -22,12 +22,12 @@ export class CreateBudgetUseCase {
       const category = await this.categoryRepository.findById(data.categoryId)
 
       if (!category) {
-        return left(new DomainError('Category not found'))
+        return left(new PayloadError('Category not found'))
       }
 
       if (!category.years.includes(data.year)) {
         return left(
-          new DomainError(
+          new PayloadError(
             `Category "${category.name}" is not active for year ${data.year}`
           )
         )
@@ -41,7 +41,7 @@ export class CreateBudgetUseCase {
 
       return right(void 0)
     } catch (error) {
-      if (error instanceof DomainError) {
+      if (error instanceof PayloadError) {
         return left(error)
       }
 

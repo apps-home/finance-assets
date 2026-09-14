@@ -5,13 +5,15 @@ import {
   Delete,
   Get,
   InternalServerErrorException,
+  NotFoundException,
   Param,
   Patch,
   Post,
   Query
 } from '@nestjs/common'
 
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
+import { CategoryNotFoundError } from '@/modules/assets/categories/application/errors/category-not-found.error'
 
 import { AssetNotFoundError } from '../application/errors/asset-not-found.error'
 import { CreateAssetUseCase } from '../application/use-cases/create-asset'
@@ -49,7 +51,9 @@ export class AssetController {
       const error = result.value
 
       switch (error.constructor) {
-        case DomainError:
+        case CategoryNotFoundError:
+          throw new NotFoundException(error.message)
+        case PayloadError:
           throw new BadRequestException(error.message)
         default:
           throw new InternalServerErrorException('Unexpected error')
@@ -92,7 +96,7 @@ export class AssetController {
 
       switch (error.constructor) {
         case AssetNotFoundError:
-          throw new BadRequestException(error.message)
+          throw new NotFoundException(error.message)
         default:
           throw new InternalServerErrorException('Unexpected error')
       }
@@ -110,7 +114,8 @@ export class AssetController {
 
       switch (error.constructor) {
         case AssetNotFoundError:
-        case DomainError:
+          throw new NotFoundException(error.message)
+        case PayloadError:
           throw new BadRequestException(error.message)
         default:
           throw new InternalServerErrorException('Unexpected error')
@@ -129,7 +134,7 @@ export class AssetController {
 
       switch (error.constructor) {
         case AssetNotFoundError:
-          throw new BadRequestException(error.message)
+          throw new NotFoundException(error.message)
         default:
           throw new InternalServerErrorException('Unexpected error')
       }

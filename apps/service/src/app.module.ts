@@ -4,6 +4,7 @@ import { InfraModule } from './infra/infra.module'
 import { AssetModule } from './modules/assets/asset/asset.module'
 import { CategoryModule } from './modules/assets/categories/category.module'
 import { CompetenceModule } from './modules/assets/competences/competence.module'
+import { WishlistModule } from './modules/assets/wishlist/wishlist.module'
 import { BudgetModule } from './modules/budgets/budget.module'
 import { UserModule } from './modules/user/user.module'
 
@@ -14,7 +15,8 @@ import { UserModule } from './modules/user/user.module'
     BudgetModule,
     CompetenceModule,
     AssetModule,
-    UserModule
+    UserModule,
+    WishlistModule
   ]
 })
 export class AppModule {}

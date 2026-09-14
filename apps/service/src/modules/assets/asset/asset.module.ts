@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 
 import { MarketDataModule } from '@/infra/http/external/market-data/market-data.module'
 import { CategoryModule } from '@/modules/assets/categories/category.module'
+import { WishlistModule } from '@/modules/assets/wishlist/wishlist.module'
 
 import { AssetCreatedListener } from './adapters/events/asset-created.listener'
 import { UpdateAssetPriceProcessor } from './adapters/jobs/update-asset-price.processor'
@@ -20,7 +21,7 @@ import { AssetController } from './infra/asset.controller'
 import { PrismaAssetRepository } from './infra/repositories/prisma.asset.repository'
 
 @Module({
-  imports: [CategoryModule, MarketDataModule],
+  imports: [CategoryModule, MarketDataModule, WishlistModule],
   controllers: [AssetController],
   providers: [
     { provide: AssetRepository, useClass: PrismaAssetRepository },

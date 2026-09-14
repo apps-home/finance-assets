@@ -1,4 +1,4 @@
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
 
 export enum CategoryType {
@@ -31,15 +31,15 @@ export class Category implements CategoryProps {
     props: Optional<CategoryProps, 'id' | 'type' | 'createdAt' | 'updatedAt'>
   ): Category {
     if (props.currency.trim().length <= 2) {
-      throw new DomainError('Currency must be at least 3 characters long')
+      throw new PayloadError('Currency must be at least 3 characters long')
     }
 
     if (props.name.trim().length <= 1) {
-      throw new DomainError('Name must be at least 2 characters long')
+      throw new PayloadError('Name must be at least 2 characters long')
     }
 
     if (!props.years || props.years.length === 0) {
-      throw new DomainError('At least one year must be provided')
+      throw new PayloadError('At least one year must be provided')
     }
 
     if (
@@ -47,7 +47,7 @@ export class Category implements CategoryProps {
       props.targetPercentage !== undefined &&
       (props.targetPercentage < 0 || props.targetPercentage > 100)
     ) {
-      throw new DomainError('Target percentage must be between 0 and 100')
+      throw new PayloadError('Target percentage must be between 0 and 100')
     }
 
     return new Category({
@@ -65,15 +65,15 @@ export class Category implements CategoryProps {
 
   update(props: Partial<Omit<CategoryProps, 'id' | 'userId' | 'createdAt'>>) {
     if (props.currency && props.currency.trim().length <= 2) {
-      throw new DomainError('Currency must be at least 3 characters long')
+      throw new PayloadError('Currency must be at least 3 characters long')
     }
 
     if (props.name && props.name.trim().length <= 1) {
-      throw new DomainError('Name must be at least 2 characters long')
+      throw new PayloadError('Name must be at least 2 characters long')
     }
 
     if (props.years && props.years.length === 0) {
-      throw new DomainError('At least one year must be provided')
+      throw new PayloadError('At least one year must be provided')
     }
 
     if (
@@ -81,7 +81,7 @@ export class Category implements CategoryProps {
       props.targetPercentage !== undefined &&
       (props.targetPercentage < 0 || props.targetPercentage > 100)
     ) {
-      throw new DomainError('Target percentage must be between 0 and 100')
+      throw new PayloadError('Target percentage must be between 0 and 100')
     }
 
     this._props = {

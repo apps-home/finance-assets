@@ -27,11 +27,12 @@ export const auth = betterAuth({
     },
     autoSignIn: true
   },
-  rateLimit: {
-    enabled: process.env.NODE_ENV !== 'development',
-    max: 5, //tentativas por minuto
-    window: 60 * 1000 // 1 minuto
-  },
+  disabledPaths: [
+    '/sign-up',
+    '/sign-in',
+    '/forgot-password',
+    '/reset-password'
+  ],
   plugins: [nextCookies()]
 })
 

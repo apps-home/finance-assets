@@ -32,19 +32,21 @@ export class UpdateAssetPriceProcessor extends WorkerHost {
   }
 
   private async updatePrice(jobPayload: UpdateAssetPriceJobData) {
-    const { assetId, ticker, categoryType } = jobPayload
+    const { ticker, categoryType, assetId, assetIds, wishlistIds } = jobPayload
 
-    this.logger.log(`Processing price update for asset ${assetId} (${ticker})`)
+    this.logger.log(`Processing price update for ticker ${ticker}`)
 
     try {
       await this.updateAssetPriceUseCase.execute({
-        assetId,
         ticker,
-        categoryType
+        categoryType,
+        assetId,
+        assetIds,
+        wishlistIds
       })
     } catch (error) {
       this.logger.error(
-        `Failed to update asset "${ticker}" with market data`,
+        `Failed to update ticker "${ticker}" with market data`,
         error instanceof Error ? error.stack : error
       )
     }

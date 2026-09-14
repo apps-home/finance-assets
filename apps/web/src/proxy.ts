@@ -4,11 +4,7 @@ import { NextResponse } from 'next/server'
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  if (
-    pathname.startsWith('/api') ||
-    pathname === '/sign-in' ||
-    pathname === '/sign-up'
-  ) {
+  if (pathname.startsWith('/api')) {
     return NextResponse.next()
   }
 

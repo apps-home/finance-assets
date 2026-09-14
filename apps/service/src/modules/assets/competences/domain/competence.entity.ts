@@ -1,4 +1,4 @@
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
 
 export interface CompetenceProps {
@@ -16,11 +16,11 @@ export class Competence implements CompetenceProps {
 
   static create(props: Optional<CompetenceProps, 'id'>): Competence {
     if (!props.year || props.year < 2000 || props.year > 2100) {
-      throw new DomainError('Year must be between 2000 and 2100')
+      throw new PayloadError('Year must be between 2000 and 2100')
     }
 
     if (!props.categoryId) {
-      throw new DomainError('Category ID is required')
+      throw new PayloadError('Category ID is required')
     }
 
     return new Competence({

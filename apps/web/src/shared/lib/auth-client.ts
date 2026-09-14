@@ -37,5 +37,6 @@ export const {
   updateUser,
   useSession,
   verifyEmail,
-  updateSession
+  updateSession,
+  hydrateSession
 } = authClient

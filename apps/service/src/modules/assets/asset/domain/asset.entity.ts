@@ -1,4 +1,4 @@
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
 
 export interface AssetProps {
@@ -27,6 +27,7 @@ export class Asset implements AssetProps {
     props: Optional<
       AssetProps,
       | 'id'
+      | 'ticker'
       | 'quantity'
       | 'averagePrice'
       | 'broker'
@@ -38,14 +39,14 @@ export class Asset implements AssetProps {
     >
   ): Asset {
     if (props.name.trim().length <= 1) {
-      throw new DomainError('Name must be at least 2 characters long')
+      throw new PayloadError('Name must be at least 2 characters long')
     }
 
     return new Asset({
       id: props.id || crypto.randomUUID(),
       categoryId: props.categoryId,
       name: props.name,
-      ticker: props.ticker,
+      ticker: props.ticker || '',
       quantity: props.quantity ?? null,
       averagePrice: props.averagePrice ?? null,
       broker: props.broker ?? null,
@@ -58,13 +59,20 @@ export class Asset implements AssetProps {
   }
 
   update(props: Partial<Omit<AssetProps, 'id' | 'categoryId' | 'createdAt'>>) {
-    if (props.name && props.name.trim().length <= 1) {
-      throw new DomainError('Name must be at least 2 characters long')
+    if (props.name !== undefined && props.name.trim().length <= 1) {
+      throw new PayloadError('Name must be at least 2 characters long')
     }
 
     this._props = {
       ...this._props,
-      ...props,
+      ...(props.name !== undefined && { name: props.name.trim() }),
+      ...(props.ticker !== undefined && { ticker: props.ticker || '' }),
+      ...(props.quantity !== undefined && { quantity: props.quantity ?? null }),
+      ...(props.averagePrice !== undefined && {
+        averagePrice: props.averagePrice ?? null
+      }),
+      ...(props.broker !== undefined && { broker: props.broker ?? null }),
+      ...(props.isActive !== undefined && { isActive: props.isActive }),
       updatedAt: new Date()
     }
   }

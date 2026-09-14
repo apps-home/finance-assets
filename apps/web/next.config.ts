@@ -12,7 +12,28 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@t3-oss/env-nextjs', '@t3-oss/env-core', '@lib/db'],
   ...(process.env.NODE_ENV === 'development' && {
     allowedDevOrigins: ['10.0.2.124', 'local.dev.terraviva', '192.168.0.4']
-  })
+  }),
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          }
+        ]
+      }
+    ]
+  }
 }
 
 export default nextConfig

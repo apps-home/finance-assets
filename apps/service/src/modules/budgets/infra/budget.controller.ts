@@ -12,7 +12,7 @@ import {
   Req
 } from '@nestjs/common'
 
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 
 import { BudgetNotFoundError } from '../application/errors/budget-not-found.error'
 import { CreateBudgetUseCase } from '../application/use-cases/create-budget'
@@ -44,7 +44,7 @@ export class BudgetController {
       const error = result.value
 
       switch (error.constructor) {
-        case DomainError:
+        case PayloadError:
           throw new BadRequestException(error.message)
         default:
           throw new InternalServerErrorException('Unexpected error')
@@ -101,7 +101,7 @@ export class BudgetController {
 
       switch (error.constructor) {
         case BudgetNotFoundError:
-        case DomainError:
+        case PayloadError:
           throw new BadRequestException(error.message)
         default:
           throw new InternalServerErrorException('Unexpected error')

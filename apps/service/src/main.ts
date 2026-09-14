@@ -1,6 +1,6 @@
 import 'dotenv/config'
 
-import { Logger, ValidationPipe } from '@nestjs/common'
+import { HttpException, Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app.module'
@@ -34,6 +34,19 @@ async function bootstrap() {
     catch(exception, host) {
       const ctx = host.switchToHttp()
       const response = ctx.getResponse()
+
+      if (exception instanceof HttpException) {
+        const status = exception.getStatus()
+        const res = exception.getResponse()
+
+        return response
+          .status(status)
+          .json(
+            typeof res === 'object'
+              ? res
+              : { statusCode: status, message: res, error: exception.name }
+          )
+      }
 
       if (exception instanceof Error) {
         return response.status(400).json({

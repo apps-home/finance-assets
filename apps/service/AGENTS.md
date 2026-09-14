@@ -148,7 +148,7 @@ O `R2StorageService` (`src/infra/storage`) é responsável pelo upload de arquiv
 ```
 core/
 ├── domain/
-│   ├── errors/    # DomainError base
+│   ├── errors/    # PayloadError base
 │   ├── events/    # Interface DomainEventPublisher + AssetEvent
 │   └── queue/     # Interface DomainJobPublisher + constantes de filas
 └── utils/         # Utilitários genéricos (Optional, etc.)

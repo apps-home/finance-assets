@@ -7,6 +7,7 @@ import { AlphaVantageMarketDataProvider } from './alpha-vantage/alpha-vantage-ma
 import { BrapiMarketDataProvider } from './brapi/brapi-market-data.provider'
 import { CoinGeckoMarketDataProvider } from './coingecko/coingecko-market-data.provider'
 import { MarketDataFactory } from './market-data.factory'
+import { PolygonMarketDataProvider } from './polygon/polygon-market-data.provider'
 
 @Module({
   imports: [HttpModule],
@@ -14,6 +15,7 @@ import { MarketDataFactory } from './market-data.factory'
     BrapiMarketDataProvider,
     CoinGeckoMarketDataProvider,
     AlphaVantageMarketDataProvider,
+    PolygonMarketDataProvider,
     { provide: MarketDataGateway, useClass: MarketDataFactory }
   ],
   exports: [MarketDataGateway]

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common'
 
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Either, left, right } from '@/core/utils/Either'
 
 import { BudgetRepository } from '../../domain/budget.repository'
 import { UpdateBudgetPayload } from '../../domain/dto/update-budget.dto'
 import { BudgetNotFoundError } from '../errors/budget-not-found.error'
 
-type UpdateBudgetResponse = Either<BudgetNotFoundError | DomainError, void>
+type UpdateBudgetResponse = Either<BudgetNotFoundError | PayloadError, void>
 
 @Injectable()
 export class UpdateBudgetUseCase {
@@ -27,7 +27,7 @@ export class UpdateBudgetUseCase {
       existingBudget.updateAmountWithExchangeRate(data.exchangeRate || 1)
       existingBudget.update(data)
     } catch (error) {
-      if (error instanceof DomainError) {
+      if (error instanceof PayloadError) {
         return left(error)
       }
 

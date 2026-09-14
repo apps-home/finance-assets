@@ -1,4 +1,4 @@
-import { DomainError } from '@/core/domain/errors/domain-error'
+import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
 
 export interface BudgetProps {
@@ -24,7 +24,7 @@ export class Budget implements BudgetProps {
     props: Optional<BudgetProps, 'id' | 'createdAt' | 'updatedAt'>
   ): Budget {
     if (props.month < 1 || props.month > 12) {
-      throw new DomainError('Month must be between 1 and 12')
+      throw new PayloadError('Month must be between 1 and 12')
     }
 
     if (
@@ -32,7 +32,7 @@ export class Budget implements BudgetProps {
       props.exchangeRate !== undefined &&
       props.exchangeRate <= 0
     ) {
-      throw new DomainError('Exchange rate must be greater than 0')
+      throw new PayloadError('Exchange rate must be greater than 0')
     }
 
     if (
@@ -40,7 +40,7 @@ export class Budget implements BudgetProps {
       props.dividendAmount !== undefined &&
       props.dividendAmount < 0
     ) {
-      throw new DomainError(
+      throw new PayloadError(
         'Dividend amount must be greater than or equal to 0'
       )
     }
@@ -62,7 +62,7 @@ export class Budget implements BudgetProps {
     props: Partial<Omit<BudgetProps, 'id' | 'createdAt' | 'updatedAt'>>
   ): void {
     if (props.month && (props.month < 1 || props.month > 12)) {
-      throw new DomainError('Month must be between 1 and 12')
+      throw new PayloadError('Month must be between 1 and 12')
     }
 
     if (
@@ -70,7 +70,7 @@ export class Budget implements BudgetProps {
       props.exchangeRate !== undefined &&
       props.exchangeRate <= 0
     ) {
-      throw new DomainError('Exchange rate must be greater than 0')
+      throw new PayloadError('Exchange rate must be greater than 0')
     }
 
     if (
@@ -78,7 +78,7 @@ export class Budget implements BudgetProps {
       props.dividendAmount !== undefined &&
       props.dividendAmount < 0
     ) {
-      throw new DomainError(
+      throw new PayloadError(
         'Dividend amount must be greater than or equal to 0'
       )
     }
@@ -98,7 +98,7 @@ export class Budget implements BudgetProps {
       exchangeRate === undefined ||
       exchangeRate <= 0
     ) {
-      throw new DomainError(
+      throw new PayloadError(
         'Cannot update amount with exchange rate when exchangeRate is null, undefined or less than or equal to 0'
       )
     }
