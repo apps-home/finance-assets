@@ -14,6 +14,8 @@ import { AllocationOverview } from '@/features/categories/components/AllocationO
 import { CategoryCard } from '@/features/categories/components/CategoryCard'
 import { CategoryFormDialog } from '@/features/categories/components/CategoryFormDialog'
 import { DeleteCategoryDialog } from '@/features/categories/components/DeleteCategoryDialog'
+import { CategoryAllocation } from '@/features/categories/types/allocation'
+import { calculateAllocations } from '@/features/categories/utils/calculate-allocations'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Input } from '@/shared/components/ui/input'
@@ -65,6 +67,31 @@ export default function CategoriesClient() {
     })
     return map
   }, [categories, assetQueries])
+
+  const categoryBalances = useMemo(() => {
+    const map = new Map<string, number>()
+    categories.forEach((cat, index) => {
+      const assets = assetQueries[index]?.data || []
+      const balance = assets.reduce(
+        (acc, asset) => acc + (asset.currentBalance || 0),
+        0
+      )
+      map.set(cat.id, balance)
+    })
+    return map
+  }, [categories, assetQueries])
+
+  const allocationSummary = useMemo(() => {
+    return calculateAllocations(categories, categoryBalances)
+  }, [categories, categoryBalances])
+
+  const allocationMap = useMemo(() => {
+    const map = new Map<string, CategoryAllocation>()
+    allocationSummary.allocations.forEach((item) => {
+      map.set(item.categoryId, item)
+    })
+    return map
+  }, [allocationSummary])
 
   const isAssetsLoading =
     onlyWithAssets && assetQueries.some((q) => q.isLoading)
@@ -206,7 +233,7 @@ export default function CategoriesClient() {
         </div>
 
         {selectedFilter === 'ALL' && categories.length > 0 && (
-          <AllocationOverview categories={categories} />
+          <AllocationOverview summary={allocationSummary} />
         )}
 
         {filteredCategories.length === 0 ? (
@@ -240,6 +267,7 @@ export default function CategoriesClient() {
               <CategoryCard
                 key={category.id}
                 category={category}
+                allocation={allocationMap.get(category.id)}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onAddAsset={handleAddAsset}

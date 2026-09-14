@@ -308,12 +308,12 @@ export function FinancialTable({
                 {formatCurrency(numericValue)}
               </p>
             ) : (
-              <span className="font-mono text-muted-foreground/30 text-xs">
+              <span className=" text-muted-foreground/30 text-xs font-mono">
                 —
               </span>
             )}
             {dividendValue && dividendValue > 0 ? (
-              <span className="mt-0.5 inline-flex items-center rounded bg-emerald-500/10 px-1.5 py-0.5 font-mono font-semibold text-emerald-400 text-xs">
+              <span className="mt-0.5 inline-flex items-center rounded bg-emerald-500/10 px-1.5 py-0.5  font-semibold text-emerald-400 text-xs">
                 Dividendos: {formatCurrency(dividendValue)}
               </span>
             ) : null}
@@ -374,7 +374,7 @@ export function FinancialTable({
                     if (e.key === 'Enter') handleSave()
                     if (e.key === 'Escape') handleCancel()
                   }}
-                  className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 font-mono text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-md border border-input bg-background px-2.5 py-1.5  text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="R$ 0,00"
                 />
               </div>
@@ -399,7 +399,7 @@ export function FinancialTable({
                       if (e.key === 'Enter') handleSave()
                       if (e.key === 'Escape') handleCancel()
                     }}
-                    className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 font-mono text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-md border border-input bg-background px-2.5 py-1.5  text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="R$ 0,00"
                   />
                 </div>
@@ -447,9 +447,9 @@ export function FinancialTable({
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
-        <thead className="border-border border-b bg-muted/20 text-xs">
+        <thead className="border-border border-b bg-muted/50 text-xs">
           <tr>
-            <th className="sticky left-0 z-10 bg-card px-4 py-3.5 text-left font-semibold text-muted-foreground uppercase tracking-wider shadow-[1px_0_0_0_var(--border)]">
+            <th className="sticky left-0 z-10 px-4 py-3.5 text-left font-semibold text-muted-foreground uppercase tracking-wider">
               Mês
             </th>
             {categories.map((cat) => (
@@ -460,7 +460,7 @@ export function FinancialTable({
                 {cat.name}
               </th>
             ))}
-            <th className="border-border/60 border-l bg-muted/10 px-4 py-3.5 text-right font-semibold text-primary uppercase tracking-wider">
+            <th className="border-border/60 border-l px-4 py-3.5 text-right font-semibold text-primary uppercase tracking-wider">
               Total
             </th>
           </tr>
@@ -480,10 +480,10 @@ export function FinancialTable({
                     ? 'bg-primary/5 hover:bg-primary/10'
                     : isZeroMonth
                       ? 'opacity-40 hover:bg-muted/30 hover:opacity-100'
-                      : 'hover:bg-muted/40'
+                      : 'hover:bg-muted/30'
                 }`}
               >
-                <td className="sticky left-0 z-10 whitespace-nowrap bg-card px-4 py-3.5 font-semibold text-foreground text-xs shadow-[1px_0_0_0_var(--border)]">
+                <td className="sticky left-0 z-10 whitespace-nowrap bg-muted/50 px-4 py-3.5 font-semibold text-foreground text-xs">
                   <div className="flex items-center gap-2">
                     <span>{row.month}</span>
                     {isCurrentMonth && (
@@ -508,13 +508,13 @@ export function FinancialTable({
                     </td>
                   )
                 })}
-                <td className="border-border/60 border-l bg-muted/10 px-4 py-3.5 text-right text-xs">
+                <td className="border-border/60 border-l bg-muted/40 px-4 py-3.5 text-right text-xs">
                   {rowTotal > 0 ? (
                     <span className="font-bold text-primary text-sm tabular-nums">
                       {formatCurrency(rowTotal)}
                     </span>
                   ) : (
-                    <span className="font-mono text-muted-foreground/30 text-xs">
+                    <span className=" text-muted-foreground/30 text-xs font-mono">
                       —
                     </span>
                   )}
@@ -524,8 +524,8 @@ export function FinancialTable({
           })}
         </tbody>
         <tfoot className="border-primary/30 border-t-2 bg-muted/30 font-medium">
-          <tr className="border-border/60 border-b">
-            <td className="sticky left-0 z-10 whitespace-nowrap bg-card px-4 py-3.5 text-left shadow-[1px_0_0_0_var(--border)]">
+          <tr className="group/foot border-border/60 border-b transition-colors hover:bg-muted/40">
+            <td className="sticky left-0 z-10 whitespace-nowrap bg-muted/30 px-4 py-3.5 text-left transition-colors group-hover/foot:bg-muted/40">
               <div className="flex items-center gap-2">
                 <div className="rounded bg-primary/10 p-1">
                   <Coins className="size-3.5 text-primary" />
@@ -546,11 +546,11 @@ export function FinancialTable({
                 >
                   {hasDividends ? (
                     <div className="flex flex-col items-end text-right">
-                      <span className="font-bold font-mono text-primary text-sm tabular-nums">
+                      <span className="font-bold text-primary text-sm tabular-nums">
                         {formatCurrency(catStat.totalDividends)}
                       </span>
                       {catStat.yieldPercentage > 0 && (
-                        <span className="mt-0.5 inline-flex items-center whitespace-nowrap rounded bg-primary/10 px-1.5 py-0.5 font-medium font-mono text-primary text-xs">
+                        <span className="mt-0.5 inline-flex items-center whitespace-nowrap rounded font-mono bg-primary/10 px-1.5 py-0.5 font-medium  text-primary text-xs">
                           DY: {catStat.yieldPercentage.toFixed(2)}% a.a. •{' '}
                           {catStat.monthlyYieldPercentage.toFixed(2)}% a.m.
                         </span>
@@ -558,7 +558,7 @@ export function FinancialTable({
                     </div>
                   ) : (
                     <div className="flex justify-end">
-                      <span className="text-muted-foreground/40 text-xs">
+                      <span className="items-center  text-muted-foreground/40 font-mono text-xs">
                         —
                       </span>
                     </div>
@@ -566,14 +566,14 @@ export function FinancialTable({
                 </td>
               )
             })}
-            <td className="border-border/60 border-l bg-muted/10 px-4 py-3.5 text-right text-[13px]">
-              <span className="font-bold font-mono text-[13px] text-primary">
+            <td className="border-border/60 border-l px-4 py-3.5 text-right text-[13px]">
+              <span className="font-bold text-[13px] text-primary">
                 {formatCurrency(summaryStats.overall.totalDividends)}
               </span>
             </td>
           </tr>
-          <tr>
-            <td className="sticky left-0 z-10 whitespace-nowrap bg-card px-4 py-3.5 text-left shadow-[1px_0_0_0_var(--border)]">
+          <tr className="group/foot transition-colors hover:bg-muted/40">
+            <td className="sticky left-0 z-10 whitespace-nowrap bg-muted/30 px-4 py-3.5 text-left transition-colors group-hover/foot:bg-muted/40">
               <div className="flex items-center gap-2">
                 <div className="rounded bg-primary/10 p-1">
                   <TrendingUp className="size-3.5 text-primary" />
@@ -594,7 +594,7 @@ export function FinancialTable({
                     key={`foot-growth-${cat.id}`}
                     className="px-4 py-3.5 pr-8 text-right text-muted-foreground/40 text-xs"
                   >
-                    <div className="flex justify-end">
+                    <div className="flex justify-end font-mono">
                       <span>—</span>
                     </div>
                   </td>
@@ -619,7 +619,7 @@ export function FinancialTable({
                     </span>
                     {catStat.growthPercentage !== null && (
                       <span
-                        className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 font-medium font-mono text-xs ${
+                        className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 font-medium  text-xs ${
                           isPositive
                             ? 'bg-emerald-500/10 text-emerald-400'
                             : 'bg-rose-500/10 text-rose-400'
@@ -633,10 +633,10 @@ export function FinancialTable({
                 </td>
               )
             })}
-            <td className="border-border/60 border-l bg-muted/10 px-4 py-3.5 text-right text-sm">
+            <td className="border-border/60 border-l px-4 py-3.5 text-right text-sm">
               <div className="flex flex-col items-end text-right">
                 <span
-                  className={`font-bold font-mono text-sm ${
+                  className={`font-bold text-sm ${
                     summaryStats.overall.growthDiff >= 0
                       ? 'text-primary'
                       : 'text-destructive'
@@ -647,7 +647,7 @@ export function FinancialTable({
                 </span>
                 {summaryStats.overall.growthPercentage !== null && (
                   <span
-                    className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 font-medium font-mono text-xs ${
+                    className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 font-medium text-xs ${
                       summaryStats.overall.growthDiff >= 0
                         ? 'bg-emerald-500/10 text-emerald-400'
                         : 'bg-rose-500/10 text-rose-400'

@@ -14,6 +14,7 @@ import Link from 'next/link'
 
 import { listAssetsByCategory } from '@/features/assets/api'
 import { Category } from '@/features/categories/api/types'
+import { CategoryAllocation } from '@/features/categories/types/allocation'
 import {
   CATEGORY_TYPE_BG,
   CATEGORY_TYPE_COLORS,
@@ -40,8 +41,11 @@ import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
 
+import { AllocationBadge } from '../AllocationBadge'
+
 interface CategoryCardProps {
   category: Category
+  allocation?: CategoryAllocation
   onEdit: (category: Category) => void
   onDelete: (category: Category) => void
   onAddAsset?: (category: Category) => void
@@ -50,6 +54,7 @@ interface CategoryCardProps {
 
 export function CategoryCard({
   category,
+  allocation,
   onEdit,
   onDelete,
   onAddAsset,
@@ -153,7 +158,7 @@ export function CategoryCard({
       </CardHeader>
 
       <CardContent className="flex flex-1 flex-col justify-between gap-4">
-        <div className="rounded-xl border border-border bg-muted/20 p-3">
+        <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <Target className="size-3.5 text-primary" />
@@ -162,9 +167,12 @@ export function CategoryCard({
               </span>
             </div>
             {targetPercentage != null && targetPercentage > 0 ? (
-              <span className="font-bold text-primary text-sm tabular-nums">
-                {targetPercentage}%
-              </span>
+              <div className="flex items-center gap-1.5">
+                {allocation && <AllocationBadge allocation={allocation} />}
+                <span className="font-bold text-primary text-xs tabular-nums">
+                  {targetPercentage}%
+                </span>
+              </div>
             ) : (
               <span className="text-muted-foreground text-xs italic">
                 Não definida
@@ -173,16 +181,41 @@ export function CategoryCard({
           </div>
 
           {targetPercentage != null && targetPercentage > 0 && (
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className={cn(
-                  'h-full rounded-full transition-all duration-700',
-                  CATEGORY_TYPE_BG[categoryType] || 'bg-primary'
+            <div className="space-y-1.5">
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/70">
+                {allocation && (
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all duration-700',
+                      CATEGORY_TYPE_BG[categoryType] || 'bg-primary'
+                    )}
+                    style={{
+                      width: `${Math.min(allocation.actualPercentage, 100)}%`
+                    }}
+                  />
                 )}
-                style={{
-                  width: `${Math.min(targetPercentage, 100)}%`
-                }}
-              />
+                <div
+                  className="absolute top-0 bottom-0 w-0.5 bg-foreground shadow-xs"
+                  style={{ left: `${Math.min(targetPercentage, 100)}%` }}
+                />
+              </div>
+
+              {allocation && (
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
+                  <span>
+                    Real:{' '}
+                    <strong className="font-medium text-foreground">
+                      {allocation.actualPercentage.toFixed(1)}%
+                    </strong>
+                  </span>
+                  <span>
+                    Meta:{' '}
+                    <strong className="font-medium text-primary">
+                      {targetPercentage}%
+                    </strong>
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
