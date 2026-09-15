@@ -308,12 +308,12 @@ export function FinancialTable({
                 {formatCurrency(numericValue)}
               </p>
             ) : (
-              <span className=" text-muted-foreground/30 text-xs font-mono">
+              <span className="font-mono text-muted-foreground/30 text-xs">
                 —
               </span>
             )}
             {dividendValue && dividendValue > 0 ? (
-              <span className="mt-0.5 inline-flex items-center rounded bg-emerald-500/10 px-1.5 py-0.5  font-semibold text-emerald-400 text-xs">
+              <span className="mt-0.5 inline-flex items-center rounded bg-emerald-500/10 px-1.5 py-0.5 font-semibold text-emerald-400 text-xs">
                 Dividendos: {formatCurrency(dividendValue)}
               </span>
             ) : null}
@@ -374,7 +374,7 @@ export function FinancialTable({
                     if (e.key === 'Enter') handleSave()
                     if (e.key === 'Escape') handleCancel()
                   }}
-                  className="w-full rounded-md border border-input bg-background px-2.5 py-1.5  text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="R$ 0,00"
                 />
               </div>
@@ -399,7 +399,7 @@ export function FinancialTable({
                       if (e.key === 'Enter') handleSave()
                       if (e.key === 'Escape') handleCancel()
                     }}
-                    className="w-full rounded-md border border-input bg-background px-2.5 py-1.5  text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="R$ 0,00"
                   />
                 </div>
@@ -514,7 +514,7 @@ export function FinancialTable({
                       {formatCurrency(rowTotal)}
                     </span>
                   ) : (
-                    <span className=" text-muted-foreground/30 text-xs font-mono">
+                    <span className="font-mono text-muted-foreground/30 text-xs">
                       —
                     </span>
                   )}
@@ -550,7 +550,7 @@ export function FinancialTable({
                         {formatCurrency(catStat.totalDividends)}
                       </span>
                       {catStat.yieldPercentage > 0 && (
-                        <span className="mt-0.5 inline-flex items-center whitespace-nowrap rounded font-mono bg-primary/10 px-1.5 py-0.5 font-medium  text-primary text-xs">
+                        <span className="mt-0.5 inline-flex items-center whitespace-nowrap rounded bg-primary/10 px-1.5 py-0.5 font-medium font-mono text-primary text-xs">
                           DY: {catStat.yieldPercentage.toFixed(2)}% a.a. •{' '}
                           {catStat.monthlyYieldPercentage.toFixed(2)}% a.m.
                         </span>
@@ -558,7 +558,7 @@ export function FinancialTable({
                     </div>
                   ) : (
                     <div className="flex justify-end">
-                      <span className="items-center  text-muted-foreground/40 font-mono text-xs">
+                      <span className="items-center font-mono text-muted-foreground/40 text-xs">
                         —
                       </span>
                     </div>
@@ -619,7 +619,7 @@ export function FinancialTable({
                     </span>
                     {catStat.growthPercentage !== null && (
                       <span
-                        className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 font-medium  text-xs ${
+                        className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 font-medium text-xs ${
                           isPositive
                             ? 'bg-emerald-500/10 text-emerald-400'
                             : 'bg-rose-500/10 text-rose-400'
