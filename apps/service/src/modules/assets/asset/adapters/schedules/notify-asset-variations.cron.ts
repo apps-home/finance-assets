@@ -43,23 +43,36 @@ export class NotifyAssetVariationsCron {
         return
       }
 
-      const { totalAssetsEvaluated, totalGainers, totalLosers, userAlerts } =
-        result.value
+      const {
+        totalAssetsEvaluated,
+        totalGainers,
+        totalLosers,
+        totalWishlistItemsEvaluated,
+        totalWishlistTargetReached,
+        totalWishlistGainers,
+        totalWishlistLosers,
+        userAlerts
+      } = result.value
 
       if (userAlerts.length === 0) {
         this.logger.log(
-          `Asset variation check finished: ${totalAssetsEvaluated} evaluated, 0 passed the 5% margin threshold. Webhook not triggered.`
+          `Asset variation check finished: ${totalAssetsEvaluated} portfolio assets and ${totalWishlistItemsEvaluated} wishlist items evaluated. 0 alerts triggered.`
         )
         return
       }
 
       this.logger.log(
-        `Asset variation check found ${totalGainers} gain(s) and ${totalLosers} drop(s) for ${userAlerts.length} user(s). Dispatching to n8n...`
+        `Asset variation check found ${totalGainers} portfolio gain(s), ${totalLosers} drop(s), ` +
+          `${totalWishlistTargetReached} wishlist target(s) reached, ${totalWishlistGainers} wishlist gain(s), and ` +
+          `${totalWishlistLosers} wishlist drop(s) across ${userAlerts.length} user(s). Dispatching to n8n...`
       )
 
       for (const alert of userAlerts) {
         this.logger.log(
-          `Dispatching n8n webhook for user ${alert.user.email} (${alert.gainers.length} gainers, ${alert.losers.length} losers)...`
+          `Dispatching n8n webhook for user ${alert.user.email} (` +
+            `${alert.gainers.length} portfolio gainers, ${alert.losers.length} portfolio losers, ` +
+            `${alert.wishlist.targetReached.length} wishlist targets, ${alert.wishlist.gainers.length} wishlist gainers, ` +
+            `${alert.wishlist.losers.length} wishlist losers)...`
         )
 
         const response = await this.n8nProvider.triggerWebhook(

@@ -14,7 +14,7 @@ export const envSchema = z.object({
   BRAPI_TOKEN: z.string('BRAPI_TOKEN is required'),
   COINGECKO_API_KEY: z.string('COINGECKO_API_KEY is required'),
   POLYGON_API_KEY: z.string('POLYGON_API_KEY is required'),
-  
+
   // Cloudflare R2
   R2_ACCOUNT_ID: z.string('R2_ACCOUNT_ID is required'),
   R2_ACCESS_KEY_ID: z.string('R2_ACCESS_KEY_ID is required'),

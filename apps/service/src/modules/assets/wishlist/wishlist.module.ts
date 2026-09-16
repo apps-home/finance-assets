@@ -13,16 +13,16 @@ import { PrismaWishlistRepository } from './infra/repositories/prisma.wishlist.r
 import { WishlistController } from './infra/wishlist.controller'
 
 @Module({
-	imports: [CategoryModule, MarketDataModule],
-	controllers: [WishlistController],
-	providers: [
-		{ provide: WishlistRepository, useClass: PrismaWishlistRepository },
-		CreateWishlistUseCase,
-		FindAllWishlistUseCase,
-		FindWishlistByIdUseCase,
-		UpdateWishlistUseCase,
-		DeleteWishlistUseCase,
-	],
-	exports: [WishlistRepository],
+  imports: [CategoryModule, MarketDataModule],
+  controllers: [WishlistController],
+  providers: [
+    { provide: WishlistRepository, useClass: PrismaWishlistRepository },
+    CreateWishlistUseCase,
+    FindAllWishlistUseCase,
+    FindWishlistByIdUseCase,
+    UpdateWishlistUseCase,
+    DeleteWishlistUseCase
+  ],
+  exports: [WishlistRepository]
 })
 export class WishlistModule {}

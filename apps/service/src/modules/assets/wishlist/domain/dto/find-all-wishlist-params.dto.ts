@@ -1,6 +1,6 @@
 export interface FindAllWishlistParams {
-	userId: string
-	categoryId?: string
-	ticker?: string
-	name?: string
+  userId: string
+  categoryId?: string
+  ticker?: string
+  name?: string
 }

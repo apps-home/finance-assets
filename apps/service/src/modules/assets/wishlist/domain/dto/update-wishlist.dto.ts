@@ -1,6 +1,6 @@
 export interface UpdateWishlistPayload {
-	name?: string
-	ticker?: string
-	targetPrice?: number | null
-	notes?: string | null
+  name?: string
+  ticker?: string
+  targetPrice?: number | null
+  notes?: string | null
 }
