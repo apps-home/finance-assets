@@ -39,11 +39,19 @@ export class CreateAssetUseCase {
         )
       }
 
+      if (
+        isFixedIncome &&
+        data.currentClosePrice === undefined &&
+        data.averagePrice != null
+      ) {
+        data.currentClosePrice = data.averagePrice
+      }
+
       const asset = AssetMapper.toDomain(data)
 
       await this.assetRepository.save(asset)
 
-      if (asset.ticker) {
+      if (!isFixedIncome && asset.ticker) {
         this.eventPublisher.publish<AssetEventPayload>(
           AssetEvent.CREATED,
           new AssetEventPayload(asset.id, asset.ticker, category.type)

@@ -527,6 +527,7 @@ export function CategoryDetailCard({
         }}
         isPending={isCreating}
         categoryName={category.name}
+        categoryType={category.type}
       />
 
       <AssetFormDialog
@@ -541,6 +542,7 @@ export function CategoryDetailCard({
         }}
         isPending={isUpdating}
         categoryName={category.name}
+        categoryType={category.type}
         defaultValues={
           editingAsset
             ? {
@@ -548,6 +550,7 @@ export function CategoryDetailCard({
                 ticker: editingAsset.ticker || '',
                 quantity: editingAsset.quantity,
                 averagePrice: editingAsset.averagePrice,
+                currentClosePrice: editingAsset.currentClosePrice,
                 broker: editingAsset.broker || '',
                 isActive: editingAsset.isActive
               }

@@ -63,6 +63,16 @@ export class CreateAssetDTO {
   @IsOptional()
   @IsBoolean({ message: 'O status ativo deve ser verdadeiro ou falso' })
   isActive?: boolean
+
+  @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined)
+  @IsNumber({}, { message: 'O preço atual deve ser um número válido' })
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return null
+    const num = Number(value)
+    return Number.isNaN(num) ? value : num
+  })
+  currentClosePrice?: number | null
 }
 
 export class UpdateAssetDTO extends PartialType(CreateAssetDTO) {}

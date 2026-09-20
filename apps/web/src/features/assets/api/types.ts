@@ -20,6 +20,7 @@ export interface CreateAssetDTO {
   averagePrice?: number | null
   broker?: string | null
   isActive?: boolean
+  currentClosePrice?: number | null
 }
 
 export interface UpdateAssetDTO {
@@ -29,6 +30,7 @@ export interface UpdateAssetDTO {
   averagePrice?: number | null
   broker?: string | null
   isActive?: boolean
+  currentClosePrice?: number | null
 }
 
 export interface AssetHTTPResponse extends Asset {

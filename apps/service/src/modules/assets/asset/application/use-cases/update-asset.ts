@@ -24,6 +24,15 @@ export class UpdateAssetUseCase {
     }
 
     try {
+      if (
+        data.currentClosePrice === undefined &&
+        data.averagePrice !== undefined &&
+        (existingAsset.currentClosePrice === null ||
+          existingAsset.currentClosePrice === existingAsset.averagePrice)
+      ) {
+        data.currentClosePrice = data.averagePrice
+      }
+
       existingAsset.update(data)
     } catch (error) {
       if (error instanceof PayloadError) {

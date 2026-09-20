@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import type { CreateAssetDTO } from '@/features/assets/api/types'
+import { CategoryType } from '@/features/categories/api/types'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
@@ -25,6 +26,7 @@ interface AssetFormDefaults {
   ticker: string
   quantity: number | null
   averagePrice: number | null
+  currentClosePrice?: number | null
   broker: string
   isActive: boolean
 }
@@ -35,6 +37,7 @@ interface AssetFormDialogProps {
   onSubmit: (data: CreateAssetDTO) => Promise<void>
   isPending: boolean
   categoryName: string
+  categoryType?: CategoryType
   defaultValues?: AssetFormDefaults
 }
 
@@ -44,16 +47,19 @@ export function AssetFormDialog({
   onSubmit,
   isPending,
   categoryName,
+  categoryType,
   defaultValues
 }: AssetFormDialogProps) {
   const [name, setName] = useState('')
   const [ticker, setTicker] = useState('')
   const [quantity, setQuantity] = useState('')
   const [averagePrice, setAveragePrice] = useState('')
+  const [currentClosePrice, setCurrentClosePrice] = useState('')
   const [broker, setBroker] = useState('')
   const [isActive, setIsActive] = useState(true)
 
   const isEditing = !!defaultValues
+  const isFixedIncome = categoryType === CategoryType.FIXED
 
   useEffect(() => {
     if (open && defaultValues) {
@@ -69,6 +75,13 @@ export function AssetFormDialog({
             )
           : ''
       )
+      setCurrentClosePrice(
+        defaultValues.currentClosePrice != null
+          ? formatCurrencyInput(
+              Math.round(defaultValues.currentClosePrice * 100).toString()
+            )
+          : ''
+      )
       setBroker(defaultValues.broker || '')
       setIsActive(defaultValues.isActive ?? true)
     } else if (open) {
@@ -76,6 +89,7 @@ export function AssetFormDialog({
       setTicker('')
       setQuantity('')
       setAveragePrice('')
+      setCurrentClosePrice('')
       setBroker('')
       setIsActive(true)
     }
@@ -89,6 +103,8 @@ export function AssetFormDialog({
     const parsedQuantity = quantity.trim() !== '' ? Number(quantity) : null
     const parsedAveragePrice =
       averagePrice.trim() !== '' ? parseValue(averagePrice) : null
+    const parsedCurrentClosePrice =
+      currentClosePrice.trim() !== '' ? parseValue(currentClosePrice) : null
 
     await onSubmit({
       name: name.trim(),
@@ -100,6 +116,10 @@ export function AssetFormDialog({
       averagePrice:
         parsedAveragePrice != null && !Number.isNaN(parsedAveragePrice)
           ? parsedAveragePrice
+          : null,
+      currentClosePrice:
+        parsedCurrentClosePrice != null && !Number.isNaN(parsedCurrentClosePrice)
+          ? parsedCurrentClosePrice
           : null,
       broker: broker.trim() || null,
       isActive
@@ -171,6 +191,25 @@ export function AssetFormDialog({
               />
             </div>
           </div>
+
+          {isFixedIncome && (
+            <div className="space-y-2">
+              <Label htmlFor="asset-current-price">Preço Atual / Saldo</Label>
+              <Input
+                id="asset-current-price"
+                type="text"
+                placeholder="Opcional (padrão: igual ao preço médio)"
+                value={currentClosePrice}
+                onChange={(e) =>
+                  setCurrentClosePrice(formatCurrencyInput(e.target.value))
+                }
+                disabled={isPending}
+              />
+              <p className="text-muted-foreground text-xs">
+                Deixe em branco para usar o preço médio como saldo atual.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="asset-broker">Corretora</Label>

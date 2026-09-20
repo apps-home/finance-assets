@@ -73,6 +73,12 @@ export class Asset implements AssetProps {
       }),
       ...(props.broker !== undefined && { broker: props.broker ?? null }),
       ...(props.isActive !== undefined && { isActive: props.isActive }),
+      ...(props.currentClosePrice !== undefined && {
+        currentClosePrice: props.currentClosePrice ?? null
+      }),
+      ...(props.lastMonthClosePrice !== undefined && {
+        lastMonthClosePrice: props.lastMonthClosePrice ?? null
+      }),
       updatedAt: new Date()
     }
   }

@@ -7,6 +7,7 @@ export interface AssetDomainDTO {
   averagePrice?: number | null
   broker?: string | null
   isActive?: boolean
+  currentClosePrice?: number | null
   categoryId: string
 }
 
@@ -26,6 +27,7 @@ export class AssetMapper {
       averagePrice: raw.averagePrice ?? null,
       broker: raw.broker ?? null,
       isActive: raw.isActive ?? true,
+      currentClosePrice: raw.currentClosePrice ?? null,
       categoryId: raw.categoryId
     })
   }
@@ -33,7 +35,7 @@ export class AssetMapper {
   static toHTTP(asset: Asset): AssetHTTPResponse {
     const quantity = asset.quantity
     const averagePrice = asset.averagePrice
-    const currentClosePrice = asset.currentClosePrice
+    const currentClosePrice = asset.currentClosePrice ?? averagePrice
 
     const canComputeInvested = quantity !== null && averagePrice !== null
     const canComputeBalance = quantity !== null && currentClosePrice !== null
@@ -60,7 +62,7 @@ export class AssetMapper {
       averagePrice: asset.averagePrice,
       broker: asset.broker,
       isActive: asset.isActive,
-      currentClosePrice: asset.currentClosePrice,
+      currentClosePrice: asset.currentClosePrice ?? currentClosePrice,
       lastMonthClosePrice: asset.lastMonthClosePrice,
       investedValue,
       currentBalance,

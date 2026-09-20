@@ -5,5 +5,6 @@ export class CreateAssetPayload {
   averagePrice?: number | null
   broker?: string | null
   isActive?: boolean
+  currentClosePrice?: number | null
   categoryId: string
 }

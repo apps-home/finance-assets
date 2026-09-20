@@ -271,6 +271,7 @@ export default function AssetsClient() {
                 categoryId: editingAsset.categoryId,
                 quantity: editingAsset.quantity,
                 averagePrice: editingAsset.averagePrice,
+                currentClosePrice: editingAsset.currentClosePrice,
                 broker: editingAsset.broker || '',
                 isActive: editingAsset.isActive
               }
