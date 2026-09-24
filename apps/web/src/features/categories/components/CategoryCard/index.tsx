@@ -231,7 +231,7 @@ export function CategoryCard({
                 Total Investido
               </span>
               <p className="font-medium text-foreground text-xs tabular-nums">
-                {formatCurrency(totals.investedValue)}
+                {formatCurrency(totals.investedValue, category.currency)}
               </p>
             </div>
             <div className="space-y-0.5">
@@ -239,7 +239,7 @@ export function CategoryCard({
                 Saldo Atual
               </span>
               <p className="font-semibold text-foreground text-xs tabular-nums">
-                {formatCurrency(totals.currentBalance)}
+                {formatCurrency(totals.currentBalance, category.currency)}
               </p>
             </div>
             <div className="space-y-0.5">
@@ -256,7 +256,7 @@ export function CategoryCard({
                     totals.profitLoss === 0 && 'text-muted-foreground'
                   )}
                 >
-                  {formatCurrency(totals.profitLoss)}
+                  {formatCurrency(totals.profitLoss, category.currency)}
                 </p>
                 {totalProfitPercentage !== 0 && (
                   <span

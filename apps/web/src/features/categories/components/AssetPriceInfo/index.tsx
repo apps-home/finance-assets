@@ -13,12 +13,14 @@ import {
 interface AssetPriceInfoProps {
   currentClosePrice: number | null
   lastMonthClosePrice: number | null
+  currency?: string
   className?: string
 }
 
 export function AssetPriceInfo({
   currentClosePrice,
   lastMonthClosePrice,
+  currency = 'BRL',
   className
 }: AssetPriceInfoProps) {
   if (currentClosePrice === null) {
@@ -49,13 +51,13 @@ export function AssetPriceInfo({
       <div className="space-y-0.5">
         <span className="text-muted-foreground/60 text-xs">Cotação atual</span>
         <p className="font-semibold text-foreground text-sm tabular-nums">
-          {formatCurrency(currentClosePrice)}
+          {formatCurrency(currentClosePrice, currency)}
         </p>
       </div>
       <div className="space-y-0.5">
         <span className="text-muted-foreground/60 text-xs">Mês anterior</span>
         <p className="font-medium text-muted-foreground text-sm tabular-nums">
-          {formatCurrency(lastMonthClosePrice || 0)}
+          {formatCurrency(lastMonthClosePrice || 0, currency)}
         </p>
       </div>
       <div className="flex items-end justify-end">

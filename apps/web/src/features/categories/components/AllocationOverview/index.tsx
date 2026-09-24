@@ -17,13 +17,14 @@ import {
   CATEGORY_TYPE_COLORS,
   CATEGORY_TYPE_LABELS
 } from '@/features/categories/utils'
-import { Badge } from '@/shared/components/ui/badge'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from '@/shared/components/ui/card'
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '@/shared/components/ui/accordion'
+import { Badge } from '@/shared/components/ui/badge'
+import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
 import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 
@@ -44,7 +45,6 @@ export function AllocationOverview({ summary }: AllocationOverviewProps) {
     allocations
   } = summary
 
-  // Filtrar categorias que possuem meta configurada
   const configuredAllocations = allocations.filter(
     (a) => a.targetPercentage != null && a.targetPercentage > 0
   )
@@ -60,154 +60,165 @@ export function AllocationOverview({ summary }: AllocationOverviewProps) {
   return (
     <Card
       data-slot="allocation-overview"
-      className="border-border bg-card/60 shadow-xs backdrop-blur-xs"
+      className="gap-0 border-border bg-card/60 py-0 shadow-xs backdrop-blur-xs"
     >
-      <CardHeader className="pb-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Scale className="size-4.5" />
-            </div>
-            <div>
-              <CardTitle className="font-semibold text-sm">
-                Equilíbrio & Metas de Alocação
-              </CardTitle>
-              <p className="text-muted-foreground text-xs">
-                Comparativo entre sua carteira real e a estratégia alvo
-              </p>
-            </div>
-          </div>
+      <Accordion className="w-full">
+        <AccordionItem value="overview" className="border-none">
+          <CardHeader className="p-0">
+            <AccordionTrigger className="cursor-pointer px-4 py-3.5 hover:no-underline">
+              <div className="flex flex-1 flex-col gap-3 pr-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Scale className="size-4.5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-semibold text-foreground text-sm">
+                      Equilíbrio & Metas de Alocação
+                    </span>
+                    <span className="block text-muted-foreground text-xs">
+                      Comparativo entre sua carteira real e a estratégia alvo
+                    </span>
+                  </div>
+                </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Badge
-              variant="outline"
-              className="border-emerald-500/25 bg-emerald-500/10 text-[11px] text-emerald-600 dark:text-emerald-400"
-            >
-              <CheckCircle2 className="mr-1 size-3" />
-              {balancedCount} em equilíbrio
-            </Badge>
-            {warningCount > 0 && (
-              <Badge
-                variant="outline"
-                className="border-amber-500/25 bg-amber-500/10 text-[11px] text-amber-600 dark:text-amber-400"
-              >
-                <AlertTriangle className="mr-1 size-3" />
-                {warningCount} atenção
-              </Badge>
-            )}
-            {criticalCount > 0 && (
-              <Badge
-                variant="outline"
-                className="border-rose-500/25 bg-rose-500/10 text-[11px] text-rose-600 dark:text-rose-400"
-              >
-                <TrendingDown className="mr-1 size-3" />
-                {criticalCount} desbalanceada{criticalCount > 1 ? 's' : ''}
-              </Badge>
-            )}
-          </div>
-        </div>
-      </CardHeader>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className="border-emerald-500/25 bg-emerald-500/10 text-[11px] text-emerald-600 dark:text-emerald-400"
+                  >
+                    <CheckCircle2 className="mr-1 size-3" />
+                    {balancedCount} em equilíbrio
+                  </Badge>
+                  {warningCount > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/25 bg-amber-500/10 text-[11px] text-amber-600 dark:text-amber-400"
+                    >
+                      <AlertTriangle className="mr-1 size-3" />
+                      {warningCount} atenção
+                    </Badge>
+                  )}
+                  {criticalCount > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="border-rose-500/25 bg-rose-500/10 text-[11px] text-rose-600 dark:text-rose-400"
+                    >
+                      <TrendingDown className="mr-1 size-3" />
+                      {criticalCount} desbalanceada
+                      {criticalCount > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </AccordionTrigger>
+          </CardHeader>
 
-      <CardContent className="space-y-4">
-        {isOverAllocated && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <p className="font-medium text-amber-700 text-xs dark:text-amber-300">
-              A soma das metas ({totalTargetPercentage.toFixed(1)}%) excede
-              100%. Reajuste os percentuais de cada categoria para garantir um
-              planejamento balanceado.
-            </p>
-          </div>
-        )}
-
-        {underAllocatedCategories.length > 0 && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-rose-500/25 bg-rose-500/5 px-3 py-2.5">
-            <TrendingDown className="mt-0.5 size-4 shrink-0 text-rose-600 dark:text-rose-400" />
-            <div className="space-y-0.5">
-              <p className="font-semibold text-rose-700 text-xs dark:text-rose-300">
-                Prioridade para Novos Aportes
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                As categorias{' '}
-                <strong className="text-foreground">
-                  {underAllocatedCategories
-                    .map((c) => `${c.categoryName} (${c.gap.toFixed(1)}%)`)
-                    .join(', ')}
-                </strong>{' '}
-                estão significativamente abaixo da meta. Aporte nelas para
-                reequilibrar o portfólio.
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/50 bg-muted/25 p-3 sm:grid-cols-3">
-          <div>
-            <span className="text-[11px] text-muted-foreground/80">
-              Patrimônio Consolidado
-            </span>
-            <p className="font-semibold text-foreground text-xs tabular-nums">
-              {formatCurrency(totalBalance)}
-            </p>
-          </div>
-          <div>
-            <span className="text-[11px] text-muted-foreground/80">
-              Meta Total Alocada
-            </span>
-            <p
-              className={cn(
-                'font-semibold text-xs tabular-nums',
-                isOverAllocated
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-primary'
+          <AccordionContent className="pb-4">
+            <CardContent className="space-y-4 pt-0">
+              {isOverAllocated && (
+                <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <p className="font-medium text-amber-700 text-xs dark:text-amber-300">
+                    A soma das metas ({totalTargetPercentage.toFixed(1)}%)
+                    excede 100%. Reajuste os percentuais de cada categoria para
+                    garantir um planejamento balanceado.
+                  </p>
+                </div>
               )}
-            >
-              {totalTargetPercentage.toFixed(1)}%
-              {!isOverAllocated && totalTargetPercentage < 100 && (
-                <span className="ml-1 font-normal text-[10px] text-muted-foreground">
-                  ({(100 - totalTargetPercentage).toFixed(1)}% livre)
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="col-span-2 sm:col-span-1">
-            <span className="text-[11px] text-muted-foreground/80">
-              Saúde da Alocação
-            </span>
-            <p className="font-medium text-foreground text-xs">
-              {criticalCount === 0 && warningCount === 0 ? (
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  Carteira em Equilíbrio
-                </span>
-              ) : criticalCount > 0 ? (
-                <span className="font-semibold text-rose-600 dark:text-rose-400">
-                  Demanda Rebalanceamento
-                </span>
-              ) : (
-                <span className="font-semibold text-amber-600 dark:text-amber-400">
-                  Pequenas Divergências
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
 
-        <div className="space-y-4 pt-1">
-          {configuredAllocations.map((item) => (
-            <AllocationItemRow key={item.categoryId} allocation={item} />
-          ))}
-        </div>
+              {underAllocatedCategories.length > 0 && (
+                <div className="flex items-start gap-2.5 rounded-lg border border-rose-500/25 bg-rose-500/5 px-3 py-2.5">
+                  <TrendingDown className="mt-0.5 size-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                  <div className="space-y-0.5">
+                    <p className="font-semibold text-rose-700 text-xs dark:text-rose-300">
+                      Prioridade para Novos Aportes
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      As categorias{' '}
+                      <strong className="text-foreground">
+                        {underAllocatedCategories
+                          .map(
+                            (c) => `${c.categoryName} (${c.gap.toFixed(1)}%)`
+                          )
+                          .join(', ')}
+                      </strong>{' '}
+                      estão significativamente abaixo da meta. Aporte nelas para
+                      reequilibrar o portfólio.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-        <div className="flex items-center justify-between border-border/50 border-t pt-2 text-[11px] text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Info className="size-3.5 text-muted-foreground/70" />
-            <span>
-              Equilíbrio: desvio até ±2% • Atenção: ±2% a ±5% • Desbalanceada:
-              &gt; ±5%
-            </span>
-          </div>
-        </div>
-      </CardContent>
+              <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/50 bg-muted/25 p-3 sm:grid-cols-3">
+                <div>
+                  <span className="text-[11px] text-muted-foreground/80">
+                    Patrimônio Consolidado
+                  </span>
+                  <p className="font-semibold text-foreground text-xs tabular-nums">
+                    {formatCurrency(totalBalance)}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] text-muted-foreground/80">
+                    Meta Total Alocada
+                  </span>
+                  <p
+                    className={cn(
+                      'font-semibold text-xs tabular-nums',
+                      isOverAllocated
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-primary'
+                    )}
+                  >
+                    {totalTargetPercentage.toFixed(1)}%
+                    {!isOverAllocated && totalTargetPercentage < 100 && (
+                      <span className="ml-1 font-normal text-[10px] text-muted-foreground">
+                        ({(100 - totalTargetPercentage).toFixed(1)}% livre)
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <span className="text-[11px] text-muted-foreground/80">
+                    Saúde da Alocação
+                  </span>
+                  <p className="font-medium text-foreground text-xs">
+                    {criticalCount === 0 && warningCount === 0 ? (
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                        Carteira em Equilíbrio
+                      </span>
+                    ) : criticalCount > 0 ? (
+                      <span className="font-semibold text-rose-600 dark:text-rose-400">
+                        Demanda Rebalanceamento
+                      </span>
+                    ) : (
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                        Pequenas Divergências
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-1">
+                {configuredAllocations.map((item) => (
+                  <AllocationItemRow key={item.categoryId} allocation={item} />
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between border-border/50 border-t pt-2 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <Info className="size-3.5 text-muted-foreground/70" />
+                  <span>
+                    Equilíbrio: desvio até ±2% • Atenção: ±2% a ±5% •
+                    Desbalanceada: &gt; ±5%
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   )
 }
@@ -251,7 +262,7 @@ function AllocationItemRow({ allocation }: { allocation: CategoryAllocation }) {
               {actual.toFixed(1)}%
             </span>
             <span className="text-[11px] text-muted-foreground">
-              ({formatCurrency(allocation.currentBalance)})
+              ({formatCurrency(allocation.currentBalance, allocation.currency)})
             </span>
             <span className="text-[11px] text-muted-foreground/50">|</span>
             <span className="text-[11px] text-muted-foreground">Meta:</span>

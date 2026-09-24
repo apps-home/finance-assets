@@ -378,7 +378,10 @@ export function CategoryDetailCard({
                           </span>
                           <p className="font-semibold text-foreground text-sm tabular-nums">
                             {asset.averagePrice != null
-                              ? formatCurrency(asset.averagePrice)
+                              ? formatCurrency(
+                                  asset.averagePrice,
+                                  category.currency
+                                )
                               : '—'}
                           </p>
                         </div>
@@ -388,7 +391,10 @@ export function CategoryDetailCard({
                           </span>
                           <p className="font-medium text-foreground text-sm tabular-nums">
                             {asset.investedValue != null
-                              ? formatCurrency(asset.investedValue)
+                              ? formatCurrency(
+                                  asset.investedValue,
+                                  category.currency
+                                )
                               : '—'}
                           </p>
                         </div>
@@ -398,7 +404,10 @@ export function CategoryDetailCard({
                           </span>
                           <p className="font-semibold text-foreground text-sm tabular-nums">
                             {asset.currentBalance != null
-                              ? formatCurrency(asset.currentBalance)
+                              ? formatCurrency(
+                                  asset.currentBalance,
+                                  category.currency
+                                )
                               : '—'}
                           </p>
                         </div>
@@ -409,6 +418,7 @@ export function CategoryDetailCard({
                           <AssetPriceInfo
                             currentClosePrice={asset.currentClosePrice}
                             lastMonthClosePrice={asset.lastMonthClosePrice}
+                            currency={category.currency}
                           />
                         </div>
                       )}
@@ -430,7 +440,10 @@ export function CategoryDetailCard({
                             ) : (
                               <TrendingDown className="size-3" />
                             )}
-                            {formatCurrency(Math.abs(asset.profitLoss!))}
+                            {formatCurrency(
+                              Math.abs(asset.profitLoss!),
+                              category.currency
+                            )}
                           </Badge>
                           {asset.profitabilityPercentage != null && (
                             <span
@@ -468,7 +481,7 @@ export function CategoryDetailCard({
                       Total Investido
                     </span>
                     <p className="font-semibold text-foreground text-sm tabular-nums">
-                      {formatCurrency(totals.investedValue)}
+                      {formatCurrency(totals.investedValue, category.currency)}
                     </p>
                   </div>
                   <div className="space-y-0.5">
@@ -476,7 +489,7 @@ export function CategoryDetailCard({
                       Saldo Atual
                     </span>
                     <p className="font-semibold text-foreground text-sm tabular-nums">
-                      {formatCurrency(totals.currentBalance)}
+                      {formatCurrency(totals.currentBalance, category.currency)}
                     </p>
                   </div>
                   <div className="space-y-0.5">
@@ -495,7 +508,7 @@ export function CategoryDetailCard({
                         )}
                       >
                         {totals.profitLoss >= 0 ? '+' : ''}
-                        {formatCurrency(totals.profitLoss)}
+                        {formatCurrency(totals.profitLoss, category.currency)}
                       </p>
                       {totalProfitPercentage !== 0 && (
                         <span
