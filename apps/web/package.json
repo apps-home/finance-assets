@@ -12,6 +12,7 @@
     "@finance-assets-web/env": "workspace:*",
     "@lib/db": "workspace:*",
     "@radix-ui/react-slot": "^1.2.4",
+    "@sentry/nextjs": "^11.8.0",
     "@tanstack/react-form": "^1.27.7",
     "@tanstack/react-hotkeys": "^0.4.1",
     "@tanstack/react-query": "^5.100.9",

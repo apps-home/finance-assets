@@ -21,7 +21,8 @@ export const env = createEnv({
       .url({
         error: 'NODE_API_URL must be a valid URL'
       })
-      .optional()
+      .optional(),
+    SENTRY_AUTH_TOKEN: z.string().optional()
   },
   client: {
     NEXT_PUBLIC_SERVER_URL: z.url({
@@ -44,6 +45,7 @@ export const env = createEnv({
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     DATABASE_URL: process.env.DATABASE_URL,
     N8N_URL: process.env.N8N_URL,
-    NODE_API_URL: process.env.NODE_API_URL
+    NODE_API_URL: process.env.NODE_API_URL,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN
   }
 })

@@ -18,6 +18,7 @@ import type {
 } from '@/features/wishlist/types/wishlist.types'
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useCategories } from '@/features/categories/hooks/use-category'
 
 export default function WishlistClient() {
   const [search, setSearch] = useQueryState('search', { defaultValue: '' })
@@ -47,7 +48,6 @@ export default function WishlistClient() {
   )
 
   const {
-    categories,
     wishlistItems,
     isLoading,
     createWishlist,
@@ -57,6 +57,8 @@ export default function WishlistClient() {
     isUpdating,
     isDeleting
   } = useWishlist()
+
+  const { data: categories = [] } = useCategories()
 
   const filteredItems = useMemo(() => {
     return wishlistItems.filter((item) => {
