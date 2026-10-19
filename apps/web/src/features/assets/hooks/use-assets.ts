@@ -11,16 +11,14 @@ import type {
   CreateAssetDTO,
   UpdateAssetDTO
 } from '@/features/assets/api/types'
-import { listCategories } from '@/features/categories/api'
+import { useCategories } from '@/features/categories/hooks/use-category'
 import { queryClient } from '@/shared/providers/query-client'
 
 import type { AssetWithCategory } from '../types'
 
 export function useAssets(selectedCategoryId?: string) {
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
-    queryKey: ['all-categories'],
-    queryFn: () => listCategories()
-  })
+  const { data: categories = [], isLoading: isLoadingCategories } =
+    useCategories()
 
   const { data: allAssets = [], isLoading: isLoadingAssets } = useQuery({
     queryKey: [

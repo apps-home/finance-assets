@@ -31,6 +31,8 @@ import {
 } from '@/shared/components/ui/select'
 import { queryClient } from '@/shared/providers/query-client'
 
+import { CATEGORY_QUERY_KEY } from '../../hooks/use-category'
+
 const CURRENCIES = [
   { value: 'BRL', label: 'Real Brasileiro (R$)' },
   { value: 'USD', label: 'Dólar Americano ($)' },
@@ -104,8 +106,7 @@ export function CategoryFormDialog({
     onSuccess: () => {
       onOpenChange(false)
       resetForm()
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      queryClient.invalidateQueries({ queryKey: ['all-categories'] })
+      queryClient.invalidateQueries({ queryKey: [CATEGORY_QUERY_KEY] })
       toast.success('Categoria criada com sucesso!')
     }
   })
@@ -116,8 +117,7 @@ export function CategoryFormDialog({
     onSuccess: () => {
       onOpenChange(false)
       resetForm()
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      queryClient.invalidateQueries({ queryKey: ['all-categories'] })
+      queryClient.invalidateQueries({ queryKey: [CATEGORY_QUERY_KEY] })
       toast.success('Categoria atualizada com sucesso!')
     }
   })

@@ -18,7 +18,7 @@ O **Finance Assets** é uma plataforma robusta para gestão de patrimônio pesso
 | **Infraestrutura** | Docker + Portainer, exposto via Nginx Proxy Manager com Cloudflare Zero Trust |
 | **Automação Externa** | n8n para disparos de e-mail e geração de insights de IA |
 | **Monorepo & Submódulos** | PNPM Workspaces com Git Submodules (`packages/lib-db`) |
-| **Qualidade & Governança** | Biome (linting/formatação) e script de auditoria de dependências (`script.mjs`) |
+| **Qualidade & Governança** | Biome (linting/formatação) e script de auditoria de dependências (`scripts/check-version.mjs`) |
 
 ---
 
@@ -41,7 +41,8 @@ O schema é dividido em dois namespaces PostgreSQL: `better-auth` (autenticaçã
 |---|---|
 | `asset_categories` | Classe de ativos do usuário. Campos: `id`, `userId`, `name`, `type` (enum `CategoryType`), `currency` (padrão `BRL`). |
 | `assets` | Ativo individual dentro de uma categoria. Campos: `id`, `categoryId`, `name`, `ticker`, `currentClosePrice`, `lastMonthClosePrice`. |
-| `asset_records` | Registro histórico mensal do valor consolidado de uma categoria. Campos: `id`, `categoryId`, `month`, `year`, `amount`, `exchangeRate`. |
+| `asset_wishlists` | Ativos monitorados / lista de desejos do usuário. Campos: `id`, `userId`, `categoryId`, `name`, `ticker`, `targetPrice`, `currentClosePrice`, `lastMonthClosePrice`, `notes`, `createdAt`, `updatedAt`. |
+| `asset_records` | Registro histórico mensal do valor consolidado de uma categoria. Campos: `id`, `categoryId`, `month`, `year`, `amount`, `exchangeRate`, `dividendAmount`. |
 | `asset_category_competences` | Registra em quais **anos** uma categoria possui registros, otimizando queries de filtro temporal. Campos: `id`, `categoryId`, `year`. |
 
 ### Enum: `CategoryType`
@@ -83,16 +84,85 @@ modules/
 ├── assets/
 │   ├── asset/          # Domínio do ativo individual (CRUD + price update)
 │   ├── categories/     # Domínio das categorias de ativos
-│   └── competences/    # Domínio das competências anuais por categoria
+│   ├── competences/    # Domínio das competências anuais por categoria
+│   └── wishlist/       # Domínio da lista de desejos / ativos monitorados
 ├── budgets/            # Domínio dos registros mensais (AssetRecord)
 └── user/               # Domínio do usuário (perfil, avatar)
 ```
 
-Cada módulo segue a arquitetura em camadas:
-- **`domain/`** — Entidades, repositórios (interfaces) e DTOs
-- **`application/use-cases/`** — Casos de uso (regras de negócio)
-- **`infra/`** — Implementações concretas (repositórios Prisma, controllers HTTP)
-- **`adapters/`** — Adaptadores externos (processadores de fila, listeners de eventos, cron schedules)
+Cada módulo segue a arquitetura em camadas (DDD / Clean Architecture):
+- **`domain/`** — Entidades, repositórios (interfaces abstratas) e DTOs de domínio.
+- **`application/use-cases/`** — Casos de uso (regras de negócio).
+- **`infra/`** — Implementações concretas (repositórios Prisma conectando ao `PrismaService`, controllers HTTP NestJS, DTOs de validação de entrada).
+- **`adapters/`** — Adaptadores externos (processadores de fila BullMQ, listeners de eventos, agendamentos).
+
+### Padrão de Erro e Retorno dos Use Cases: `Either<Left, Right>`
+
+O projeto utiliza o padrão funcional `Either` de `@/core/utils/Either` para encapsular retornos e erros sem lançar exceções não tratadas nos casos de uso:
+
+```ts
+import { Either, left, right } from '@/core/utils/Either'
+import { PayloadError } from '@/core/domain/errors/payload-error'
+
+type Response = Either<PayloadError | CustomError, { asset: Asset }>
+
+export class CreateAssetUseCase {
+  constructor(private readonly assetRepository: AssetRepository) {}
+
+  async execute(data: CreateAssetDTO): Promise<Response> {
+    if (!data.ticker) {
+      return left(new PayloadError('Ticker is required'))
+    }
+
+    const asset = await this.assetRepository.create(data)
+    return right({ asset })
+  }
+}
+```
+
+### Tratamento nos Controllers HTTP
+
+Nos controllers NestJS, avalie o resultado com `result.isLeft()` e mapeie para a exceção HTTP correspondente:
+
+```ts
+@Post()
+async create(@Body() data: CreateDTO) {
+  const result = await this.useCase.execute(data)
+
+  if (result.isLeft()) {
+    const error = result.value
+
+    switch (error.constructor) {
+      case PayloadError:
+        throw new BadRequestException(error.message)
+      case ResourceNotFoundError:
+        throw new NotFoundException(error.message)
+      default:
+        throw new InternalServerErrorException('Unexpected error')
+    }
+  }
+
+  return { data: result.value }
+}
+```
+
+### Passo a Passo para Criar um Novo Módulo no Backend
+
+1. **Modelagem:** Se necessário, adicione a tabela em `packages/lib-db/src/prisma/schema.prisma` e execute `pnpm --filter @lib/db build`.
+2. **Camada Domain (`src/modules/<nome>/domain`):**
+   - Crie a entidade e o contrato do repositório (ex: `abstract class <Nome>Repository`).
+3. **Camada Application (`src/modules/<nome>/application`):**
+   - Crie os casos de uso em `use-cases/` retornando `Promise<Either<AppError, Result>>`.
+4. **Camada Infra (`src/modules/<nome>/infra`):**
+   - Implemente o repositório Prisma em `repositories/prisma-<nome>.repository.ts` injetando `PrismaService`.
+   - Crie o DTO de requisição (ex: `<nome>.dto.ts`) com class-validator/zod.
+   - Crie o controller HTTP em `<nome>.controller.ts`.
+5. **Módulo NestJS (`src/modules/<nome>/<nome>.module.ts`):**
+   - Declare `controllers: [<Nome>Controller]`.
+   - Forneça os use-cases e vincule a interface do repositório à implementação concreta:
+     `{ provide: <Nome>Repository, useClass: Prisma<Nome>Repository }`.
+6. **Registro Global (`src/app.module.ts`):**
+   - **OBRIGATÓRIO:** Importe `<Nome>Module` no array `imports` de `AppModule`.
 
 ---
 
@@ -163,9 +233,10 @@ core/
 | **Dashboard de Patrimônio** | Visualização da alocação de recursos por categoria com totais consolidados. |
 | **Gestão de Categorias** | CRUD de categorias com suporte a múltiplas moedas (BRL/USD) e tipos de ativos. |
 | **Gestão de Ativos** | CRUD de ativos individuais com ticker, preço médio e quantidade. |
+| **Lista de Desejos (Wishlist)**| Monitoramento de ativos em radar com preço alvo, cotação atual e notas. |
 | **Sincronização Automática** | Cron Jobs diários que buscam cotações em Brapi, CoinGecko e Alpha Vantage via BullMQ. |
 | **Atualização ao Criar Ativo** | Evento `asset.created` dispara busca imediata do preço de mercado (currentClosePrice + lastMonthClosePrice). |
-| **Histórico Mensal (Budget)** | Registro do valor consolidado de uma categoria por mês/ano com suporte a taxa de câmbio. |
+| **Histórico Mensal (Budget)** | Registro do valor consolidado de uma categoria por mês/ano com suporte a taxa de câmbio e dividendos. |
 | **Filtro por Competência** | Consulta eficiente dos anos com registros via `AssetCategoryCompetence`. |
 | **Gestão de Usuário** | Atualização de perfil e upload de avatar para Cloudflare R2. |
 | **Autenticação Segura** | Better Auth com suporte a OAuth (Google), verificação de e-mail e gestão de sessões. |
@@ -185,19 +256,22 @@ core/
 
 ## 10. Estrutura do Monorepo & Scripts (`package.json`)
 
-O projeto adota uma arquitetura monorepo gerenciada via **pnpm workspaces** (`pnpm-workspace.yaml`), integrando a API principal com bibliotecas compartilhadas versionadas via Git Submodule.
+O projeto adota uma arquitetura monorepo gerenciada via **pnpm workspaces** (`pnpm-workspace.yaml`), integrando a API backend (`apps/service`), o frontend Next.js (`apps/web`) e bibliotecas compartilhadas versionadas via Git Submodule (`packages/lib-db`).
 
 ### Estrutura de Pacotes
 
 ```
-finance-assets-api/
+finance-assets/
 ├── apps/
-│   └── service/              # API NestJS principal (package: "api")
+│   ├── service/              # API NestJS principal (package: "api", porta 3333)
+│   └── web/                  # Frontend Next.js 16 (package: "web", porta 3000)
 ├── packages/
+│   ├── config/               # Configurações compartilhadas Biome/TS (@finance-assets-web/config)
+│   ├── env/                  # Schemas de variáveis de ambiente (@finance-assets-web/env)
 │   └── lib-db/               # Submódulo Git compartilhado (package: "@lib/db", Prisma ORM)
 ├── package.json              # Configurações e scripts orquestradores da raiz
 ├── pnpm-workspace.yaml       # Configuração de workspaces e permissões de build
-├── script.mjs                # Script de auditoria e validação de dependências do workspace
+├── scripts/check-version.mjs # Script de auditoria e validação de dependências do workspace
 └── biome.json                # Configuração de linting e formatação
 ```
 
@@ -211,15 +285,15 @@ finance-assets-api/
 | `lint` | `pnpm --filter api lint` | Executa a verificação e correção de linting com Biome na API. |
 | `format` | `pnpm --filter api format` | Formata o código com Biome na API. |
 | `check` | `pnpm --filter api check` | Executa verificação completa de linting e formatação com auto-correção. |
-| `check-versions` | `node script.mjs` | Executa o validador de integridade e consistência de versões no monorepo e submódulos. |
+| `check-versions` | `node scripts/check-version.mjs` | Executa o validador de integridade e consistência de versões no monorepo e submódulos. |
 
 ---
 
-## 11. Auditoria e Consistência de Versões (`script.mjs`)
+## 11. Auditoria e Consistência de Versões (`scripts/check-version.mjs`)
 
-O arquivo `script.mjs` (executado via `pnpm check-versions`) é uma ferramenta interna de governança para auditoria estática e prevenção de conflitos de dependências entre projetos do workspace e submódulos Git.
+O arquivo `scripts/check-version.mjs` (executado via `pnpm check-versions`) é uma ferramenta interna de governança para auditoria estática e prevenção de conflitos de dependências entre projetos do workspace e submódulos Git.
 
-### Capacidades e Funcionamento do `script.mjs`:
+### Capacidades e Funcionamento do `scripts/check-version.mjs`:
 
 1. **Varredura Dinâmica de Pacotes**:
    - Lê os padrões glob de pacotes definidos no `pnpm-workspace.yaml` (ex: `apps/*`, `packages/*`).

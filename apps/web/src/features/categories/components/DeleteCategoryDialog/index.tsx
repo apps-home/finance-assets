@@ -16,6 +16,8 @@ import {
 } from '@/shared/components/ui/dialog'
 import { queryClient } from '@/shared/providers/query-client'
 
+import { CATEGORY_QUERY_KEY } from '../../hooks/use-category'
+
 interface DeleteCategoryDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -31,8 +33,7 @@ export function DeleteCategoryDialog({
     mutationFn: deleteCategory,
     onSuccess: () => {
       onOpenChange(false)
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      queryClient.invalidateQueries({ queryKey: ['all-categories'] })
+      queryClient.invalidateQueries({ queryKey: [CATEGORY_QUERY_KEY] })
       toast.success('Categoria removida com sucesso!')
     }
   })

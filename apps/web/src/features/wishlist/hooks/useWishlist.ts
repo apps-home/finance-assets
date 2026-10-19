@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-import { listCategories } from '@/features/categories/api'
 import { queryClient } from '@/shared/providers/query-client'
 
 import {
@@ -16,19 +15,16 @@ import type {
   WishlistSearchParams
 } from '../types/wishlist.types'
 
-export function useWishlist(params?: WishlistSearchParams) {
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
-    queryKey: ['all-categories'],
-    queryFn: () => listCategories()
-  })
+export const WISHLIST_QUERY_KEY = 'wishlist-items'
 
+export function useWishlist(params?: WishlistSearchParams) {
   const {
     data: wishlistItems = [],
     isLoading: isLoadingWishlist,
     refetch
   } = useQuery({
     queryKey: [
-      'wishlist-items',
+      WISHLIST_QUERY_KEY,
       params?.categoryId,
       params?.ticker,
       params?.name
@@ -40,7 +36,7 @@ export function useWishlist(params?: WishlistSearchParams) {
     mutationFn: (data: CreateWishlistDTO) => createWishlist(data),
     onSuccess: () => {
       toast.success('Ativo adicionado à Wishlist com sucesso!')
-      queryClient.invalidateQueries({ queryKey: ['wishlist-items'] })
+      queryClient.invalidateQueries({ queryKey: [WISHLIST_QUERY_KEY] })
     },
     onError: (error: any) => {
       const message =
@@ -54,7 +50,7 @@ export function useWishlist(params?: WishlistSearchParams) {
       updateWishlist(id, data),
     onSuccess: () => {
       toast.success('Item da Wishlist atualizado com sucesso!')
-      queryClient.invalidateQueries({ queryKey: ['wishlist-items'] })
+      queryClient.invalidateQueries({ queryKey: [WISHLIST_QUERY_KEY] })
     },
     onError: (error: any) => {
       const message =
@@ -67,7 +63,7 @@ export function useWishlist(params?: WishlistSearchParams) {
     mutationFn: (id: string) => deleteWishlist(id),
     onSuccess: () => {
       toast.success('Item removido da Wishlist com sucesso!')
-      queryClient.invalidateQueries({ queryKey: ['wishlist-items'] })
+      queryClient.invalidateQueries({ queryKey: [WISHLIST_QUERY_KEY] })
     },
     onError: (error: any) => {
       const message =
@@ -77,9 +73,8 @@ export function useWishlist(params?: WishlistSearchParams) {
   })
 
   return {
-    categories,
     wishlistItems,
-    isLoading: isLoadingCategories || isLoadingWishlist,
+    isLoading: isLoadingWishlist,
     refetch,
     createWishlist: createMutation.mutateAsync,
     updateWishlist: updateMutation.mutateAsync,

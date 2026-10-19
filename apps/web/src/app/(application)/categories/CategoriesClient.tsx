@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
+import { useMutation, useQueries } from '@tanstack/react-query'
 import { ChartBarStacked, PlusIcon, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -8,12 +8,12 @@ import { toast } from 'sonner'
 import { createAsset, listAssetsByCategory } from '@/features/assets/api'
 import { CreateAssetDTO } from '@/features/assets/api/types'
 import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
-import { listCategories } from '@/features/categories/api'
 import { Category, CategoryType } from '@/features/categories/api/types'
 import { AllocationOverview } from '@/features/categories/components/AllocationOverview'
 import { CategoryCard } from '@/features/categories/components/CategoryCard'
 import { CategoryFormDialog } from '@/features/categories/components/CategoryFormDialog'
 import { DeleteCategoryDialog } from '@/features/categories/components/DeleteCategoryDialog'
+import { useCategories } from '@/features/categories/hooks/use-category'
 import { CategoryAllocation } from '@/features/categories/types/allocation'
 import { calculateAllocations } from '@/features/categories/utils/calculate-allocations'
 import { Button } from '@/shared/components/ui/button'
@@ -45,11 +45,7 @@ export default function CategoriesClient() {
     null
   )
 
-  const { data: categories = [], isLoading } = useQuery({
-    queryKey: ['all-categories'],
-    queryFn: () => listCategories(),
-    placeholderData: (prev) => prev
-  })
+  const { data: categories = [], isLoading } = useCategories()
 
   const assetQueries = useQueries({
     queries: categories.map((cat) => ({

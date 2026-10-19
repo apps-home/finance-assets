@@ -11,16 +11,17 @@
 ### Workspace Structure
 
 ```
-finance-assets-web/
+finance-assets/
 ├── apps/
+│   ├── service/          # NestJS backend API (runs on port 3333)
 │   └── web/              # Next.js 16 frontend (runs on port 3000)
 ├── packages/
-│   ├── config/           # Shared Biome/TS config
+│   ├── config/           # Shared Biome/TS config (@finance-assets-web/config)
 │   ├── env/              # Environment variable schemas (@finance-assets-web/env)
-│   └── lib-db/           # Prisma database layer (git submodule)
+│   └── lib-db/           # Prisma database layer (git submodule: @lib/db)
 ├── pnpm-workspace.yaml   # Workspace configuration and shared catalogs
 ├── biome.json            # Root linter/formatter config
-├── script.js             # Version & submodule catalog mismatch checker
+├── scripts/check-version.mjs # Version & submodule catalog mismatch checker
 └── package.json
 ```
 
@@ -88,10 +89,11 @@ Feature modules live under `src/features/<feature>/` and follow this pattern:
 
 ```
 features/<feature>/
+├── api/              # API calls and request/response types (e.g. index.ts, types.ts)
 ├── components/       # Feature-specific React components
-├── hooks/            # Custom hooks for the feature
-├── services/         # API calls for the feature
-└── types/            # TypeScript types/interfaces
+├── hooks/            # Custom React hooks (TanStack Query hooks, e.g. use<Feature>)
+├── types/            # TypeScript domain & UI types
+└── utils/            # Feature-specific helper functions (optional)
 ```
 
 ---
@@ -285,28 +287,6 @@ Biome enforces a specific import order with blank-line separation:
 
 ## Common Patterns
 
-### API Calls (TanStack Query)
-
-```tsx
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiFunction } from '@/infrastructure/api/<feature>'
-
-// Query
-const { data, isLoading } = useQuery({
-  queryKey: ['resource-name', param],
-  queryFn: () => apiFunction(param)
-})
-
-// Mutation with cache invalidation
-const queryClient = useQueryClient()
-const mutation = useMutation({
-  mutationFn: (data) => apiFunction(data),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['resource-name'] })
-  }
-})
-```
-
 ### URL State with nuqs
 
 ```tsx
@@ -339,54 +319,164 @@ toast.success('Operation completed')
 toast.error('Something went wrong')
 ```
 
+### API & Hooks Architecture (Server vs Client Separation)
+
+A arquitetura de features do frontend separa estritamente **camada HTTP / Server-Side** de **gerenciamento de cache / Client-Side**:
+
+1. **`features/<feature>/api/` (Server-Side / HTTP Layer)**:
+   - Funções assíncronas puras (`index.ts`) que disparam requisições HTTP via `axios` e os tipos/DTOs de payload e resposta (`types.ts`).
+   - **Propósito**: Pode ser consumida diretamente no **Server-Side** (Server Components do App Router, Route Handlers) ou fornecida como `queryFn`/`mutationFn` para os hooks de cliente.
+   - Não contém hooks do React nem acoplamento com TanStack Query.
+
+2. **`features/<feature>/hooks/` (Client-Side / TanStack Query Layer)**:
+   - Exclusivo para componentes cliente (`'use client'`).
+   - Aproveita os caches globais, refetching e deduplicação do `@tanstack/react-query`.
+   - Exporta as constantes de Query Key (`export const <FEATURE>_QUERY_KEY = '...'`).
+   - Expõe queries com `placeholderData: (prev) => prev`.
+   - Expõe mutations granulares (`useCreate...`, `useUpdate...`, `useDelete...`) que já encapsulam `onSuccess` (com `toast.success` e `queryClient.invalidateQueries`) e `onError` (com `toast.error`).
+   - **Regra**: Componentes cliente devem consumir esses hooks customizados em vez de criar `useMutation` ad-hoc nas telas.
+
+#### Padrão Oficial de Feature Hooks (Referência: `features/categories/hooks/use-category.ts`)
+
+```tsx
+// features/<feature>/hooks/use-<feature>.ts
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
+
+import { queryClient } from '@/shared/providers/query-client'
+import {
+  createItem,
+  deleteItem,
+  getItemById,
+  listItems,
+  updateItem
+} from '../api'
+import type {
+  CreateItemDTO,
+  ListItemsParams,
+  UpdateItemDTO
+} from '../api/types'
+
+export const ITEM_QUERY_KEY = 'items'
+
+// 1. Queries
+export function useItems(params?: ListItemsParams) {
+  return useQuery({
+    queryKey: [ITEM_QUERY_KEY, params],
+    queryFn: () => listItems(params),
+    placeholderData: (prev) => prev
+  })
+}
+
+export function useItem(id: string) {
+  return useQuery({
+    queryKey: [ITEM_QUERY_KEY, id],
+    queryFn: () => getItemById(id)
+  })
+}
+
+// 2. Mutations granulares (com toast e invalidação automática de cache)
+export function useCreateItem() {
+  return useMutation({
+    mutationFn: (dto: CreateItemDTO) => createItem(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ITEM_QUERY_KEY] })
+      toast.success('Item criado com sucesso!')
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Erro ao criar item'
+      toast.error(message)
+    }
+  })
+}
+
+export function useUpdateItem() {
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: UpdateItemDTO }) =>
+      updateItem(id, dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ITEM_QUERY_KEY] })
+      toast.success('Item atualizado com sucesso!')
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Erro ao atualizar item'
+      toast.error(message)
+    }
+  })
+}
+
+export function useDeleteItem() {
+  return useMutation({
+    mutationFn: (id: string) => deleteItem(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ITEM_QUERY_KEY] })
+      toast.success('Item excluído com sucesso!')
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Erro ao excluir item'
+      toast.error(message)
+    }
+  })
+}
+```
+
+> [!IMPORTANT]
+> **Consumo em Componentes Cliente**:
+> Os hooks de query retornam a instância de `useQuery`. Sempre desestruture a propriedade `data`:
+> ```tsx
+> const { data: items = [], isLoading } = useItems()
+> const { mutate: createItem, isPending } = useCreateItem()
+> ```
+
 ---
 
 ## Creating a New Feature
 
-When creating a new feature, follow this structure:
+Ao criar uma nova feature, siga esta ordem de implementação:
 
-### 1. Create the feature directory
+### 1. Criar a estrutura de diretórios
 
 ```
 features/<feature>/
-├── components/       # Feature-specific React components
-├── hooks/            # Custom hooks for the feature
-├── services/         # API calls for the feature
+├── api/              # Camada HTTP pura (index.ts) e DTOs (types.ts) — Server-Side & QueryFn
+
 ├── store/            # Zustand store (only if needed)
-└── types/            # TypeScript types/interfaces
+├── components/       # Componentes React da feature (Dialogs, Cards, Tables)
+├── hooks/            # Custom hooks TanStack Query (use-<feature>.ts) — Client-Side
+├── types/            # Tipos e interfaces de domínio e UI
+└── utils/            # Utilitários e cálculos específicos da feature (opcional)
 ```
 
-### 2. Create API functions
+### 2. Implementar a camada HTTP (`features/<feature>/api/`)
 
-Place API call functions in `infrastructure/api/<feature>/`. Use `axios` and the shared API client from `@/infrastructure/api/`.
+Crie funções assíncronas puras em `api/index.ts` usando a instância base do axios de `@/infrastructure/api/`. Defina os DTOs em `api/types.ts`.
 
-### 3. Build UI with shared components
+### 3. Criar os Custom Hooks (`features/<feature>/hooks/use-<feature>.ts`)
 
-Feature components import from `@/shared/components/ui/` (shadcn primitives), compose with `@/shared/components/` (custom shared components), and use `@/shared/hooks/` for reusable logic.
+Implemente os hooks conforme o padrão oficial acima, exportando as constantes de query key, queries com `placeholderData`, e mutations com tratamento automático de toasts e `queryClient.invalidateQueries`.
 
-```tsx
-import { Button, Card } from '@/shared/components/ui/button'
-import { DataTable } from '@/shared/components/data-table'
-import { useFeatureHook } from '@/features/<feature>/hooks/use-feature-hook'
-```
+### 4. Construir os Componentes de UI (`features/<feature>/components/`)
 
-### 4. Data fetching with TanStack Query
+Consuma os custom hooks nos componentes cliente. Utilize os componentes primitivos de `@/shared/components/ui/` (shadcn) e componha layouts com `cn()` e design tokens.
 
-Use `useQuery` and `useMutation` from `@tanstack/react-query` in components or custom hooks. Never store server data in Zustand.
+### 5. Configurar Rotas em `app/`
 
-### 5. Add types
-
-Define types in `features/<feature>/types/`. Import API response types from `@/infrastructure/api/<feature>/` if needed.
-
-### 6. Wire routing in `app/`
-
-Add route segments under `app/(auth)/<feature>/` or `app/(shared)/<feature>/` depending on auth requirements. Shared providers are already in `app/providers.tsx`.
+Crie a rota sob `app/(application)/<feature>/page.tsx`. Se a página for um Server Component, ela pode pré-carregar dados via `api/` ou delegar o ciclo de vida dinâmico para um `<Feature>Client.tsx` que consome os hooks de `hooks/`.
 
 ---
 
 ## Dependency Version & Submodule Verification
 
-The workspace includes a version checker (`script.js`) that verifies dependency consistency across:
+The workspace includes a version checker (`scripts/check-version.mjs`) that verifies dependency consistency across:
 - Root `package.json` and all apps (`apps/*`)
 - Workspace packages and Git submodules (`packages/*`, `.gitmodules`)
 - Shared catalog definitions in `pnpm-workspace.yaml` (`catalog:`)

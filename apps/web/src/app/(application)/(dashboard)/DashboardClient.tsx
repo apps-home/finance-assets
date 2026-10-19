@@ -15,8 +15,9 @@ import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-import { listAvailableYears, listCategories } from '@/features/categories/api'
 import { CategoryType } from '@/features/categories/api/types'
+import { useCategories } from '@/features/categories/hooks/use-category'
+import { useAvailableYears } from '@/features/categories/hooks/use-competence'
 import { CategoryBreakdown } from '@/features/dashboard/components/CategoryBreakdown'
 import { FinancialChart } from '@/features/dashboard/components/FinancialChart'
 import { FinancialTable } from '@/features/dashboard/components/FinancialTable'
@@ -46,11 +47,7 @@ export default function DashboardPageClient() {
   const [insightsMode, setInsightsMode] = useState<'month' | 'year'>('month')
   const hasInitializedYear = useRef(false)
 
-  const { data: availableYears } = useQuery({
-    queryKey: ['available-years'],
-    queryFn: () => listAvailableYears(),
-    placeholderData: (prev) => prev
-  })
+  const { data: availableYears } = useAvailableYears()
 
   useEffect(() => {
     if (availableYears?.length && !hasInitializedYear.current) {
@@ -66,11 +63,8 @@ export default function DashboardPageClient() {
     placeholderData: (prev) => prev
   })
 
-  const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
-    queryKey: ['categories', selectedYear],
-    queryFn: () => listCategories({ year: parseInt(selectedYear, 10) }),
-    placeholderData: (prev) => prev
-  })
+  const { data: categoriesData, isLoading: isLoadingCategories } =
+    useCategories({ year: parseInt(selectedYear, 10) })
 
   const { mutateAsync: saveBudget } = useMutation({
     mutationFn: createBudget,

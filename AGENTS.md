@@ -2,6 +2,10 @@
 
 > Context file for AI coding assistants working on this unified monorepo.
 
+@apps/service/AGENTS.md
+@apps/web/AGENTS.md
+@packages/lib-db/AGENTS.md
+
 ---
 
 ## 1. Project Overview
@@ -25,7 +29,7 @@ finance-assets/
 │       └── deploy-web.yml     # CI/CD for Web (GHCR build + SSH deploy to Oracle VM)
 ├── pnpm-workspace.yaml   # Workspace configuration and shared catalogs
 ├── biome.json            # Root linter/formatter config
-├── script.mjs            # Version & submodule catalog mismatch checker
+├── scripts/check-version.mjs # Version & submodule catalog mismatch checker
 └── package.json
 ```
 
