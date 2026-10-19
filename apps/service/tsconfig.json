@@ -2,6 +2,7 @@
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
+    "baseUrl": "./",
     "declaration": true,
     "resolvePackageJsonExports": true,
     "removeComments": true,
@@ -10,7 +11,7 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
@@ -22,7 +23,8 @@
     "noFallthroughCasesInSwitch": false,
     "types": ["node", "multer"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@test/*": ["./test/*"]
     }
   },
   "include": ["src/**/*", "test/**/*"],
