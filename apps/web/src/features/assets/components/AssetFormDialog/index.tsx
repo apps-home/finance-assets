@@ -42,7 +42,7 @@ interface AssetFormDefaults {
 interface AssetFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (categoryId: string, data: CreateAssetDTO) => Promise<void>
+  onSubmit: (data: CreateAssetDTO) => Promise<void>
   isPending: boolean
   categories: Category[]
   initialCategoryId?: string
@@ -126,7 +126,8 @@ export function AssetFormDialog({
     const parsedCurrentClosePrice =
       currentClosePrice.trim() !== '' ? parseValue(currentClosePrice) : null
 
-    await onSubmit(categoryId, {
+    await onSubmit({
+      categoryId,
       name: name.trim(),
       ticker: ticker.trim(),
       quantity:
@@ -138,7 +139,8 @@ export function AssetFormDialog({
           ? parsedAveragePrice
           : null,
       currentClosePrice:
-        parsedCurrentClosePrice != null && !Number.isNaN(parsedCurrentClosePrice)
+        parsedCurrentClosePrice != null &&
+        !Number.isNaN(parsedCurrentClosePrice)
           ? parsedCurrentClosePrice
           : null,
       broker: broker.trim() || null,
@@ -187,7 +189,7 @@ export function AssetFormDialog({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="asset-name" className="font-medium text-xs">
                 Nome *
@@ -215,7 +217,7 @@ export function AssetFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="asset-quantity" className="font-medium text-xs">
                 Quantidade

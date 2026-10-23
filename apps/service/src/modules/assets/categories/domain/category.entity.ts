@@ -8,6 +8,11 @@ export enum CategoryType {
   FIXED = 'FIXED'
 }
 
+export type CategorySummary = Pick<
+  CategoryProps,
+  'id' | 'name' | 'type' | 'currency'
+>
+
 export interface CategoryProps {
   id: string
   name: string

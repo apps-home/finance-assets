@@ -6,9 +6,10 @@ import { Badge } from '@/shared/components/ui/badge'
 import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import {
-  calcPercentageChange,
+  calcMonthChange,
   formatPercentage
 } from '@/shared/utils/format-percentage'
+import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 interface AssetPriceInfoProps {
   currentClosePrice: number | null
@@ -34,11 +35,10 @@ export function AssetPriceInfo({
     )
   }
 
-  const hasComparison =
-    lastMonthClosePrice !== null && lastMonthClosePrice !== 0
-  const percentageChange = hasComparison
-    ? calcPercentageChange(currentClosePrice, lastMonthClosePrice)
-    : null
+  const percentageChange = calcMonthChange(
+    currentClosePrice,
+    lastMonthClosePrice
+  )
 
   const isPositive = percentageChange !== null && percentageChange >= 0
   const isNegative = percentageChange !== null && percentageChange < 0
@@ -46,7 +46,7 @@ export function AssetPriceInfo({
   return (
     <div
       data-slot="asset-price-info"
-      className={cn('grid grid-cols-3 gap-2', className)}
+      className={cn('grid grid-cols-2 gap-2 sm:grid-cols-3', className)}
     >
       <div className="space-y-0.5">
         <span className="text-muted-foreground/60 text-xs">Cotação atual</span>
@@ -66,9 +66,8 @@ export function AssetPriceInfo({
             variant="secondary"
             className={cn(
               'gap-1 border-0 px-2 py-1 font-semibold text-xs tabular-nums',
-              isPositive &&
-                'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-              isNegative && 'bg-red-500/15 text-red-600 dark:text-red-400'
+              isPositive && TREND_CLASSES.positive.badge,
+              isNegative && TREND_CLASSES.negative.badge
             )}
           >
             {isPositive ? (

@@ -1,37 +1,41 @@
 'use client'
 
 import { Briefcase, FilterX, PlusIcon } from 'lucide-react'
-import { useQueryState } from 'nuqs'
 import { useMemo, useState } from 'react'
 
-import { CreateAssetDTO } from '@/features/assets/api/types'
+import {
+  AssetWithCategory,
+  CreateAssetDTO,
+  ListAssetsParams
+} from '@/features/assets/api/types'
 import { AssetCard } from '@/features/assets/components/AssetCard'
-import { AssetFilters } from '@/features/assets/components/AssetFilters'
 import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
 import { AssetSummaryCards } from '@/features/assets/components/AssetSummaryCards'
 import { AssetTable } from '@/features/assets/components/AssetTable'
-import { DeleteAssetDialog } from '@/features/assets/components/DeleteAssetDialog'
-import { DollarRateBadge } from '@/features/assets/components/DollarRateBadge'
-import { useAssets } from '@/features/assets/hooks/use-assets'
-import { AssetWithCategory } from '@/features/assets/types'
+import {
+  useAssets,
+  useCreateAsset,
+  useDeleteAsset,
+  useUpdateAsset
+} from '@/features/assets/hooks/use-assets'
+import { CategoryType } from '@/features/categories/api/types'
+import { useCategories } from '@/features/categories/hooks/use-category'
+import { CATEGORY_TYPE_OPTIONS } from '@/features/categories/utils'
+import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
+import { DollarRateBadge } from '@/shared/components/DollarRateBadge'
+import { ListFilters } from '@/shared/components/ListFilters'
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useListFilters } from '@/shared/hooks/use-list-filters'
+
+const STATUS_OPTIONS = [
+  { value: 'ALL', label: 'Todos os Status' },
+  { value: 'ACTIVE', label: 'Em Carteira' },
+  { value: 'INACTIVE', label: 'Inativos' }
+]
 
 export default function AssetsClient() {
-  const [search, setSearch] = useQueryState('search', { defaultValue: '' })
-  const [categoryFilter, setCategoryFilter] = useQueryState('category', {
-    defaultValue: 'ALL'
-  })
-  const [typeFilter, setTypeFilter] = useQueryState('type', {
-    defaultValue: 'ALL'
-  })
-  const [statusFilter, setStatusFilter] = useQueryState('status', {
-    defaultValue: 'ALL'
-  })
-  const [viewMode, setViewMode] = useQueryState<'table' | 'cards'>('view', {
-    defaultValue: 'table',
-    parse: (v): 'table' | 'cards' => (v === 'cards' ? 'cards' : 'table')
-  })
+  const filters = useListFilters('status')
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<AssetWithCategory | null>(
@@ -41,55 +45,37 @@ export default function AssetsClient() {
     null
   )
 
-  const {
-    categories,
-    allAssets,
-    isLoading,
-    createAsset,
-    updateAsset,
-    deleteAsset,
-    isCreating,
-    isUpdating,
-    isDeleting
-  } = useAssets()
+  const params = useMemo<ListAssetsParams>(
+    () => ({
+      search: filters.debouncedSearch || undefined,
+      categoryId:
+        filters.categoryFilter !== 'ALL' ? filters.categoryFilter : undefined,
+      type:
+        filters.typeFilter !== 'ALL'
+          ? (filters.typeFilter as CategoryType)
+          : undefined,
+      status:
+        filters.extraFilter === 'ACTIVE' || filters.extraFilter === 'INACTIVE'
+          ? filters.extraFilter
+          : undefined,
+      ...filters.sortParams
+    }),
+    [
+      filters.debouncedSearch,
+      filters.categoryFilter,
+      filters.typeFilter,
+      filters.extraFilter,
+      filters.sortParams
+    ]
+  )
 
-  const filteredAssets = useMemo(() => {
-    return allAssets.filter((asset) => {
-      if (categoryFilter !== 'ALL' && asset.categoryId !== categoryFilter) {
-        return false
-      }
-
-      if (typeFilter !== 'ALL' && asset.category?.type !== typeFilter) {
-        return false
-      }
-
-      if (statusFilter === 'ACTIVE' && !asset.isActive) {
-        return false
-      }
-      if (statusFilter === 'INACTIVE' && asset.isActive) {
-        return false
-      }
-
-      if (search.trim()) {
-        const query = search.toLowerCase()
-        const matchName = asset.name.toLowerCase().includes(query)
-        const matchTicker = (asset.ticker || '').toLowerCase().includes(query)
-        const matchBroker = (asset.broker || '').toLowerCase().includes(query)
-        if (!matchName && !matchTicker && !matchBroker) {
-          return false
-        }
-      }
-
-      return true
-    })
-  }, [allAssets, categoryFilter, typeFilter, statusFilter, search])
-
-  const handleResetFilters = () => {
-    setSearch('')
-    setCategoryFilter('ALL')
-    setTypeFilter('ALL')
-    setStatusFilter('ALL')
-  }
+  const { data: categories = [], isLoading: isLoadingCategories } =
+    useCategories()
+  const { data: assets = [], isLoading: isLoadingAssets } = useAssets(params)
+  const { mutateAsync: createAsset, isPending: isCreating } = useCreateAsset()
+  const { mutateAsync: updateAsset, isPending: isUpdating } = useUpdateAsset()
+  const { mutateAsync: deleteAsset, isPending: isDeleting } = useDeleteAsset()
+  const isLoading = isLoadingCategories || isLoadingAssets
 
   const handleOpenCreate = () => {
     setEditingAsset(null)
@@ -105,27 +91,22 @@ export default function AssetsClient() {
     setDeletingAsset(asset)
   }
 
-  const handleSubmitForm = async (catId: string, data: CreateAssetDTO) => {
+  const handleSubmitForm = async (dto: CreateAssetDTO) => {
+    const { categoryId, ...fields } = dto
+
     if (editingAsset) {
-      await updateAsset({
-        categoryId: catId,
-        id: editingAsset.id,
-        data
-      })
+      await updateAsset({ id: editingAsset.id, dto: fields })
       setEditingAsset(null)
-      setFormOpen(false)
     } else {
-      await createAsset({
-        categoryId: catId,
-        data
-      })
-      setFormOpen(false)
+      await createAsset({ categoryId, ...fields })
     }
+
+    setFormOpen(false)
   }
 
   if (isLoading) {
     return (
-      <div className="bg-background px-6 pt-4 pb-12">
+      <div className="bg-background px-4 pt-4 pb-12 sm:px-6">
         <div className="mx-auto max-w-screen-2xl space-y-8">
           <div className="flex items-center gap-4">
             <Skeleton className="size-14 rounded-xl" />
@@ -146,10 +127,16 @@ export default function AssetsClient() {
     )
   }
 
-  const hasAnyAsset = allAssets.length > 0
+  const hasActiveFilters = Object.entries(params).some(
+    ([, value]) => value !== undefined
+  )
+  const hasAnyAsset = assets.length > 0 || hasActiveFilters
 
   return (
-    <div data-slot="assets-page" className="bg-background px-6 pt-4 pb-12">
+    <div
+      data-slot="assets-page"
+      className="bg-background px-4 pt-4 pb-12 sm:px-6"
+    >
       <div className="mx-auto max-w-screen-2xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
@@ -157,7 +144,9 @@ export default function AssetsClient() {
               <Briefcase className="size-8 text-primary" />
             </div>
             <div>
-              <h1 className="font-bold text-3xl text-foreground">Ativos</h1>
+              <h1 className="font-bold text-2xl text-foreground sm:text-3xl">
+                Ativos
+              </h1>
               <p className="text-muted-foreground text-xs">
                 Gerencie e acompanhe todos os ativos da sua carteira de
                 investimentos
@@ -174,24 +163,31 @@ export default function AssetsClient() {
           </div>
         </div>
 
-        <AssetSummaryCards assets={filteredAssets} />
+        <AssetSummaryCards assets={assets} />
 
-        <AssetFilters
+        <ListFilters
+          searchPlaceholder="Buscar por ticker, nome ou corretora..."
+          search={filters.search}
+          onSearchChange={filters.setSearch}
           categories={categories}
-          search={search}
-          onSearchChange={setSearch}
-          selectedCategory={categoryFilter}
-          onCategoryChange={setCategoryFilter}
-          selectedType={typeFilter}
-          onTypeChange={setTypeFilter}
-          selectedStatus={statusFilter}
-          onStatusChange={setStatusFilter}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onReset={handleResetFilters}
+          selectedCategory={filters.categoryFilter}
+          onCategoryChange={filters.setCategoryFilter}
+          typeOptions={CATEGORY_TYPE_OPTIONS}
+          selectedType={filters.typeFilter}
+          onTypeChange={filters.setTypeFilter}
+          extraFilter={{
+            value: filters.extraFilter,
+            onChange: filters.setExtraFilter,
+            options: STATUS_OPTIONS
+          }}
+          selectedSort={filters.sort}
+          onSortChange={filters.setSort}
+          viewMode={filters.viewMode}
+          onViewModeChange={filters.setViewMode}
+          onReset={filters.resetFilters}
         />
 
-        {filteredAssets.length === 0 ? (
+        {assets.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-border border-dashed py-16 text-center">
             <div className="mb-4 rounded-xl bg-muted/50 p-4">
               {hasAnyAsset ? (
@@ -215,7 +211,7 @@ export default function AssetsClient() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleResetFilters}
+                onClick={filters.resetFilters}
                 className="mt-4 text-xs"
               >
                 Limpar filtros
@@ -231,15 +227,15 @@ export default function AssetsClient() {
               </Button>
             )}
           </div>
-        ) : viewMode === 'table' ? (
+        ) : filters.viewMode === 'table' ? (
           <AssetTable
-            assets={filteredAssets}
+            assets={assets}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredAssets.map((asset) => (
+            {assets.map((asset) => (
               <AssetCard
                 key={asset.id}
                 asset={asset}
@@ -261,7 +257,7 @@ export default function AssetsClient() {
         isPending={isCreating || isUpdating}
         categories={categories}
         initialCategoryId={
-          categoryFilter !== 'ALL' ? categoryFilter : undefined
+          filters.categoryFilter !== 'ALL' ? filters.categoryFilter : undefined
         }
         defaultValues={
           editingAsset
@@ -279,18 +275,16 @@ export default function AssetsClient() {
         }
       />
 
-      <DeleteAssetDialog
+      <ConfirmDeleteDialog
         open={!!deletingAsset}
         onOpenChange={(open) => {
           if (!open) setDeletingAsset(null)
         }}
-        assetName={deletingAsset?.name || ''}
+        title="Remover Ativo"
+        itemName={deletingAsset?.name || ''}
         onConfirm={async () => {
           if (deletingAsset) {
-            await deleteAsset({
-              categoryId: deletingAsset.categoryId,
-              id: deletingAsset.id
-            })
+            await deleteAsset(deletingAsset.id)
             setDeletingAsset(null)
           }
         }}

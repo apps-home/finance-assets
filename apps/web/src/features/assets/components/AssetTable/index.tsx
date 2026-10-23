@@ -2,10 +2,12 @@
 
 import { Building2, CircleOff, Pencil, Trash2 } from 'lucide-react'
 
+import type { AssetWithCategory } from '@/features/assets/api/types'
 import { CategoryType } from '@/features/categories/api/types'
 import {
   CATEGORY_TYPE_COLORS,
-  CATEGORY_TYPE_LABELS
+  CATEGORY_TYPE_LABELS,
+  getCategoryCurrency
 } from '@/features/categories/utils'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -23,14 +25,13 @@ import {
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { CURRENCIES } from '@/shared/utils/currencies'
 import { formatCurrency } from '@/shared/utils/format-currency'
+import { formatQuantity } from '@/shared/utils/format-number'
 import {
-  calcPercentageChange,
+  calcMonthChange,
   formatPercentage
 } from '@/shared/utils/format-percentage'
-
-import type { AssetWithCategory } from '../../types'
+import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 interface AssetTableProps {
   assets: AssetWithCategory[]
@@ -60,7 +61,9 @@ export function AssetTable({
       <Table data-slot="asset-table">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-55 font-semibold text-xs">Ativo</TableHead>
+            <TableHead className="sticky left-0 z-10 w-55 bg-card font-semibold text-xs">
+              Ativo
+            </TableHead>
             <TableHead className="font-semibold text-xs">Categoria</TableHead>
             <TableHead className="font-semibold text-xs">Corretora</TableHead>
             <TableHead className="text-right font-semibold text-xs">
@@ -95,19 +98,13 @@ export function AssetTable({
             const isPositivePL = hasPL && asset.profitLoss! > 0
             const isNegativePL = hasPL && asset.profitLoss! < 0
 
-            const hasComparison =
-              asset.currentClosePrice != null &&
-              asset.lastMonthClosePrice != null &&
-              asset.lastMonthClosePrice !== 0
-            const percentagePriceChange = hasComparison
-              ? calcPercentageChange(
-                  asset.currentClosePrice!,
-                  asset.lastMonthClosePrice!
-                )
-              : null
+            const percentagePriceChange = calcMonthChange(
+              asset.currentClosePrice,
+              asset.lastMonthClosePrice
+            )
 
             const catType = asset.category?.type || CategoryType.FIXED
-            const currency = asset.category?.currency || CURRENCIES[catType]
+            const currency = getCategoryCurrency(asset.category)
 
             return (
               <TableRow
@@ -117,7 +114,7 @@ export function AssetTable({
                   !asset.isActive && 'bg-muted/20 opacity-60'
                 )}
               >
-                <TableCell>
+                <TableCell className="sticky left-0 z-10 bg-card">
                   <div className="flex items-center gap-2.5">
                     <Badge
                       variant="default"
@@ -168,9 +165,7 @@ export function AssetTable({
 
                 <TableCell className="text-right font-medium text-foreground text-xs tabular-nums">
                   {asset.quantity != null
-                    ? asset.quantity.toLocaleString('pt-BR', {
-                        maximumFractionDigits: 5
-                      })
+                    ? formatQuantity(asset.quantity)
                     : '—'}
                 </TableCell>
 
@@ -191,8 +186,8 @@ export function AssetTable({
                           className={cn(
                             'font-medium text-[10px]',
                             percentagePriceChange >= 0
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-red-600 dark:text-red-400'
+                              ? TREND_CLASSES.positive.text
+                              : TREND_CLASSES.negative.text
                           )}
                         >
                           {formatPercentage(percentagePriceChange)}
@@ -222,9 +217,8 @@ export function AssetTable({
                       <span
                         className={cn(
                           'font-semibold',
-                          isPositivePL &&
-                            'text-emerald-600 dark:text-emerald-400',
-                          isNegativePL && 'text-red-600 dark:text-red-400'
+                          isPositivePL && TREND_CLASSES.positive.text,
+                          isNegativePL && TREND_CLASSES.negative.text
                         )}
                       >
                         {isPositivePL ? '+' : ''}
@@ -234,9 +228,8 @@ export function AssetTable({
                         <span
                           className={cn(
                             'font-medium text-[10px]',
-                            isPositivePL &&
-                              'text-emerald-600 dark:text-emerald-400',
-                            isNegativePL && 'text-red-600 dark:text-red-400'
+                            isPositivePL && TREND_CLASSES.positive.text,
+                            isNegativePL && TREND_CLASSES.negative.text
                           )}
                         >
                           {formatPercentage(asset.profitabilityPercentage)}

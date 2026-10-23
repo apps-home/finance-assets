@@ -1,16 +1,14 @@
-import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+import {
+  CategorySummary,
+  CategoryType
+} from '@/modules/assets/categories/domain/category.entity'
 
 import { FindAllWishlistParams } from './dto/find-all-wishlist-params.dto'
 import { Wishlist } from './wishlist.entity'
 
 export interface WishlistWithCategory {
   wishlist: Wishlist
-  category: {
-    id: string
-    name: string
-    type: CategoryType
-    currency: string
-  }
+  category: CategorySummary
 }
 
 export interface WishlistWithCategoryType {
@@ -18,14 +16,7 @@ export interface WishlistWithCategoryType {
   categoryType: CategoryType
 }
 
-export interface WishlistWithUserDetails {
-  wishlist: Wishlist
-  category: {
-    id: string
-    name: string
-    type: CategoryType
-    currency: string
-  }
+export interface WishlistWithUserDetails extends WishlistWithCategory {
   user: {
     id: string
     name: string

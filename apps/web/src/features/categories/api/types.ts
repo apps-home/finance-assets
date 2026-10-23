@@ -17,6 +17,11 @@ export interface Category {
   updatedAt: string
 }
 
+export type CategorySummary = Pick<
+  Category,
+  'id' | 'name' | 'type' | 'currency'
+>
+
 export interface CreateCategoryDTO {
   name: string
   currency: string

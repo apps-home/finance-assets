@@ -17,7 +17,9 @@ export default async function MaintenancePage() {
           <ServerCrash className="h-12 w-12 text-muted-foreground" />
         </div>
 
-        <h1 className="mb-2 font-bold text-8xl text-primary">503</h1>
+        <h1 className="mb-2 font-bold text-6xl text-primary sm:text-8xl">
+          503
+        </h1>
 
         <h2 className="mb-4 font-semibold text-2xl text-foreground">
           Serviço em Manutenção

@@ -2,9 +2,8 @@
 
 import { Upload } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
 
-import { uploadUserAvatar } from '@/infrastructure/api/users'
+import { useUploadAvatar } from '@/features/profile/hooks/use-avatar'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -15,7 +14,6 @@ import {
   DialogTitle
 } from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
-import { updateUser } from '@/shared/lib/auth-client'
 
 interface UploadAvatarModalProps {
   open: boolean
@@ -30,7 +28,8 @@ export function UploadAvatarModal({
 }: UploadAvatarModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
+  const { mutateAsync: uploadAvatar, isPending: isUploading } =
+    useUploadAvatar()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -49,33 +48,14 @@ export function UploadAvatarModal({
   const handleUpload = async () => {
     if (!selectedFile) return
 
-    setIsUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-
-      const response = await uploadUserAvatar(userId, formData)
-
-      const { error } = await updateUser({
-        image: response.file_name
-      })
-
-      if (error) {
-        console.error('Erro ao atualizar usuário:', error)
-        toast.error('Erro ao atualizar foto de perfil')
-        return
-      }
-
-      toast.success('Foto de perfil atualizada com sucesso!')
+      await uploadAvatar({ userId, file: selectedFile })
 
       onOpenChange(false)
       setSelectedFile(null)
       setPreview(null)
-    } catch (error) {
-      console.error('Erro ao fazer upload:', error)
-      toast.error('Erro ao atualizar foto de perfil')
-    } finally {
-      setIsUploading(false)
+    } catch {
+      // o erro já é exibido pelo toast do hook
     }
   }
 

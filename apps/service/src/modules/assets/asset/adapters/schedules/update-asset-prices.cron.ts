@@ -122,7 +122,7 @@ export class UpdateAssetPricesCron {
     const providerIndex: Record<string, number> = {}
 
     await this.jobPublisher.publishBulk(
-      QUEUES.ASSET_PRICE_UPDATE,
+      QUEUES.ASSET_PROCESSING,
       uniqueTargets.map((target) => {
         const categoryType = target.categoryType
         const delayPerRequest = PROVIDER_DELAY_MS[categoryType] ?? 0
@@ -135,7 +135,7 @@ export class UpdateAssetPricesCron {
         const delay = index * delayPerRequest
 
         return {
-          name: JOBS.ASSET_PRICE_UPDATE.UPDATE_PRICE,
+          name: JOBS.ASSET.UPDATE_PRICE,
           data: {
             ticker: target.ticker,
             categoryType,

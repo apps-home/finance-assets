@@ -9,11 +9,13 @@ import {
   TrendingUp
 } from 'lucide-react'
 
+import type { AssetWithCategory } from '@/features/assets/api/types'
 import { AssetPriceInfo } from '@/features/assets/components/AssetPriceInfo'
 import { CategoryType } from '@/features/categories/api/types'
 import {
   CATEGORY_TYPE_COLORS,
-  CATEGORY_TYPE_LABELS
+  CATEGORY_TYPE_LABELS,
+  getCategoryCurrency
 } from '@/features/categories/utils'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -25,11 +27,10 @@ import {
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { CURRENCIES } from '@/shared/utils/currencies'
 import { formatCurrency } from '@/shared/utils/format-currency'
+import { formatQuantity } from '@/shared/utils/format-number'
 import { formatPercentage } from '@/shared/utils/format-percentage'
-
-import type { AssetWithCategory } from '../../types'
+import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 interface AssetCardProps {
   asset: AssetWithCategory
@@ -48,7 +49,7 @@ export function AssetCard({
   const isPositivePL = hasPL && asset.profitLoss! > 0
   const isNegativePL = hasPL && asset.profitLoss! < 0
   const catType = asset.category?.type || CategoryType.FIXED
-  const currency = asset.category?.currency || CURRENCIES[catType]
+  const currency = getCategoryCurrency(asset.category)
 
   return (
     <Card
@@ -59,7 +60,7 @@ export function AssetCard({
         className
       )}
     >
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-3">
         <div className="flex items-center gap-2.5">
           <Badge
             variant="default"
@@ -145,13 +146,11 @@ export function AssetCard({
       </CardHeader>
 
       <CardContent className="flex flex-1 flex-col justify-between gap-4 pt-1">
-        <div className="grid grid-cols-4 gap-2 rounded-xl bg-muted/20 p-3">
+        <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/20 p-3 sm:grid-cols-4">
           <div className="space-y-0.5">
             <span className="text-muted-foreground/60 text-xs">Quantidade</span>
             <p className="font-semibold text-foreground text-xs tabular-nums">
-              {asset.quantity != null
-                ? asset.quantity.toLocaleString('pt-BR')
-                : '—'}
+              {asset.quantity != null ? formatQuantity(asset.quantity) : '—'}
             </p>
           </div>
           <div className="space-y-0.5">
@@ -206,10 +205,8 @@ export function AssetCard({
                   variant="secondary"
                   className={cn(
                     'gap-1 border-0 px-2 py-0.5 font-semibold text-xs tabular-nums',
-                    isPositivePL &&
-                      'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-                    isNegativePL &&
-                      'bg-red-500/15 text-red-600 dark:text-red-400'
+                    isPositivePL && TREND_CLASSES.positive.badge,
+                    isNegativePL && TREND_CLASSES.negative.badge
                   )}
                 >
                   {isPositivePL ? (
@@ -223,8 +220,8 @@ export function AssetCard({
                   <span
                     className={cn(
                       'font-medium text-xs tabular-nums',
-                      isPositivePL && 'text-emerald-600 dark:text-emerald-400',
-                      isNegativePL && 'text-red-600 dark:text-red-400'
+                      isPositivePL && TREND_CLASSES.positive.text,
+                      isNegativePL && TREND_CLASSES.negative.text
                     )}
                   >
                     {formatPercentage(asset.profitabilityPercentage)}

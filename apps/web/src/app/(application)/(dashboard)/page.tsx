@@ -6,12 +6,6 @@ import { getCurrentUser } from '@/shared/lib/current-user'
 
 import DashboardClient from './DashboardClient'
 
-export interface MonthData {
-  month: string
-  monthIndex: number
-  [key: string]: string | number
-}
-
 async function DashboardContent() {
   const user = await getCurrentUser()
 

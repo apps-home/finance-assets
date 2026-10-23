@@ -13,8 +13,8 @@ type FindAssetByIdResponse = Either<AssetNotFoundError, AssetProps>
 export class FindAssetByIdUseCase {
   constructor(private assetRepository: AssetRepository) {}
 
-  async execute(id: string): Promise<FindAssetByIdResponse> {
-    const asset = await this.assetRepository.findById(id)
+  async execute(userId: string, id: string): Promise<FindAssetByIdResponse> {
+    const asset = await this.assetRepository.findByIdAndUser(id, userId)
 
     if (!asset) {
       return left(new AssetNotFoundError())

@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Finance Assets',
-    short_name: 'Finance Assets',
+    name: 'Finance Assets (PWA)',
+    short_name: 'Finance Assets (PWA)',
     description: 'Acompanhe e gerencie seus investimentos',
     start_url: '/',
     display: 'standalone',

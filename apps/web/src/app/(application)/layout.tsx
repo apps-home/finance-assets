@@ -13,7 +13,7 @@ export default function Layout({
   children: React.ReactNode
 }>) {
   return (
-    <div className="grid h-svh grid-rows-[auto_1fr]">
+    <div className="grid min-h-svh grid-rows-[auto_1fr]">
       <Header />
       {children}
     </div>

@@ -2,65 +2,54 @@ import { apiClient } from '@/infrastructure/services/api-client'
 
 import type {
   Asset,
-  AssetHTTPResponse,
+  AssetWithCategory,
   CreateAssetDTO,
+  ListAssetsParams,
   UpdateAssetDTO
 } from './types'
 
-const BASE_URL = '/categories'
+const BASE_URL = '/assets'
 
 /**
- * Lista todos os ativos de uma categoria
+ * Lista os ativos do usuário, com filtros e ordenação no servidor
  */
-export async function listAssetsByCategory(
-  categoryId: string
-): Promise<AssetHTTPResponse[]> {
-  const response = await apiClient.get<AssetHTTPResponse[]>(
-    `${BASE_URL}/${categoryId}/assets`
-  )
+export async function listAssets(
+  params?: ListAssetsParams
+): Promise<AssetWithCategory[]> {
+  const response = await apiClient.get<AssetWithCategory[]>(BASE_URL, {
+    params
+  })
   return response.data
 }
 
 /**
  * Busca um ativo por ID
  */
-export async function getAssetById(
-  categoryId: string,
-  id: string
-): Promise<Asset> {
-  const response = await apiClient.get<Asset>(
-    `${BASE_URL}/${categoryId}/assets/${id}`
-  )
+export async function getAssetById(id: string): Promise<Asset> {
+  const response = await apiClient.get<Asset>(`${BASE_URL}/${id}`)
   return response.data
 }
 
 /**
- * Cria um novo ativo em uma categoria
+ * Cria um novo ativo
  */
-export async function createAsset(
-  categoryId: string,
-  data: CreateAssetDTO
-): Promise<void> {
-  await apiClient.post(`${BASE_URL}/${categoryId}/assets`, data)
+export async function createAsset(data: CreateAssetDTO): Promise<void> {
+  await apiClient.post(BASE_URL, data)
 }
 
 /**
  * Atualiza um ativo existente
  */
 export async function updateAsset(
-  categoryId: string,
   id: string,
   data: UpdateAssetDTO
 ): Promise<void> {
-  await apiClient.patch(`${BASE_URL}/${categoryId}/assets/${id}`, data)
+  await apiClient.patch(`${BASE_URL}/${id}`, data)
 }
 
 /**
  * Remove um ativo
  */
-export async function deleteAsset(
-  categoryId: string,
-  id: string
-): Promise<void> {
-  await apiClient.delete(`${BASE_URL}/${categoryId}/assets/${id}`)
+export async function deleteAsset(id: string): Promise<void> {
+  await apiClient.delete(`${BASE_URL}/${id}`)
 }

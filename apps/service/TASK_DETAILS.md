@@ -106,7 +106,7 @@ Um email que falhou não pode travar a fila. Configurar `BullMQ` com DLQ separad
 ```typescript
 // queue.constants.ts
 export const QUEUES = {
-  ASSET_PRICE_UPDATE: 'asset-price-update',
+  ASSET_PROCESSING: 'asset-processing',
   WEEKLY_REPORT: 'weekly-report',
   WEEKLY_REPORT_DLQ: 'weekly-report-dlq',  // 👈 novo
 }

@@ -1,15 +1,23 @@
-import { PartialType } from '@nestjs/mapped-types'
+import { OmitType, PartialType } from '@nestjs/mapped-types'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   ValidateIf
 } from 'class-validator'
 
+import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+
 export class CreateAssetDTO {
+  @IsNotEmpty({ message: 'A categoria é obrigatória' })
+  @IsUUID('4', { message: 'A categoria deve ser um UUID válido' })
+  categoryId: string
+
   @IsString({ message: 'O nome deve ser um texto válido' })
   @IsNotEmpty({ message: 'O nome é obrigatório' })
   @Transform(({ value }) => {
@@ -75,35 +83,38 @@ export class CreateAssetDTO {
   currentClosePrice?: number | null
 }
 
-export class UpdateAssetDTO extends PartialType(CreateAssetDTO) {}
+export class UpdateAssetDTO extends PartialType(
+  OmitType(CreateAssetDTO, ['categoryId'] as const)
+) {}
 
-export class FindAllAssetsParamsDTO {
+export class FindAssetsParamsDTO {
   @IsOptional()
-  @IsString({ message: 'O nome deve ser um texto válido' })
+  @IsString({ message: 'A busca deve ser um texto válido' })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
-      return value.trim()
+      return value.trim() || undefined
     }
     return undefined
   })
-  name?: string
+  search?: string
 
   @IsOptional()
-  @IsString({ message: 'A corretora deve ser um texto válido' })
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      return value.trim()
-    }
-    return undefined
-  })
-  broker?: string
+  @IsUUID('4', { message: 'A categoria deve ser um UUID válido' })
+  categoryId?: string
 
   @IsOptional()
-  @Transform(({ value }) => {
-    if (value === 'true') return true
-    if (value === 'false') return false
-    return value
-  })
-  @IsBoolean({ message: 'O status ativo deve ser verdadeiro ou falso' })
-  isActive?: boolean
+  @IsIn(Object.values(CategoryType), { message: 'Tipo de categoria inválido' })
+  type?: CategoryType
+
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE'], { message: 'Status inválido' })
+  status?: 'ACTIVE' | 'INACTIVE'
+
+  @IsOptional()
+  @IsIn(['monthChange'], { message: 'Ordenação inválida' })
+  sort?: 'monthChange'
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'], { message: 'Direção da ordenação inválida' })
+  order?: 'asc' | 'desc'
 }

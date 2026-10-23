@@ -21,7 +21,7 @@ export function StatCard({
   subtitle
 }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm transition-all duration-300 hover:border-primary/30">
+    <div className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm transition-all duration-300 hover:border-primary/30 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <div className="rounded-lg bg-primary/10 p-3">
           <Icon className="size-6 text-primary" />
@@ -34,7 +34,7 @@ export function StatCard({
           </div>
         )}
       </div>
-      <div className="mb-1 flex items-center gap-2">
+      <div className="mb-1 flex min-w-0 flex-wrap items-center gap-2">
         <span className="text-muted-foreground text-sm">{title}</span>
         {subtitle && (
           <Badge className="bg-primary/10 text-primary text-xs">

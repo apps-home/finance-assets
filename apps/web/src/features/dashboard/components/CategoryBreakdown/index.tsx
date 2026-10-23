@@ -73,8 +73,8 @@ export function CategoryBreakdown({ data, subtitle }: CategoryBreakdownProps) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-      <div className="mb-2 flex items-center gap-4">
+    <div className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
+      <div className="mb-2 flex flex-wrap items-center gap-2 sm:gap-4">
         <h3 className="font-semibold text-xl">Distribuição por Categoria</h3>
         {subtitle && (
           <Badge className="bg-primary/10 text-primary text-xs">
@@ -147,7 +147,7 @@ export function CategoryBreakdown({ data, subtitle }: CategoryBreakdownProps) {
                 onBlur={() => setActiveIndex(undefined)}
               >
                 <div
-                  className={`size-3 rounded-full transition-transform duration-200${isActive ? 'scale-125' : ''}
+                  className={`size-3 rounded-full transition-transform duration-200 ${isActive ? 'scale-125' : ''}
 									`}
                   style={{ backgroundColor: item.color }}
                 />
@@ -157,7 +157,7 @@ export function CategoryBreakdown({ data, subtitle }: CategoryBreakdownProps) {
                   </p>
                 </div>
                 <span
-                  className={`font-semibold text-xs tabular-nums transition-colors duration-200${isActive ? 'text-primary' : 'text-muted-foreground'}
+                  className={`font-semibold text-xs tabular-nums transition-colors duration-200 ${isActive ? 'text-primary' : 'text-muted-foreground'}
 								`}
                 >
                   {percent}%

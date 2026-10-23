@@ -14,10 +14,11 @@ export class UpdateAssetUseCase {
   constructor(private assetRepository: AssetRepository) {}
 
   async execute(
+    userId: string,
     id: string,
     data: UpdateAssetPayload
   ): Promise<UpdateAssetResponse> {
-    const existingAsset = await this.assetRepository.findById(id)
+    const existingAsset = await this.assetRepository.findByIdAndUser(id, userId)
 
     if (!existingAsset) {
       return left(new AssetNotFoundError())

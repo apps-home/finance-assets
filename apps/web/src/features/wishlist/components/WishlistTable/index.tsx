@@ -12,8 +12,11 @@ import {
 import { CategoryType } from '@/features/categories/api/types'
 import {
   CATEGORY_TYPE_COLORS,
-  CATEGORY_TYPE_LABELS
+  CATEGORY_TYPE_LABELS,
+  getCategoryCurrency
 } from '@/features/categories/utils'
+import type { WishlistWithCategory } from '@/features/wishlist/api/types'
+import { getTargetPriceInfo } from '@/features/wishlist/utils/target-price'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -30,14 +33,12 @@ import {
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { CURRENCIES } from '@/shared/utils/currencies'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import {
-  calcPercentageChange,
+  calcMonthChange,
   formatPercentage
 } from '@/shared/utils/format-percentage'
-
-import type { WishlistWithCategory } from '../../types/wishlist.types'
+import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 interface WishlistTableProps {
   items: WishlistWithCategory[]
@@ -67,7 +68,9 @@ export function WishlistTable({
       <Table data-slot="wishlist-table">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-55 font-semibold text-xs">Ativo</TableHead>
+            <TableHead className="sticky left-0 z-10 w-55 bg-card font-semibold text-xs">
+              Ativo
+            </TableHead>
             <TableHead className="font-semibold text-xs">Categoria</TableHead>
             <TableHead className="text-right font-semibold text-xs">
               Cotação Atual
@@ -88,33 +91,19 @@ export function WishlistTable({
           {items.map((item) => {
             const { wishlist, category } = item
             const catType = category?.type || CategoryType.VARIABLE_BR
-            const currency = category?.currency || CURRENCIES[catType] || 'BRL'
+            const currency = getCategoryCurrency(category)
 
             const currentPrice = wishlist.currentClosePrice
             const lastMonthPrice = wishlist.lastMonthClosePrice
             const targetPrice = wishlist.targetPrice
 
-            const hasMonthComparison =
-              currentPrice != null &&
-              lastMonthPrice != null &&
-              lastMonthPrice !== 0
-            const monthlyChange = hasMonthComparison
-              ? calcPercentageChange(currentPrice!, lastMonthPrice!)
-              : null
-
-            const hasTarget = targetPrice != null && targetPrice > 0
-            const isAtOrBelowTarget =
-              hasTarget && currentPrice != null && currentPrice <= targetPrice
-
-            // Distância em % do preço atual para o alvo: ((currentPrice - targetPrice) / targetPrice) * 100
-            const distancePercentage =
-              hasTarget && currentPrice != null
-                ? ((currentPrice - targetPrice) / targetPrice) * 100
-                : null
+            const monthlyChange = calcMonthChange(currentPrice, lastMonthPrice)
+            const { hasTarget, isAtOrBelowTarget, distancePercentage } =
+              getTargetPriceInfo(currentPrice, targetPrice)
 
             return (
               <TableRow key={wishlist.id} className="transition-colors">
-                <TableCell>
+                <TableCell className="sticky left-0 z-10 bg-card">
                   <div className="flex items-center gap-2.5">
                     <Badge
                       variant="default"
@@ -163,8 +152,8 @@ export function WishlistTable({
                           className={cn(
                             'font-medium text-[10px]',
                             monthlyChange >= 0
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-red-600 dark:text-red-400'
+                              ? TREND_CLASSES.positive.text
+                              : TREND_CLASSES.negative.text
                           )}
                         >
                           {formatPercentage(monthlyChange)} no mês

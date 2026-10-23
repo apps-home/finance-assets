@@ -1,6 +1,5 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
 import {
   Briefcase,
   Edit2,
@@ -12,7 +11,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-import { listAssetsByCategory } from '@/features/assets/api'
+import type { AssetWithCategory } from '@/features/assets/api/types'
 import { Category } from '@/features/categories/api/types'
 import { CategoryAllocation } from '@/features/categories/types/allocation'
 import {
@@ -40,11 +39,14 @@ import {
 import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
+import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 import { AllocationBadge } from '../AllocationBadge'
 
 interface CategoryCardProps {
   category: Category
+  assets: AssetWithCategory[]
+  isLoadingAssets: boolean
   allocation?: CategoryAllocation
   onEdit: (category: Category) => void
   onDelete: (category: Category) => void
@@ -54,6 +56,8 @@ interface CategoryCardProps {
 
 export function CategoryCard({
   category,
+  assets,
+  isLoadingAssets,
   allocation,
   onEdit,
   onDelete,
@@ -62,15 +66,10 @@ export function CategoryCard({
 }: CategoryCardProps) {
   const categoryType = category.type
 
-  const { data: assets, isLoading: isLoadingAssets } = useQuery({
-    queryKey: ['assets', category.id],
-    queryFn: () => listAssetsByCategory(category.id)
-  })
-
-  const assetCount = assets?.length || 0
+  const assetCount = assets.length
   const targetPercentage = category.targetPercentage
 
-  const totals = (assets || []).reduce(
+  const totals = assets.reduce(
     (acc, asset) => ({
       investedValue: acc.investedValue + (asset.investedValue || 0),
       currentBalance: acc.currentBalance + (asset.currentBalance || 0),
@@ -94,7 +93,7 @@ export function CategoryCard({
         className
       )}
     >
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-3">
         <div className="flex items-center gap-3">
           <div
             className={cn(
@@ -225,7 +224,7 @@ export function CategoryCard({
             <Skeleton className="h-16 w-full rounded-xl" />
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/15 p-3">
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/15 p-3 sm:grid-cols-3">
             <div className="space-y-0.5">
               <span className="text-muted-foreground/60 text-xs">
                 Total Investido
@@ -250,9 +249,8 @@ export function CategoryCard({
                 <p
                   className={cn(
                     'font-semibold text-xs tabular-nums',
-                    totals.profitLoss > 0 &&
-                      'text-emerald-600 dark:text-emerald-400',
-                    totals.profitLoss < 0 && 'text-red-600 dark:text-red-400',
+                    totals.profitLoss > 0 && TREND_CLASSES.positive.text,
+                    totals.profitLoss < 0 && TREND_CLASSES.negative.text,
                     totals.profitLoss === 0 && 'text-muted-foreground'
                   )}
                 >
@@ -262,10 +260,8 @@ export function CategoryCard({
                   <span
                     className={cn(
                       'font-medium text-[10px] tabular-nums',
-                      totalProfitPercentage > 0 &&
-                        'text-emerald-600 dark:text-emerald-400',
-                      totalProfitPercentage < 0 &&
-                        'text-red-600 dark:text-red-400'
+                      totalProfitPercentage > 0 && TREND_CLASSES.positive.text,
+                      totalProfitPercentage < 0 && TREND_CLASSES.negative.text
                     )}
                   >
                     {formatPercentage(totalProfitPercentage)}
@@ -299,7 +295,7 @@ export function CategoryCard({
 
       <Separator />
 
-      <CardFooter className="flex items-center justify-between p-3">
+      <CardFooter className="flex flex-wrap items-center justify-between gap-2 p-3">
         <div className="flex items-center gap-1.5">
           <Briefcase className="size-3.5 text-muted-foreground" />
           <span className="text-muted-foreground text-xs">

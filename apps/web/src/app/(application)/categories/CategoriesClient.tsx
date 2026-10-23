@@ -1,35 +1,33 @@
 'use client'
 
-import { useMutation, useQueries } from '@tanstack/react-query'
 import { ChartBarStacked, PlusIcon, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
-import { createAsset, listAssetsByCategory } from '@/features/assets/api'
-import { CreateAssetDTO } from '@/features/assets/api/types'
+import { AssetWithCategory } from '@/features/assets/api/types'
 import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
+import { useAssets, useCreateAsset } from '@/features/assets/hooks/use-assets'
 import { Category, CategoryType } from '@/features/categories/api/types'
 import { AllocationOverview } from '@/features/categories/components/AllocationOverview'
 import { CategoryCard } from '@/features/categories/components/CategoryCard'
 import { CategoryFormDialog } from '@/features/categories/components/CategoryFormDialog'
-import { DeleteCategoryDialog } from '@/features/categories/components/DeleteCategoryDialog'
-import { useCategories } from '@/features/categories/hooks/use-category'
+import {
+  useCategories,
+  useDeleteCategory
+} from '@/features/categories/hooks/use-category'
 import { CategoryAllocation } from '@/features/categories/types/allocation'
+import { CATEGORY_TYPE_OPTIONS } from '@/features/categories/utils'
 import { calculateAllocations } from '@/features/categories/utils/calculate-allocations'
+import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
-import { queryClient } from '@/shared/providers/query-client'
 
 const FILTER_TABS: { value: CategoryType | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'Todos' },
-  { value: CategoryType.FIXED, label: 'Renda Fixa' },
-  { value: CategoryType.VARIABLE_BR, label: 'Ações BR' },
-  { value: CategoryType.VARIABLE_US, label: 'Ações EUA' },
-  { value: CategoryType.CRYPTO, label: 'Cripto' }
+  ...CATEGORY_TYPE_OPTIONS
 ]
 
 export default function CategoriesClient() {
@@ -47,35 +45,27 @@ export default function CategoriesClient() {
 
   const { data: categories = [], isLoading } = useCategories()
 
-  const assetQueries = useQueries({
-    queries: categories.map((cat) => ({
-      queryKey: ['assets', cat.id],
-      queryFn: () => listAssetsByCategory(cat.id),
-      staleTime: 1000 * 60 * 5
-    }))
-  })
+  const { data: assets = [], isLoading: isLoadingAssets } = useAssets()
 
-  const categoryAssetCounts = useMemo(() => {
-    const map = new Map<string, number>()
-    categories.forEach((cat, index) => {
-      const query = assetQueries[index]
-      map.set(cat.id, query?.data?.length ?? 0)
+  const assetsByCategory = useMemo(() => {
+    const map = new Map<string, AssetWithCategory[]>()
+    assets.forEach((asset) => {
+      map.set(asset.categoryId, [...(map.get(asset.categoryId) ?? []), asset])
     })
     return map
-  }, [categories, assetQueries])
+  }, [assets])
 
   const categoryBalances = useMemo(() => {
     const map = new Map<string, number>()
-    categories.forEach((cat, index) => {
-      const assets = assetQueries[index]?.data || []
-      const balance = assets.reduce(
+    categories.forEach((cat) => {
+      const balance = (assetsByCategory.get(cat.id) ?? []).reduce(
         (acc, asset) => acc + (asset.currentBalance || 0),
         0
       )
       map.set(cat.id, balance)
     })
     return map
-  }, [categories, assetQueries])
+  }, [categories, assetsByCategory])
 
   const allocationSummary = useMemo(() => {
     return calculateAllocations(categories, categoryBalances)
@@ -89,36 +79,19 @@ export default function CategoriesClient() {
     return map
   }, [allocationSummary])
 
-  const isAssetsLoading =
-    onlyWithAssets && assetQueries.some((q) => q.isLoading)
+  const isAssetsLoading = onlyWithAssets && isLoadingAssets
+
+  const { mutateAsync: deleteCategory, isPending: isDeletingCategory } =
+    useDeleteCategory()
 
   const { mutateAsync: handleCreateAsset, isPending: isCreatingAsset } =
-    useMutation({
-      mutationFn: ({
-        categoryId,
-        data
-      }: {
-        categoryId: string
-        data: CreateAssetDTO
-      }) => createAsset(categoryId, data),
-      onSuccess: (_, variables) => {
-        toast.success('Ativo criado com sucesso!')
-        queryClient.invalidateQueries({
-          queryKey: ['assets', variables.categoryId]
-        })
-        queryClient.invalidateQueries({ queryKey: ['all-assets'] })
-        setAssetModalCategory(null)
-      },
-      onError: () => {
-        toast.error('Erro ao criar ativo.')
-      }
-    })
+    useCreateAsset()
 
   const filteredCategories = categories.filter((cat) => {
     const matchesType = selectedFilter === 'ALL' || cat.type === selectedFilter
     const matchesSearch =
       !searchQuery || cat.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const assetCount = categoryAssetCounts.get(cat.id) ?? 0
+    const assetCount = assetsByCategory.get(cat.id)?.length ?? 0
     const matchesAssets = !onlyWithAssets || assetCount > 0
     return matchesType && matchesSearch && matchesAssets
   })
@@ -145,7 +118,7 @@ export default function CategoriesClient() {
 
   if (isLoading || isAssetsLoading) {
     return (
-      <div className="bg-background px-6 pt-4 pb-12">
+      <div className="bg-background px-4 pt-4 pb-12 sm:px-6">
         <div className="mx-auto max-w-screen-2xl space-y-8">
           <div className="flex items-center gap-4">
             <Skeleton className="size-14 rounded-xl" />
@@ -154,7 +127,7 @@ export default function CategoriesClient() {
               <Skeleton className="h-4 w-64" />
             </div>
           </div>
-          <Skeleton className="h-10 w-96" />
+          <Skeleton className="h-10 w-full max-w-96" />
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-64 rounded-xl" />
@@ -166,7 +139,10 @@ export default function CategoriesClient() {
   }
 
   return (
-    <div data-slot="categories-page" className="bg-background px-6 pt-4 pb-12">
+    <div
+      data-slot="categories-page"
+      className="bg-background px-4 pt-4 pb-12 sm:px-6"
+    >
       <div className="mx-auto max-w-screen-2xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
@@ -174,15 +150,17 @@ export default function CategoriesClient() {
               <ChartBarStacked className="size-8 text-primary" />
             </div>
             <div>
-              <h1 className="font-bold text-3xl text-foreground">Categorias</h1>
+              <h1 className="font-bold text-2xl text-foreground sm:text-3xl">
+                Categorias
+              </h1>
               <p className="text-muted-foreground text-xs">
                 Gerencie suas categorias de investimentos e metas de alocação
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative w-full max-w-xs">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:max-w-xs">
               <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar categoria..."
@@ -200,7 +178,7 @@ export default function CategoriesClient() {
 
         <div className="flex flex-col gap-8 sm:flex-row sm:items-center">
           <Tabs value={selectedFilter} onValueChange={setSelectedFilter}>
-            <TabsList variant="line">
+            <TabsList variant="line" className="max-w-full overflow-x-auto">
               {FILTER_TABS.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
@@ -263,6 +241,8 @@ export default function CategoriesClient() {
               <CategoryCard
                 key={category.id}
                 category={category}
+                assets={assetsByCategory.get(category.id) ?? []}
+                isLoadingAssets={isLoadingAssets}
                 allocation={allocationMap.get(category.id)}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
@@ -279,12 +259,22 @@ export default function CategoriesClient() {
         editingCategory={editingCategory}
       />
 
-      <DeleteCategoryDialog
+      <ConfirmDeleteDialog
         open={!!deletingCategory}
         onOpenChange={(open) => {
           if (!open) setDeletingCategory(null)
         }}
-        category={deletingCategory}
+        title="Confirmar Exclusão"
+        lead="Tem certeza que deseja excluir a categoria"
+        itemName={deletingCategory?.name || ''}
+        confirmLabel="Excluir Categoria"
+        onConfirm={async () => {
+          if (deletingCategory) {
+            await deleteCategory(deletingCategory.id)
+            setDeletingCategory(null)
+          }
+        }}
+        isPending={isDeletingCategory}
       />
 
       <AssetFormDialog
@@ -292,8 +282,9 @@ export default function CategoriesClient() {
         onOpenChange={(open) => {
           if (!open) setAssetModalCategory(null)
         }}
-        onSubmit={async (catId, data) => {
-          await handleCreateAsset({ categoryId: catId, data })
+        onSubmit={async (dto) => {
+          await handleCreateAsset(dto)
+          setAssetModalCategory(null)
         }}
         isPending={isCreatingAsset}
         categories={categories}

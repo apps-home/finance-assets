@@ -1,16 +1,18 @@
 'use client'
 
-import { useMutation } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { createCategory, updateCategory } from '@/features/categories/api'
+import { Category, CategoryType } from '@/features/categories/api/types'
 import {
-  Category,
-  CategoryType,
-  UpdateCategoryDTO
-} from '@/features/categories/api/types'
+  useCreateCategory,
+  useUpdateCategory
+} from '@/features/categories/hooks/use-category'
+import {
+  CATEGORY_TYPE_OPTIONS,
+  CURRENCY_OPTIONS
+} from '@/features/categories/utils'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -29,23 +31,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui/select'
-import { queryClient } from '@/shared/providers/query-client'
-
-import { CATEGORY_QUERY_KEY } from '../../hooks/use-category'
-
-const CURRENCIES = [
-  { value: 'BRL', label: 'Real Brasileiro (R$)' },
-  { value: 'USD', label: 'Dólar Americano ($)' },
-  { value: 'EUR', label: 'Euro (€)' },
-  { value: 'GBP', label: 'Libra Esterlina (£)' }
-]
-
-const CATEGORY_TYPES: { value: CategoryType; label: string }[] = [
-  { value: CategoryType.FIXED, label: 'Renda Fixa' },
-  { value: CategoryType.VARIABLE_BR, label: 'Renda Variável Brasil' },
-  { value: CategoryType.VARIABLE_US, label: 'Renda Variável EUA' },
-  { value: CategoryType.CRYPTO, label: 'Criptomoedas' }
-]
 
 const MIN_YEAR = 2020
 const MAX_YEAR = 2100
@@ -95,32 +80,14 @@ export function CategoryFormDialog({
   }, [open, editingCategory])
 
   const selectedCurrencyLabel =
-    CURRENCIES.find((currency) => currency.value === formData.currency)
+    CURRENCY_OPTIONS.find((currency) => currency.value === formData.currency)
       ?.label ?? formData.currency
   const selectedTypeLabel =
-    CATEGORY_TYPES.find((type) => type.value === formData.type)?.label ??
+    CATEGORY_TYPE_OPTIONS.find((type) => type.value === formData.type)?.label ??
     formData.type
 
-  const { mutateAsync: createCategoryMutation } = useMutation({
-    mutationFn: createCategory,
-    onSuccess: () => {
-      onOpenChange(false)
-      resetForm()
-      queryClient.invalidateQueries({ queryKey: [CATEGORY_QUERY_KEY] })
-      toast.success('Categoria criada com sucesso!')
-    }
-  })
-
-  const { mutateAsync: updateCategoryMutation } = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateCategoryDTO }) =>
-      updateCategory(id, data),
-    onSuccess: () => {
-      onOpenChange(false)
-      resetForm()
-      queryClient.invalidateQueries({ queryKey: [CATEGORY_QUERY_KEY] })
-      toast.success('Categoria atualizada com sucesso!')
-    }
-  })
+  const { mutateAsync: createCategoryMutation } = useCreateCategory()
+  const { mutateAsync: updateCategoryMutation } = useUpdateCategory()
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && editingCategory) {
@@ -154,7 +121,7 @@ export function CategoryFormDialog({
       if (editingCategory) {
         await updateCategoryMutation({
           id: editingCategory.id,
-          data: {
+          dto: {
             name: formData.name,
             currency: formData.currency,
             type: formData.type,
@@ -171,8 +138,11 @@ export function CategoryFormDialog({
           targetPercentage: formData.targetPercentage
         })
       }
+
+      onOpenChange(false)
+      resetForm()
     } catch {
-      toast.error('Erro ao salvar categoria')
+      // o erro já é exibido pelo toast do hook
     }
   }
 
@@ -230,7 +200,7 @@ export function CategoryFormDialog({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="w-full">
-                {CURRENCIES.map((currency) => (
+                {CURRENCY_OPTIONS.map((currency) => (
                   <SelectItem
                     key={currency.value}
                     value={currency.value}
@@ -262,7 +232,7 @@ export function CategoryFormDialog({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="w-full">
-                {CATEGORY_TYPES.map((type) => (
+                {CATEGORY_TYPE_OPTIONS.map((type) => (
                   <SelectItem
                     key={type.value}
                     value={type.value}

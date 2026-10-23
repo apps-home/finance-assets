@@ -17,7 +17,6 @@ import {
 } from '../api/types'
 
 export const CATEGORY_QUERY_KEY = 'categories'
-export const COMPETENCE_QUERY_KEY = 'competences'
 
 export function useCategories(params?: ListCategoriesParams) {
   return useQuery({

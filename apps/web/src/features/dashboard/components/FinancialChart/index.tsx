@@ -10,6 +10,7 @@ import {
   YAxis
 } from 'recharts'
 
+import { useMediaQuery } from '@/shared/hooks/use-media-query'
 import { formatCurrency } from '@/shared/utils/format-currency'
 
 interface ChartData {
@@ -64,6 +65,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export function FinancialChart({ data }: FinancialChartProps) {
+  const isMobile = !useMediaQuery('(min-width: 640px)')
+
   if (!data || data.length === 0) return null
 
   const monthsWithData = data.filter((item) => item.total > 0)
@@ -84,8 +87,8 @@ export function FinancialChart({ data }: FinancialChartProps) {
   const isPositiveGrowth = growth >= 0
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold text-xl">Evolução Patrimonial</h3>
         <div className="flex items-center gap-2">
           <span className="font-semibold text-muted-foreground text-sm">
@@ -141,7 +144,7 @@ export function FinancialChart({ data }: FinancialChartProps) {
             axisLine={{ stroke: 'var(--border)', strokeOpacity: 0.5 }}
             dy={10}
             tickFormatter={(value: string) => value.slice(0, 3)}
-            interval={0}
+            interval={isMobile ? 'preserveStartEnd' : 0}
           />
           <YAxis
             stroke="var(--border)"
@@ -153,7 +156,7 @@ export function FinancialChart({ data }: FinancialChartProps) {
             axisLine={false}
             tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
             dx={-5}
-            width={70}
+            width={isMobile ? 50 : 70}
           />
           <Tooltip
             content={<CustomTooltip />}

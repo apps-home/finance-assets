@@ -1,21 +1,22 @@
-import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+import {
+  CategorySummary,
+  CategoryType
+} from '@/modules/assets/categories/domain/category.entity'
 
 import { Asset } from './asset.entity'
-import { FindAllAssetsParams } from './dto/find-all-assets-params.dto'
+import { FindAssetsParams } from './dto/find-assets-params.dto'
 
 export interface AssetWithCategoryType {
   asset: Asset
   categoryType: CategoryType
 }
 
-export interface AssetWithUserDetails {
+export interface AssetWithCategory {
   asset: Asset
-  category: {
-    id: string
-    name: string
-    type: CategoryType
-    currency: string
-  }
+  category: CategorySummary
+}
+
+export interface AssetWithUserDetails extends AssetWithCategory {
   user: {
     id: string
     name: string
@@ -24,9 +25,10 @@ export interface AssetWithUserDetails {
 }
 
 export abstract class AssetRepository {
-  abstract list(params: FindAllAssetsParams): Promise<Asset[]>
+  abstract list(params: FindAssetsParams): Promise<AssetWithCategory[]>
   abstract save(asset: Asset): Promise<void>
   abstract findById(id: string): Promise<Asset | null>
+  abstract findByIdAndUser(id: string, userId: string): Promise<Asset | null>
   abstract delete(id: string): Promise<void>
   abstract findAllWithTicker(): Promise<AssetWithCategoryType[]>
   abstract findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]>

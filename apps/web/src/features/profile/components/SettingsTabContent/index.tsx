@@ -2,9 +2,18 @@
 
 import { LogOut, Monitor, Shield, Smartphone, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
+import {
+  useChangePassword,
+  useDeleteAccount
+} from '@/features/profile/hooks/use-account'
+import {
+  useRevokeOtherSessions,
+  useRevokeSession,
+  useSessions
+} from '@/features/profile/hooks/use-sessions'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,57 +36,25 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Separator } from '@/shared/components/ui/separator'
-import {
-  changePassword,
-  deleteUser,
-  listSessions,
-  revokeOtherSessions,
-  revokeSession,
-  signOut,
-  useSession
-} from '@/shared/lib/auth-client'
-
-interface Session {
-  id: string
-  token: string
-  userAgent?: string | null
-  ipAddress?: string | null
-  createdAt: Date
-  expiresAt: Date
-}
+import { signOut, useSession } from '@/shared/lib/auth-client'
 
 export function SettingsTabContent() {
   const router = useRouter()
 
   const { data: sessionData } = useSession()
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true)
+  const { data: sessions = [], isLoading: isLoadingSessions } = useSessions()
+  const { mutateAsync: revokeSession } = useRevokeSession()
+  const { mutateAsync: revokeOtherSessions } = useRevokeOtherSessions()
+  const { mutateAsync: changePassword, isPending: isLoading } =
+    useChangePassword()
+  const { mutateAsync: deleteAccount } = useDeleteAccount()
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
   const [deletePassword, setDeletePassword] = useState('')
-
-  useEffect(() => {
-    loadSessions()
-  }, [])
-
-  async function loadSessions() {
-    try {
-      setIsLoadingSessions(true)
-      const response = await listSessions()
-      if (response.data) {
-        setSessions(response.data)
-      }
-    } catch {
-      toast.error('Erro ao carregar sessões')
-    } finally {
-      setIsLoadingSessions(false)
-    }
-  }
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault()
@@ -92,48 +69,23 @@ export function SettingsTabContent() {
       return
     }
 
-    setIsLoading(true)
     try {
-      const response = await changePassword({
-        currentPassword,
-        newPassword,
-        revokeOtherSessions: true
-      })
+      await changePassword({ currentPassword, newPassword })
 
-      if (response.error) {
-        toast.error(response.error.message || 'Erro ao alterar senha')
-        return
-      }
-
-      toast.success('Senha alterada com sucesso!')
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch {
-      toast.error('Erro ao alterar senha')
-    } finally {
-      setIsLoading(false)
+      // o erro já é exibido pelo toast do hook
     }
   }
 
   async function handleRevokeSession(sessionToken: string) {
-    try {
-      await revokeSession({ token: sessionToken })
-      toast.success('Sessão encerrada com sucesso')
-      loadSessions()
-    } catch {
-      toast.error('Erro ao encerrar sessão')
-    }
+    await revokeSession(sessionToken).catch(() => undefined)
   }
 
   async function handleRevokeOtherSessions() {
-    try {
-      await revokeOtherSessions()
-      toast.success('Outras sessões encerradas com sucesso')
-      loadSessions()
-    } catch {
-      toast.error('Erro ao encerrar outras sessões')
-    }
+    await revokeOtherSessions().catch(() => undefined)
   }
 
   async function handleDeleteAccount() {
@@ -143,18 +95,11 @@ export function SettingsTabContent() {
     }
 
     try {
-      const response = await deleteUser({ password: deletePassword })
-
-      if (response.error) {
-        toast.error(response.error.message || 'Erro ao excluir conta')
-        return
-      }
-
-      toast.success('Conta excluída com sucesso')
+      await deleteAccount(deletePassword)
       await signOut()
       router.push('/sign-in')
     } catch {
-      toast.error('Erro ao excluir conta')
+      // o erro já é exibido pelo toast do hook
     }
   }
 
@@ -239,7 +184,7 @@ export function SettingsTabContent() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Monitor className="h-5 w-5 text-primary" />
@@ -278,7 +223,7 @@ export function SettingsTabContent() {
                 return (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3"
                   >
                     <div className="flex items-center gap-3">
                       {getDeviceIcon(session.userAgent)}
@@ -326,7 +271,7 @@ export function SettingsTabContent() {
         </CardHeader>
         <CardContent>
           <Separator className="mb-4" />
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="font-medium">Excluir Conta</p>
               <p className="text-muted-foreground text-sm">

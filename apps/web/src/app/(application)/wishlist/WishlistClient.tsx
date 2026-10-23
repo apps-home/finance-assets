@@ -1,43 +1,37 @@
 'use client'
 
 import { Bookmark, FilterX, PlusIcon } from 'lucide-react'
-import { useQueryState } from 'nuqs'
 import { useMemo, useState } from 'react'
 
-import { DollarRateBadge } from '@/features/assets/components/DollarRateBadge'
-import { DeleteWishlistDialog } from '@/features/wishlist/components/DeleteWishlistDialog'
+import type { CategoryType } from '@/features/categories/api/types'
+import { useCategories } from '@/features/categories/hooks/use-category'
+import { CATEGORY_TYPE_OPTIONS } from '@/features/categories/utils'
+import type {
+  CreateWishlistDTO,
+  TargetPriceStatus,
+  WishlistSearchParams,
+  WishlistWithCategory
+} from '@/features/wishlist/api/types'
 import { WishlistCard } from '@/features/wishlist/components/WishlistCard'
-import { WishlistFilters } from '@/features/wishlist/components/WishlistFilters'
 import { WishlistForm } from '@/features/wishlist/components/WishlistForm'
 import { WishlistSummaryCards } from '@/features/wishlist/components/WishlistSummaryCards'
 import { WishlistTable } from '@/features/wishlist/components/WishlistTable'
-import { useWishlist } from '@/features/wishlist/hooks/useWishlist'
-import type {
-  CreateWishlistDTO,
-  WishlistWithCategory
-} from '@/features/wishlist/types/wishlist.types'
+import {
+  useCreateWishlistItem,
+  useDeleteWishlistItem,
+  useUpdateWishlistItem,
+  useWishlist
+} from '@/features/wishlist/hooks/use-wishlist'
+import { TARGET_STATUS_OPTIONS } from '@/features/wishlist/utils/target-price'
+import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
+import { DollarRateBadge } from '@/shared/components/DollarRateBadge'
+import { ListFilters } from '@/shared/components/ListFilters'
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { useCategories } from '@/features/categories/hooks/use-category'
+import { useListFilters } from '@/shared/hooks/use-list-filters'
 
 export default function WishlistClient() {
-  const [search, setSearch] = useQueryState('search', { defaultValue: '' })
-  const [categoryFilter, setCategoryFilter] = useQueryState('category', {
-    defaultValue: 'ALL'
-  })
-  const [typeFilter, setTypeFilter] = useQueryState('type', {
-    defaultValue: 'ALL'
-  })
-  const [targetStatusFilter, setTargetStatusFilter] = useQueryState(
-    'targetStatus',
-    {
-      defaultValue: 'ALL'
-    }
-  )
-  const [viewMode, setViewMode] = useQueryState<'table' | 'cards'>('view', {
-    defaultValue: 'table',
-    parse: (v): 'table' | 'cards' => (v === 'cards' ? 'cards' : 'table')
-  })
+  const filters = useListFilters('targetStatus')
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<WishlistWithCategory | null>(
@@ -47,73 +41,39 @@ export default function WishlistClient() {
     null
   )
 
-  const {
-    wishlistItems,
-    isLoading,
-    createWishlist,
-    updateWishlist,
-    deleteWishlist,
-    isCreating,
-    isUpdating,
-    isDeleting
-  } = useWishlist()
+  const params = useMemo<WishlistSearchParams>(
+    () => ({
+      search: filters.debouncedSearch || undefined,
+      categoryId:
+        filters.categoryFilter !== 'ALL' ? filters.categoryFilter : undefined,
+      type:
+        filters.typeFilter !== 'ALL'
+          ? (filters.typeFilter as CategoryType)
+          : undefined,
+      targetStatus:
+        filters.extraFilter !== 'ALL'
+          ? (filters.extraFilter as TargetPriceStatus)
+          : undefined,
+      ...filters.sortParams
+    }),
+    [
+      filters.debouncedSearch,
+      filters.categoryFilter,
+      filters.typeFilter,
+      filters.extraFilter,
+      filters.sortParams
+    ]
+  )
+
+  const { data: filteredItems = [], isLoading } = useWishlist(params)
+  const { mutateAsync: createWishlist, isPending: isCreating } =
+    useCreateWishlistItem()
+  const { mutateAsync: updateWishlist, isPending: isUpdating } =
+    useUpdateWishlistItem()
+  const { mutateAsync: deleteWishlist, isPending: isDeleting } =
+    useDeleteWishlistItem()
 
   const { data: categories = [] } = useCategories()
-
-  const filteredItems = useMemo(() => {
-    return wishlistItems.filter((item) => {
-      const { wishlist, category } = item
-
-      if (categoryFilter !== 'ALL' && wishlist.categoryId !== categoryFilter) {
-        return false
-      }
-
-      if (typeFilter !== 'ALL' && category?.type !== typeFilter) {
-        return false
-      }
-
-      const currentPrice = wishlist.currentClosePrice
-      const targetPrice = wishlist.targetPrice
-      const hasTarget = targetPrice != null && targetPrice > 0
-
-      if (targetStatusFilter === 'BELOW_OR_AT_TARGET') {
-        if (!hasTarget || currentPrice == null || currentPrice > targetPrice) {
-          return false
-        }
-      }
-
-      if (targetStatusFilter === 'ABOVE_TARGET') {
-        if (!hasTarget || currentPrice == null || currentPrice <= targetPrice) {
-          return false
-        }
-      }
-
-      if (targetStatusFilter === 'NO_TARGET') {
-        if (hasTarget) {
-          return false
-        }
-      }
-
-      if (search.trim()) {
-        const query = search.toLowerCase()
-        const matchName = wishlist.name.toLowerCase().includes(query)
-        const matchTicker = wishlist.ticker.toLowerCase().includes(query)
-        const matchNotes = (wishlist.notes || '').toLowerCase().includes(query)
-        if (!matchName && !matchTicker && !matchNotes) {
-          return false
-        }
-      }
-
-      return true
-    })
-  }, [wishlistItems, categoryFilter, typeFilter, targetStatusFilter, search])
-
-  const handleResetFilters = () => {
-    setSearch('')
-    setCategoryFilter('ALL')
-    setTypeFilter('ALL')
-    setTargetStatusFilter('ALL')
-  }
 
   const handleOpenCreate = () => {
     setEditingItem(null)
@@ -133,7 +93,7 @@ export default function WishlistClient() {
     if (editingItem) {
       await updateWishlist({
         id: editingItem.wishlist.id,
-        data: {
+        dto: {
           name: data.name,
           ticker: data.ticker,
           targetPrice: data.targetPrice,
@@ -150,7 +110,7 @@ export default function WishlistClient() {
 
   if (isLoading) {
     return (
-      <div className="bg-background px-6 pt-4 pb-12">
+      <div className="bg-background px-4 pt-4 pb-12 sm:px-6">
         <div className="mx-auto max-w-screen-2xl space-y-8">
           <div className="flex items-center gap-4">
             <Skeleton className="size-14 rounded-xl" />
@@ -171,10 +131,16 @@ export default function WishlistClient() {
     )
   }
 
-  const hasAnyItem = wishlistItems.length > 0
+  const hasActiveFilters = Object.values(params).some(
+    (value) => value !== undefined
+  )
+  const hasAnyItem = filteredItems.length > 0 || hasActiveFilters
 
   return (
-    <div data-slot="wishlist-page" className="bg-background px-6 pt-4 pb-12">
+    <div
+      data-slot="wishlist-page"
+      className="bg-background px-4 pt-4 pb-12 sm:px-6"
+    >
       <div className="mx-auto max-w-screen-2xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
@@ -182,7 +148,7 @@ export default function WishlistClient() {
               <Bookmark className="size-8 text-primary" />
             </div>
             <div>
-              <h1 className="font-bold text-3xl text-foreground">
+              <h1 className="font-bold text-2xl text-foreground sm:text-3xl">
                 Lista de Desejos
               </h1>
               <p className="text-muted-foreground text-xs">
@@ -203,19 +169,26 @@ export default function WishlistClient() {
 
         <WishlistSummaryCards items={filteredItems} />
 
-        <WishlistFilters
+        <ListFilters
+          searchPlaceholder="Buscar por ticker, nome ou notas..."
+          search={filters.search}
+          onSearchChange={filters.setSearch}
           categories={categories}
-          search={search}
-          onSearchChange={setSearch}
-          selectedCategory={categoryFilter}
-          onCategoryChange={setCategoryFilter}
-          selectedType={typeFilter}
-          onTypeChange={setTypeFilter}
-          selectedTargetStatus={targetStatusFilter}
-          onTargetStatusChange={setTargetStatusFilter}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onReset={handleResetFilters}
+          selectedCategory={filters.categoryFilter}
+          onCategoryChange={filters.setCategoryFilter}
+          typeOptions={CATEGORY_TYPE_OPTIONS}
+          selectedType={filters.typeFilter}
+          onTypeChange={filters.setTypeFilter}
+          extraFilter={{
+            value: filters.extraFilter,
+            onChange: filters.setExtraFilter,
+            options: TARGET_STATUS_OPTIONS
+          }}
+          selectedSort={filters.sort}
+          onSortChange={filters.setSort}
+          viewMode={filters.viewMode}
+          onViewModeChange={filters.setViewMode}
+          onReset={filters.resetFilters}
         />
 
         {filteredItems.length === 0 ? (
@@ -242,7 +215,7 @@ export default function WishlistClient() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleResetFilters}
+                onClick={filters.resetFilters}
                 className="mt-4 text-xs"
               >
                 Limpar filtros
@@ -258,7 +231,7 @@ export default function WishlistClient() {
               </Button>
             )}
           </div>
-        ) : viewMode === 'table' ? (
+        ) : filters.viewMode === 'table' ? (
           <WishlistTable
             items={filteredItems}
             onEdit={handleEdit}
@@ -288,17 +261,19 @@ export default function WishlistClient() {
         isPending={isCreating || isUpdating}
         categories={categories}
         initialCategoryId={
-          categoryFilter !== 'ALL' ? categoryFilter : undefined
+          filters.categoryFilter !== 'ALL' ? filters.categoryFilter : undefined
         }
         editingItem={editingItem}
       />
 
-      <DeleteWishlistDialog
+      <ConfirmDeleteDialog
         open={!!deletingItem}
         onOpenChange={(open) => {
           if (!open) setDeletingItem(null)
         }}
+        title="Remover da Wishlist"
         itemName={deletingItem?.wishlist.name || ''}
+        trailing=" da sua lista de desejos?"
         onConfirm={async () => {
           if (deletingItem) {
             await deleteWishlist(deletingItem.wishlist.id)

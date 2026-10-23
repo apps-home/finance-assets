@@ -5,14 +5,14 @@ import { CategoryModule } from '@/modules/assets/categories/category.module'
 import { WishlistModule } from '@/modules/assets/wishlist/wishlist.module'
 
 import { AssetCreatedListener } from './adapters/events/asset-created.listener'
-import { UpdateAssetPriceProcessor } from './adapters/jobs/update-asset-price.processor'
+import { UpdateAssetPriceProcessor } from './adapters/jobs/update-processing.consumer'
 import { NotifyAssetVariationsCron } from './adapters/schedules/notify-asset-variations.cron'
 import { UpdateAssetPricesCron } from './adapters/schedules/update-asset-prices.cron'
 import { CreateAssetUseCase } from './application/use-cases/create-asset'
 import { DeleteAssetUseCase } from './application/use-cases/delete-asset'
-import { FindAllAssetsUseCase } from './application/use-cases/find-all-assets'
 import { FindAllWithTickerAssetsUseCase } from './application/use-cases/find-all-with-ticker-assets'
 import { FindAssetByIdUseCase } from './application/use-cases/find-asset-by-id'
+import { FindAssetsUseCase } from './application/use-cases/find-assets'
 import { NotifyAssetVariationsUseCase } from './application/use-cases/notify-asset-variations'
 import { UpdateAssetUseCase } from './application/use-cases/update-asset'
 import { UpdateAssetPriceUseCase } from './application/use-cases/update-asset-price'
@@ -26,7 +26,7 @@ import { PrismaAssetRepository } from './infra/repositories/prisma.asset.reposit
   providers: [
     { provide: AssetRepository, useClass: PrismaAssetRepository },
     CreateAssetUseCase,
-    FindAllAssetsUseCase,
+    FindAssetsUseCase,
     FindAssetByIdUseCase,
     UpdateAssetUseCase,
     DeleteAssetUseCase,

@@ -1,10 +1,14 @@
+import { Transform } from 'class-transformer'
 import {
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   IsUUID
 } from 'class-validator'
+
+import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 
 export class CreateWishlistDTO {
   @IsNotEmpty({ message: 'Category ID is required' })
@@ -53,9 +57,29 @@ export class FindAllWishlistParamsDTO {
 
   @IsOptional()
   @IsString()
-  ticker?: string
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.trim() || undefined
+    }
+    return undefined
+  })
+  search?: string
 
   @IsOptional()
-  @IsString()
-  name?: string
+  @IsIn(Object.values(CategoryType), { message: 'Invalid category type' })
+  type?: CategoryType
+
+  @IsOptional()
+  @IsIn(['BELOW_OR_AT_TARGET', 'ABOVE_TARGET', 'NO_TARGET'], {
+    message: 'Invalid target status'
+  })
+  targetStatus?: 'BELOW_OR_AT_TARGET' | 'ABOVE_TARGET' | 'NO_TARGET'
+
+  @IsOptional()
+  @IsIn(['monthChange'], { message: 'Invalid sort' })
+  sort?: 'monthChange'
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'], { message: 'Invalid order' })
+  order?: 'asc' | 'desc'
 }

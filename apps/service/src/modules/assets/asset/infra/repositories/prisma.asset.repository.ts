@@ -6,30 +6,59 @@ import { CategoryType } from '@/modules/assets/categories/domain/category.entity
 import { Asset } from '../../domain/asset.entity'
 import {
   AssetRepository,
+  AssetWithCategory,
   AssetWithCategoryType,
   AssetWithUserDetails
 } from '../../domain/asset.repository'
-import { FindAllAssetsParams } from '../../domain/dto/find-all-assets-params.dto'
+import { FindAssetsParams } from '../../domain/dto/find-assets-params.dto'
 import { PrismaAssetMapper } from './prisma.asset.mapper'
 
 @Injectable()
 export class PrismaAssetRepository implements AssetRepository {
   constructor(@Inject('prismaFinanceAssets') private prisma: FinanceAssets) {}
 
-  async list(params: FindAllAssetsParams): Promise<Asset[]> {
-    const { categoryId, name, broker, isActive } = params
+  async list(params: FindAssetsParams): Promise<AssetWithCategory[]> {
+    const { userId, search, categoryId, type, status } = params
 
     const assets = await this.prisma.asset.findMany({
       where: {
-        categoryId,
-        ...(name && { name: { contains: name } }),
-        ...(broker && { broker: { contains: broker } }),
-        ...(isActive !== undefined && { isActive })
+        category: {
+          userId,
+          ...(categoryId && { id: categoryId }),
+          ...(type && { type })
+        },
+        ...(status && { isActive: status === 'ACTIVE' }),
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { ticker: { contains: search, mode: 'insensitive' } },
+            { broker: { contains: search, mode: 'insensitive' } }
+          ]
+        })
       },
+      include: { category: true },
       orderBy: { name: 'asc' }
     })
 
-    return assets.map(PrismaAssetMapper.toDomain)
+    return assets.map((record) => ({
+      asset: PrismaAssetMapper.toDomain(record),
+      category: {
+        id: record.category.id,
+        name: record.category.name,
+        type: record.category.type as CategoryType,
+        currency: record.category.currency
+      }
+    }))
+  }
+
+  async findByIdAndUser(id: string, userId: string): Promise<Asset | null> {
+    const asset = await this.prisma.asset.findFirst({
+      where: { id, category: { userId } }
+    })
+
+    if (!asset) return null
+
+    return PrismaAssetMapper.toDomain(asset)
   }
 
   async findById(id: string): Promise<Asset | null> {

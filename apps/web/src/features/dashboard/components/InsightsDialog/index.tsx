@@ -1,9 +1,11 @@
 'use client'
 
 import { Loader2, RefreshCw, Sparkles } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 
+import type { MonthlyFinancialData } from '@/features/dashboard/api/types'
+import { useGenerateInsights } from '@/features/dashboard/hooks/use-insights'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -14,14 +16,11 @@ import {
   DialogTitle
 } from '@/shared/components/ui/dialog'
 
-interface MonthlyFinancialData {
-  total: number
-  totalBonds: number
-  totalStocks: number
-  growth: number
-  referenceMonth: string
-  categories: { name: string; value: number }[]
-}
+type InsightsState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; content: string }
+  | { status: 'error'; message: string }
 
 interface InsightsDialogProps {
   open: boolean
@@ -32,12 +31,6 @@ interface InsightsDialogProps {
   selectedYear?: string
 }
 
-type InsightsState =
-  | { status: 'idle' }
-  | { status: 'loading' }
-  | { status: 'success'; content: string }
-  | { status: 'error'; message: string }
-
 export function InsightsDialog({
   open,
   onOpenChange,
@@ -46,62 +39,54 @@ export function InsightsDialog({
   yearlyData,
   selectedYear
 }: InsightsDialogProps) {
-  const [state, setState] = useState<InsightsState>({ status: 'idle' })
+  const {
+    mutate: generate,
+    reset,
+    data: content,
+    isIdle,
+    isPending,
+    isError
+  } = useGenerateInsights()
 
-  const fetchInsights = useCallback(async () => {
-    setState({ status: 'loading' })
+  const fetchInsights = useCallback(() => {
+    generate(
+      mode === 'year' && yearlyData
+        ? {
+            mode: 'year',
+            year: selectedYear,
+            monthlyBreakdown: yearlyData,
+            summary: financialData
+          }
+        : { mode: 'month', ...financialData }
+    )
+  }, [generate, financialData, mode, yearlyData, selectedYear])
 
-    try {
-      const payload =
-        mode === 'year' && yearlyData
-          ? {
-              mode: 'year',
-              year: selectedYear,
-              monthlyBreakdown: yearlyData,
-              summary: financialData
-            }
-          : { mode: 'month', ...financialData }
-
-      const response = await fetch('/api/generate-insights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-
-      if (!response.ok) {
-        throw new Error('Falha ao gerar insights')
-      }
-
-      const data = await response.json()
-      const content =
-        typeof data === 'string'
-          ? data
-          : data.message || data.output || JSON.stringify(data, null, 2)
-
-      setState({ status: 'success', content })
-    } catch {
-      setState({
-        status: 'error',
-        message: 'Não foi possível gerar os insights. Tente novamente.'
-      })
-    }
-  }, [financialData, mode, yearlyData, selectedYear])
+  const state: InsightsState = isPending
+    ? { status: 'loading' }
+    : isError
+      ? {
+          status: 'error',
+          message: 'Não foi possível gerar os insights. Tente novamente.'
+        }
+      : content !== undefined
+        ? { status: 'success', content }
+        : { status: 'idle' }
 
   useEffect(() => {
-    if (open && state.status === 'idle') {
+    if (open && isIdle) {
       fetchInsights()
     }
-  }, [open, state.status, fetchInsights])
+  }, [open, isIdle, fetchInsights])
 
   useEffect(() => {
     if (!open) {
-      setState({ status: 'idle' })
+      reset()
     }
-  }, [open])
+  }, [open, reset])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] flex-col overflow-hidden sm:max-w-5xl">
+      <DialogContent className="flex max-h-[80dvh] flex-col overflow-hidden sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="size-4 text-yellow-500" />
@@ -152,7 +137,7 @@ export function InsightsDialog({
           )}
 
           {state.status === 'success' && (
-            <div className="max-w-none space-y-3">
+            <div className="max-w-none space-y-3 break-words">
               <ReactMarkdown
                 components={{
                   h1: ({ children }) => (

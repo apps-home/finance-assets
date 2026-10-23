@@ -1,11 +1,12 @@
 'use client'
 
 import { Coins, Edit, Loader2, Save, TrendingUp, X } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
-import type { MonthData } from '@/app/(application)/(dashboard)/page'
 import { Category, CategoryType } from '@/features/categories/api/types'
-import type { CreateBudgetDTO } from '@/infrastructure/api/budgets/types'
+import type { CreateBudgetDTO } from '@/features/dashboard/api/types'
+import type { MonthData } from '@/features/dashboard/types/month-data'
+import { calculateMonthTotal } from '@/features/dashboard/utils/month-data'
 import { getCurrencyData } from '@/infrastructure/services/external/get-currency'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -13,6 +14,11 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/shared/components/ui/popover'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
 import { parseValue } from '@/shared/utils/parse-value'
@@ -118,20 +124,6 @@ export function FinancialTable({
     setTempDividend('')
   }
 
-  const calculateTotal = useCallback((row: MonthData) => {
-    return Object.keys(row).reduce((acc, key) => {
-      if (
-        key === 'month' ||
-        key === 'monthIndex' ||
-        key === 'id' ||
-        key.endsWith('_dividend')
-      )
-        return acc
-      const value = row[key]
-      return acc + (typeof value === 'number' ? value : 0)
-    }, 0)
-  }, [])
-
   const summaryStats = useMemo(() => {
     if (!data.length || !categories.length) {
       return {
@@ -233,7 +225,7 @@ export function FinancialTable({
     let overallFinal: number | null = null
 
     data.forEach((row) => {
-      const total = calculateTotal(row)
+      const total = calculateMonthTotal(row)
       if (total > 0) {
         if (overallInitial === null) {
           overallInitial = total
@@ -266,7 +258,7 @@ export function FinancialTable({
         yieldPercentage: overallYieldPercentage
       }
     }
-  }, [data, categories, calculateTotal])
+  }, [data, categories])
 
   const { currentYear, currentMonthIndex } = useMemo(() => {
     const now = new Date()
@@ -300,7 +292,7 @@ export function FinancialTable({
           onClick={() =>
             handleEdit(rowIndex, columnName, numericValue, dividendValue)
           }
-          className="group relative -m-1.5 flex w-full cursor-pointer items-center justify-end rounded-md p-1.5 pr-8 transition-colors hover:bg-muted/80 focus:outline-none"
+          className="group relative -m-1.5 flex w-full cursor-pointer items-center justify-end rounded-md p-1.5 transition-colors hover:bg-muted/80 focus:outline-none sm:pr-8"
         >
           <div className="flex flex-col items-end text-right">
             {numericValue > 0 ? (
@@ -318,12 +310,16 @@ export function FinancialTable({
               </span>
             ) : null}
           </div>
-          <span
-            className="absolute right-1 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:text-primary group-hover:opacity-100"
-            title="Editar valor"
-          >
-            <Edit className="size-3.5" />
-          </span>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span className="absolute right-1 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:text-primary group-hover:opacity-100">
+                  <Edit className="size-3.5" />
+                </span>
+              }
+            />
+            <TooltipContent>Editar valor</TooltipContent>
+          </Tooltip>
         </PopoverTrigger>
 
         {isEditing && (
@@ -331,7 +327,7 @@ export function FinancialTable({
             align="end"
             side="bottom"
             sideOffset={6}
-            className="w-72 space-y-3 p-3.5 shadow-2xl"
+            className="w-[min(18rem,calc(100vw-2rem))] space-y-3 p-3.5 shadow-2xl"
           >
             <div className="flex items-center justify-between border-border/60 border-b pb-2">
               <div className="flex flex-col">
@@ -347,7 +343,7 @@ export function FinancialTable({
                 variant="ghost"
                 size="icon"
                 onClick={handleCancel}
-                className="size-6 text-muted-foreground hover:text-foreground"
+                className="size-8 text-muted-foreground hover:text-foreground sm:size-6"
               >
                 <X className="size-3.5" />
               </Button>
@@ -374,7 +370,7 @@ export function FinancialTable({
                     if (e.key === 'Enter') handleSave()
                     if (e.key === 'Escape') handleCancel()
                   }}
-                  className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-base text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:py-1.5 sm:text-xs"
                   placeholder="R$ 0,00"
                 />
               </div>
@@ -399,7 +395,7 @@ export function FinancialTable({
                       if (e.key === 'Enter') handleSave()
                       if (e.key === 'Escape') handleCancel()
                     }}
-                    className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-base text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:py-1.5 sm:text-xs"
                     placeholder="R$ 0,00"
                   />
                 </div>
@@ -413,7 +409,7 @@ export function FinancialTable({
                 size="sm"
                 onClick={handleCancel}
                 disabled={isSaving}
-                className="h-7 px-2.5 text-xs"
+                className="h-9 px-2.5 text-xs sm:h-7"
               >
                 Cancelar
               </Button>
@@ -423,7 +419,7 @@ export function FinancialTable({
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="h-7 gap-1.5 px-3 text-xs"
+                className="h-9 gap-1.5 px-3 text-xs sm:h-7"
               >
                 {isSaving ? (
                   <>
@@ -446,28 +442,28 @@ export function FinancialTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full min-w-max">
         <thead className="border-border border-b bg-muted/50 text-xs">
           <tr>
-            <th className="sticky left-0 z-10 px-4 py-3.5 text-left font-semibold text-muted-foreground uppercase tracking-wider">
+            <th className="sticky left-0 z-10 bg-[color-mix(in_oklab,var(--muted)_50%,var(--card))] px-2 py-3.5 text-left font-semibold text-muted-foreground uppercase tracking-wider sm:px-4">
               Mês
             </th>
             {categories.map((cat) => (
               <th
                 key={cat.id}
-                className="px-4 py-3.5 pr-8 text-right font-semibold text-muted-foreground"
+                className="whitespace-nowrap px-2 py-3.5 text-right font-semibold text-muted-foreground sm:px-4 sm:pr-8"
               >
                 {cat.name}
               </th>
             ))}
-            <th className="border-border/60 border-l px-4 py-3.5 text-right font-semibold text-primary uppercase tracking-wider">
+            <th className="sticky right-0 z-10 bg-[color-mix(in_oklab,var(--muted)_50%,var(--card))] px-2 py-3.5 text-right font-semibold text-primary uppercase tracking-wider shadow-[-1px_0_0_var(--border)] sm:px-4">
               Total
             </th>
           </tr>
         </thead>
         <tbody>
           {data.map((row, index) => {
-            const rowTotal = calculateTotal(row)
+            const rowTotal = calculateMonthTotal(row)
             const isZeroMonth = rowTotal === 0
             const isCurrentMonth =
               year === currentYear && index === currentMonthIndex
@@ -483,7 +479,7 @@ export function FinancialTable({
                       : 'hover:bg-muted/30'
                 }`}
               >
-                <td className="sticky left-0 z-10 whitespace-nowrap bg-muted/50 px-4 py-3.5 font-semibold text-foreground text-xs">
+                <td className="sticky left-0 z-10 whitespace-nowrap bg-[color-mix(in_oklab,var(--muted)_50%,var(--card))] px-2 py-3.5 font-semibold text-foreground text-xs sm:px-4">
                   <div className="flex items-center gap-2">
                     <span>{row.month}</span>
                     {isCurrentMonth && (
@@ -502,13 +498,13 @@ export function FinancialTable({
                   return (
                     <td
                       key={`${row.month}-${cat.id}`}
-                      className="px-4 py-4 text-right text-muted-foreground"
+                      className="px-2 py-4 text-right text-muted-foreground sm:px-4"
                     >
                       {renderCell(index, cat.name, row[cat.name], dividendVal)}
                     </td>
                   )
                 })}
-                <td className="border-border/60 border-l bg-muted/40 px-4 py-3.5 text-right text-xs">
+                <td className="sticky right-0 z-10 whitespace-nowrap bg-[color-mix(in_oklab,var(--muted)_40%,var(--card))] px-2 py-3.5 text-right text-xs shadow-[-1px_0_0_var(--border)] sm:px-4">
                   {rowTotal > 0 ? (
                     <span className="font-bold text-primary text-sm tabular-nums">
                       {formatCurrency(rowTotal)}
@@ -525,7 +521,7 @@ export function FinancialTable({
         </tbody>
         <tfoot className="border-primary/30 border-t-2 bg-muted/30 font-medium">
           <tr className="group/foot border-border/60 border-b transition-colors hover:bg-muted/40">
-            <td className="sticky left-0 z-10 whitespace-nowrap bg-muted/30 px-4 py-3.5 text-left transition-colors group-hover/foot:bg-muted/40">
+            <td className="sticky left-0 z-10 whitespace-nowrap bg-[color-mix(in_oklab,var(--muted)_30%,var(--card))] px-2 py-3.5 text-left transition-colors group-hover/foot:bg-[color-mix(in_oklab,var(--muted)_40%,var(--card))] sm:px-4">
               <div className="flex items-center gap-2">
                 <div className="rounded bg-primary/10 p-1">
                   <Coins className="size-3.5 text-primary" />
@@ -542,7 +538,7 @@ export function FinancialTable({
               return (
                 <td
                   key={`foot-div-${cat.id}`}
-                  className="px-4 py-3.5 pr-8 text-right text-xs"
+                  className="px-2 py-3.5 text-right text-xs sm:px-4 sm:pr-8"
                 >
                   {hasDividends ? (
                     <div className="flex flex-col items-end text-right">
@@ -566,14 +562,14 @@ export function FinancialTable({
                 </td>
               )
             })}
-            <td className="border-border/60 border-l px-4 py-3.5 text-right text-[13px]">
+            <td className="sticky right-0 z-10 bg-[color-mix(in_oklab,var(--muted)_30%,var(--card))] px-2 py-3.5 text-right text-[13px] shadow-[-1px_0_0_var(--border)] transition-colors group-hover/foot:bg-[color-mix(in_oklab,var(--muted)_40%,var(--card))] sm:px-4">
               <span className="font-bold text-[13px] text-primary">
                 {formatCurrency(summaryStats.overall.totalDividends)}
               </span>
             </td>
           </tr>
           <tr className="group/foot transition-colors hover:bg-muted/40">
-            <td className="sticky left-0 z-10 whitespace-nowrap bg-muted/30 px-4 py-3.5 text-left transition-colors group-hover/foot:bg-muted/40">
+            <td className="sticky left-0 z-10 whitespace-nowrap bg-[color-mix(in_oklab,var(--muted)_30%,var(--card))] px-2 py-3.5 text-left transition-colors group-hover/foot:bg-[color-mix(in_oklab,var(--muted)_40%,var(--card))] sm:px-4">
               <div className="flex items-center gap-2">
                 <div className="rounded bg-primary/10 p-1">
                   <TrendingUp className="size-3.5 text-primary" />
@@ -592,7 +588,7 @@ export function FinancialTable({
                 return (
                   <td
                     key={`foot-growth-${cat.id}`}
-                    className="px-4 py-3.5 pr-8 text-right text-muted-foreground/40 text-xs"
+                    className="px-2 py-3.5 text-right text-muted-foreground/40 text-xs sm:px-4 sm:pr-8"
                   >
                     <div className="flex justify-end font-mono">
                       <span>—</span>
@@ -606,7 +602,7 @@ export function FinancialTable({
               return (
                 <td
                   key={`foot-growth-${cat.id}`}
-                  className="px-4 py-3.5 pr-8 text-right text-xs"
+                  className="px-2 py-3.5 text-right text-xs sm:px-4 sm:pr-8"
                 >
                   <div className="flex flex-col items-end text-right">
                     <span
@@ -633,7 +629,7 @@ export function FinancialTable({
                 </td>
               )
             })}
-            <td className="border-border/60 border-l px-4 py-3.5 text-right text-sm">
+            <td className="sticky right-0 z-10 bg-[color-mix(in_oklab,var(--muted)_30%,var(--card))] px-2 py-3.5 text-right text-sm shadow-[-1px_0_0_var(--border)] transition-colors group-hover/foot:bg-[color-mix(in_oklab,var(--muted)_40%,var(--card))] sm:px-4">
               <div className="flex flex-col items-end text-right">
                 <span
                   className={`font-bold text-sm ${

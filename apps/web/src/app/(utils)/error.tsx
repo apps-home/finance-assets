@@ -24,7 +24,9 @@ export default function Error({ error, reset }: ErrorProps) {
           <AlertTriangle className="h-12 w-12 text-destructive" />
         </div>
 
-        <h1 className="mb-2 font-bold text-8xl text-destructive">500</h1>
+        <h1 className="mb-2 font-bold text-6xl text-destructive sm:text-8xl">
+          500
+        </h1>
 
         <h2 className="mb-4 font-semibold text-2xl text-foreground">
           Algo deu errado

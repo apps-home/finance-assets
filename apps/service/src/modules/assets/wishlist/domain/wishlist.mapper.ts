@@ -1,4 +1,4 @@
-import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+import { CategorySummary } from '@/modules/assets/categories/domain/category.entity'
 
 import { CreateWishlistPayload } from './dto/create-wishlist.dto'
 import { Wishlist, WishlistProps } from './wishlist.entity'
@@ -6,12 +6,7 @@ import { WishlistWithCategory } from './wishlist.repository'
 
 export interface WishlistWithCategoryHTTPResponse {
   wishlist: WishlistProps
-  category: {
-    id: string
-    name: string
-    type: CategoryType
-    currency: string
-  }
+  category: CategorySummary
 }
 
 export class WishlistMapper {

@@ -18,14 +18,20 @@ export class PrismaWishlistRepository implements WishlistRepository {
   constructor(@Inject('prismaFinanceAssets') private prisma: FinanceAssets) {}
 
   async list(params: FindAllWishlistParams): Promise<WishlistWithCategory[]> {
-    const { userId, categoryId, ticker, name } = params
+    const { userId, categoryId, search, type } = params
 
     const records = await this.prisma.assetWishlists.findMany({
       where: {
         userId,
         ...(categoryId && { categoryId }),
-        ...(ticker && { ticker: { contains: ticker, mode: 'insensitive' } }),
-        ...(name && { name: { contains: name, mode: 'insensitive' } })
+        ...(type && { category: { type } }),
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { ticker: { contains: search, mode: 'insensitive' } },
+            { notes: { contains: search, mode: 'insensitive' } }
+          ]
+        })
       },
       include: {
         category: true

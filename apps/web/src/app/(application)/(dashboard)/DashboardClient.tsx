@@ -1,6 +1,5 @@
 'use client'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   ArrowUpRightFromSquare,
   ChevronDown,
@@ -12,18 +11,16 @@ import {
   Wallet
 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { useEffect, useRef, useState } from 'react'
 
-import { CategoryType } from '@/features/categories/api/types'
-import { useCategories } from '@/features/categories/hooks/use-category'
 import { useAvailableYears } from '@/features/categories/hooks/use-competence'
 import { CategoryBreakdown } from '@/features/dashboard/components/CategoryBreakdown'
 import { FinancialChart } from '@/features/dashboard/components/FinancialChart'
 import { FinancialTable } from '@/features/dashboard/components/FinancialTable'
 import { InsightsDialog } from '@/features/dashboard/components/InsightsDialog'
 import { StatCard } from '@/features/dashboard/components/StatCard'
-import { createBudget, listBudgets } from '@/infrastructure/api/budgets'
+import { useSaveBudget } from '@/features/dashboard/hooks/use-budget'
+import { useDashboard } from '@/features/dashboard/hooks/use-dashboard'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
 import {
@@ -34,10 +31,6 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { cn } from '@/shared/lib/utils'
-import { queryClient } from '@/shared/providers/query-client'
-import { MONTH_NAMES } from '@/shared/utils/month-names'
-
-import type { MonthData } from './page'
 
 export default function DashboardPageClient() {
   const [selectedYear, setSelectedYear] = useState(
@@ -57,206 +50,35 @@ export default function DashboardPageClient() {
     }
   }, [availableYears])
 
-  const { data: budgetsData, isLoading: isLoadingBudgets } = useQuery({
-    queryKey: ['budgets', selectedYear],
-    queryFn: () => listBudgets({ year: parseInt(selectedYear, 10) }),
-    placeholderData: (prev) => prev
-  })
+  const {
+    isLoading,
+    categories,
+    dashboardData,
+    stats,
+    categoryChartData,
+    mainChartData
+  } = useDashboard(parseInt(selectedYear, 10))
 
-  const { data: categoriesData, isLoading: isLoadingCategories } =
-    useCategories({ year: parseInt(selectedYear, 10) })
-
-  const { mutateAsync: saveBudget } = useMutation({
-    mutationFn: createBudget,
-    onSuccess: () => {
-      toast.success('Valor atualizado!')
-      queryClient.invalidateQueries({ queryKey: ['budgets', selectedYear] })
-    },
-    onError: () => {
-      toast.error('Erro ao salvar valor.')
-    }
-  })
-
-  const isLoading = isLoadingCategories || isLoadingBudgets
-  const budgets = budgetsData || []
-  const categories = categoriesData || []
-
-  const dashboardData: MonthData[] = useMemo(() => {
-    if (isLoading) return []
-
-    const processedMonths = MONTH_NAMES.map((month, index) => {
-      const row: MonthData = {
-        month,
-        monthIndex: index + 1
-      }
-
-      categories.forEach((cat) => {
-        row[cat.name] = 0
-      })
-
-      return row
-    })
-
-    budgets.forEach((budget) => {
-      const monthIndex = budget.month - 1
-      if (monthIndex >= 0 && monthIndex < 12) {
-        const category = categories.find((c) => c.id === budget.categoryId)
-        if (category) {
-          processedMonths[monthIndex][category.name] = Number(budget.amount)
-          processedMonths[monthIndex][`${category.name}_dividend`] =
-            budget.dividendAmount ? Number(budget.dividendAmount) : 0
-        }
-      }
-    })
-
-    return processedMonths
-  }, [budgets, categories, isLoading])
-
-  const getLatestMonthWithData = useMemo(() => {
-    if (!dashboardData.length) return null
-
-    for (let i = dashboardData.length - 1; i >= 0; i--) {
-      const monthData = dashboardData[i]
-      const hasData = Object.keys(monthData).some((key) => {
-        if (
-          key === 'month' ||
-          key === 'monthIndex' ||
-          key.endsWith('_dividend')
-        )
-          return false
-        return (monthData[key] as number) > 0
-      })
-      if (hasData) return monthData
-    }
-
-    return dashboardData[dashboardData.length - 1]
-  }, [dashboardData])
-
-  const stats = useMemo(() => {
-    if (!dashboardData.length || !categories.length || !getLatestMonthWithData)
-      return {
-        total: 0,
-        growth: 0,
-        totalBonds: 0,
-        totalStocks: 0,
-        totalDividends: 0,
-        referenceMonth: ''
-      }
-
-    const currentMonthData = getLatestMonthWithData
-
-    const fixedCategoryNames = categories
-      .filter((cat) => cat.type === CategoryType.FIXED)
-      .map((cat) => cat.name)
-
-    let totalBonds = 0
-    let totalStocks = 0
-
-    Object.keys(currentMonthData).forEach((key) => {
-      if (
-        key !== 'month' &&
-        key !== 'monthIndex' &&
-        !key.endsWith('_dividend')
-      ) {
-        const value = currentMonthData[key] as number
-        if (fixedCategoryNames.includes(key)) {
-          totalBonds += value
-        } else {
-          totalStocks += value
-        }
-      }
-    })
-
-    const totalCurrent = totalBonds + totalStocks
-
-    const firstMonthData =
-      dashboardData.find((monthData) => {
-        return Object.keys(monthData).some((key) => {
-          if (
-            key === 'month' ||
-            key === 'monthIndex' ||
-            key.endsWith('_dividend')
-          )
-            return false
-          return (monthData[key] as number) > 0
-        })
-      }) ?? dashboardData[0]
-    const totalFirst = Object.keys(firstMonthData).reduce((acc, key) => {
-      if (
-        key !== 'month' &&
-        key !== 'monthIndex' &&
-        !key.endsWith('_dividend')
-      ) {
-        return acc + (firstMonthData[key] as number)
-      }
-      return acc
-    }, 0)
-
-    const growth =
-      totalFirst > 0 ? ((totalCurrent - totalFirst) / totalFirst) * 100 : 0
-
-    const totalDividends = budgets.reduce((acc, budget) => {
-      return acc + (budget.dividendAmount ? Number(budget.dividendAmount) : 0)
-    }, 0)
-
-    return {
-      total: totalCurrent,
-      growth,
-      totalBonds,
-      totalStocks,
-      totalDividends,
-      referenceMonth: currentMonthData.month as string
-    }
-  }, [dashboardData, categories, getLatestMonthWithData, budgets])
-
-  const categoryChartData = useMemo(() => {
-    if (!dashboardData.length || !getLatestMonthWithData) return []
-
-    return categories.map((cat, index) => ({
-      name: cat.name,
-      value: getLatestMonthWithData[cat.name] as number,
-      color: `var(--chart-${(index % 5) + 1})`
-    }))
-  }, [dashboardData, categories, getLatestMonthWithData])
-
-  const mainChartData = useMemo(() => {
-    return dashboardData.map((row) => {
-      const total = Object.keys(row).reduce((acc, key) => {
-        if (
-          key !== 'month' &&
-          key !== 'monthIndex' &&
-          !key.endsWith('_dividend')
-        ) {
-          return acc + (row[key] as number)
-        }
-        return acc
-      }, 0)
-
-      return {
-        ...row,
-        total
-      }
-    })
-  }, [dashboardData])
+  const { mutateAsync: saveBudget } = useSaveBudget()
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-svh items-center justify-center">
         <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
-    <div className="bg-background px-6 pt-4 pb-12">
-      <div className="mx-auto max-w-screen-2xl space-y-8">
+    <div className="bg-background px-4 pt-4 pb-12 sm:px-6">
+      <div className="mx-auto max-w-screen-2xl space-y-6 sm:space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="rounded-xl bg-primary/10 p-3">
-              <Wallet className="size-8 text-primary" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="rounded-xl bg-primary/10 p-2.5 sm:p-3">
+              <Wallet className="size-6 text-primary sm:size-8" />
             </div>
             <div>
-              <h1 className="font-bold text-3xl text-foreground">
+              <h1 className="font-bold text-2xl text-foreground sm:text-3xl">
                 Controle Patrimonial
               </h1>
               <p className="text-muted-foreground">
@@ -264,7 +86,7 @@ export default function DashboardPageClient() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex min-w-0 items-center gap-6 overflow-x-auto">
             <Tabs
               value={selectedYear}
               onValueChange={(value) => {
@@ -325,7 +147,7 @@ export default function DashboardPageClient() {
           />
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2.5">
@@ -341,12 +163,12 @@ export default function DashboardPageClient() {
               </div>
               <p className="text-muted-foreground text-xs">
                 {categories.length > 0
-                  ? 'Passe o mouse ou clique em qualquer célula para editar aportes e dividendos'
+                  ? 'Toque ou clique em qualquer célula para editar aportes e dividendos'
                   : `Nenhuma categoria encontrada para ${selectedYear}`}
               </p>
             </div>
             {categories.length > 0 && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={cn(

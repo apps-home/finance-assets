@@ -29,3 +29,33 @@ export const CURRENCY_LABELS: Record<string, string> = {
   EUR: '€',
   GBP: '£'
 }
+
+export const CATEGORY_TYPE_OPTIONS = [
+  CategoryType.FIXED,
+  CategoryType.VARIABLE_BR,
+  CategoryType.VARIABLE_US,
+  CategoryType.CRYPTO
+].map((type) => ({ value: type, label: CATEGORY_TYPE_LABELS[type] }))
+
+export const CURRENCY_OPTIONS = [
+  { value: 'BRL', label: 'Real Brasileiro (R$)' },
+  { value: 'USD', label: 'Dólar Americano ($)' },
+  { value: 'EUR', label: 'Euro (€)' },
+  { value: 'GBP', label: 'Libra Esterlina (£)' }
+]
+
+const DEFAULT_CURRENCY_BY_TYPE: Record<CategoryType, string> = {
+  [CategoryType.FIXED]: 'BRL',
+  [CategoryType.VARIABLE_BR]: 'BRL',
+  [CategoryType.VARIABLE_US]: 'USD',
+  [CategoryType.CRYPTO]: 'BRL'
+}
+
+export function getCategoryCurrency(
+  category?: { currency?: string; type?: CategoryType } | null
+) {
+  return (
+    category?.currency ||
+    DEFAULT_CURRENCY_BY_TYPE[category?.type ?? CategoryType.FIXED]
+  )
+}

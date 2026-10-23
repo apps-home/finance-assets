@@ -11,8 +11,8 @@ type DeleteAssetResponse = Either<AssetNotFoundError, void>
 export class DeleteAssetUseCase {
   constructor(private assetRepository: AssetRepository) {}
 
-  async execute(id: string): Promise<DeleteAssetResponse> {
-    const asset = await this.assetRepository.findById(id)
+  async execute(userId: string, id: string): Promise<DeleteAssetResponse> {
+    const asset = await this.assetRepository.findByIdAndUser(id, userId)
 
     if (!asset) {
       return left(new AssetNotFoundError())

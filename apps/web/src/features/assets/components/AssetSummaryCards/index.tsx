@@ -8,15 +8,14 @@ import {
   Wallet
 } from 'lucide-react'
 
-import { useDollarRate } from '@/features/assets/hooks/use-dollar-rate'
-import { CategoryType } from '@/features/categories/api/types'
+import type { AssetWithCategory } from '@/features/assets/api/types'
+import { getCategoryCurrency } from '@/features/categories/utils'
 import { Card, CardContent } from '@/shared/components/ui/card'
+import { useDollarRate } from '@/shared/hooks/use-dollar-rate'
 import { cn } from '@/shared/lib/utils'
-import { CURRENCIES } from '@/shared/utils/currencies'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
-
-import type { AssetWithCategory } from '../../types'
+import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 interface AssetSummaryCardsProps {
   assets: AssetWithCategory[]
@@ -33,12 +32,10 @@ export function AssetSummaryCards({
   const activeAssets = assets.filter((a) => a.isActive)
 
   const hasUSD = activeAssets.some((a) => {
-    const catType = a.category?.type || CategoryType.FIXED
-    return (a.category?.currency || CURRENCIES[catType]) === 'USD'
+    return getCategoryCurrency(a.category) === 'USD'
   })
   const hasBRL = activeAssets.some((a) => {
-    const catType = a.category?.type || CategoryType.FIXED
-    return (a.category?.currency || CURRENCIES[catType]) !== 'USD'
+    return getCategoryCurrency(a.category) !== 'USD'
   })
 
   const isOnlyUSD = hasUSD && !hasBRL
@@ -67,9 +64,7 @@ export function AssetSummaryCards({
     )
   } else {
     for (const asset of activeAssets) {
-      const catType = asset.category?.type || CategoryType.FIXED
-      const isAssetUSD =
-        (asset.category?.currency || CURRENCIES[catType]) === 'USD'
+      const isAssetUSD = getCategoryCurrency(asset.category) === 'USD'
       const rate = isAssetUSD ? usdRate : 1
 
       const invested = (asset.investedValue || 0) * rate
@@ -213,8 +208,8 @@ export function AssetSummaryCards({
               <p
                 className={cn(
                   'font-bold text-xl tabular-nums',
-                  isProfitPositive && 'text-emerald-600 dark:text-emerald-400',
-                  isProfitNegative && 'text-red-600 dark:text-red-400',
+                  isProfitPositive && TREND_CLASSES.positive.text,
+                  isProfitNegative && TREND_CLASSES.negative.text,
                   !isProfitPositive && !isProfitNegative && 'text-foreground'
                 )}
               >
@@ -225,9 +220,8 @@ export function AssetSummaryCards({
                 <span
                   className={cn(
                     'font-semibold text-xs tabular-nums',
-                    isProfitPositive &&
-                      'text-emerald-600 dark:text-emerald-400',
-                    isProfitNegative && 'text-red-600 dark:text-red-400'
+                    isProfitPositive && TREND_CLASSES.positive.text,
+                    isProfitNegative && TREND_CLASSES.negative.text
                   )}
                 >
                   {formatPercentage(totalProfitPercentage)}

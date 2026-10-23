@@ -4,128 +4,74 @@ import { toast } from 'sonner'
 import {
   createAsset,
   deleteAsset,
-  listAssetsByCategory,
+  listAssets,
   updateAsset
 } from '@/features/assets/api'
 import type {
   CreateAssetDTO,
+  ListAssetsParams,
   UpdateAssetDTO
 } from '@/features/assets/api/types'
-import { useCategories } from '@/features/categories/hooks/use-category'
 import { queryClient } from '@/shared/providers/query-client'
 
-import type { AssetWithCategory } from '../types'
+export const ASSET_QUERY_KEY = 'assets'
 
-export function useAssets(selectedCategoryId?: string) {
-  const { data: categories = [], isLoading: isLoadingCategories } =
-    useCategories()
-
-  const { data: allAssets = [], isLoading: isLoadingAssets } = useQuery({
-    queryKey: [
-      'all-assets',
-      categories
-        .map((c) => c.id)
-        .sort()
-        .join(',')
-    ],
-    queryFn: async () => {
-      if (!categories || categories.length === 0) return []
-
-      const assetsByCat = await Promise.all(
-        categories.map(async (category) => {
-          try {
-            const assets = await listAssetsByCategory(category.id)
-            return assets.map(
-              (asset): AssetWithCategory => ({
-                ...asset,
-                category
-              })
-            )
-          } catch {
-            return []
-          }
-        })
-      )
-
-      return assetsByCat.flat()
-    },
-    enabled: categories.length > 0
+// 1. Queries
+export function useAssets(params?: ListAssetsParams) {
+  return useQuery({
+    queryKey: [ASSET_QUERY_KEY, params],
+    queryFn: () => listAssets(params),
+    placeholderData: (prev) => prev
   })
+}
 
-  const filteredAssets = allAssets.filter((asset) => {
-    if (selectedCategoryId && selectedCategoryId !== 'ALL') {
-      return asset.categoryId === selectedCategoryId
-    }
-    return true
-  })
-
-  const createMutation = useMutation({
-    mutationFn: ({
-      categoryId,
-      data
-    }: {
-      categoryId: string
-      data: CreateAssetDTO
-    }) => createAsset(categoryId, data),
-    onSuccess: (_, variables) => {
+// 2. Mutations granulares (com toast e invalidação automática de cache)
+export function useCreateAsset() {
+  return useMutation({
+    mutationFn: (dto: CreateAssetDTO) => createAsset(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ASSET_QUERY_KEY] })
       toast.success('Ativo criado com sucesso!')
-      queryClient.invalidateQueries({
-        queryKey: ['assets', variables.categoryId]
-      })
-      queryClient.invalidateQueries({ queryKey: ['all-assets'] })
     },
-    onError: () => {
-      toast.error('Erro ao criar ativo.')
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message || error.message || 'Erro ao criar ativo.'
+      toast.error(message)
     }
   })
+}
 
-  const updateMutation = useMutation({
-    mutationFn: ({
-      categoryId,
-      id,
-      data
-    }: {
-      categoryId: string
-      id: string
-      data: UpdateAssetDTO
-    }) => updateAsset(categoryId, id, data),
-    onSuccess: (_, variables) => {
+export function useUpdateAsset() {
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: UpdateAssetDTO }) =>
+      updateAsset(id, dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ASSET_QUERY_KEY] })
       toast.success('Ativo atualizado com sucesso!')
-      queryClient.invalidateQueries({
-        queryKey: ['assets', variables.categoryId]
-      })
-      queryClient.invalidateQueries({ queryKey: ['all-assets'] })
     },
-    onError: () => {
-      toast.error('Erro ao atualizar ativo.')
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Erro ao atualizar ativo.'
+      toast.error(message)
     }
   })
+}
 
-  const deleteMutation = useMutation({
-    mutationFn: ({ categoryId, id }: { categoryId: string; id: string }) =>
-      deleteAsset(categoryId, id),
-    onSuccess: (_, variables) => {
+export function useDeleteAsset() {
+  return useMutation({
+    mutationFn: (id: string) => deleteAsset(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ASSET_QUERY_KEY] })
       toast.success('Ativo removido com sucesso!')
-      queryClient.invalidateQueries({
-        queryKey: ['assets', variables.categoryId]
-      })
-      queryClient.invalidateQueries({ queryKey: ['all-assets'] })
     },
-    onError: () => {
-      toast.error('Erro ao remover ativo.')
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Erro ao remover ativo.'
+      toast.error(message)
     }
   })
-
-  return {
-    categories,
-    assets: filteredAssets,
-    allAssets,
-    isLoading: isLoadingCategories || isLoadingAssets,
-    createAsset: createMutation.mutateAsync,
-    updateAsset: updateMutation.mutateAsync,
-    deleteAsset: deleteMutation.mutateAsync,
-    isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending
-  }
 }

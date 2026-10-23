@@ -21,11 +21,14 @@ export class CreateAssetUseCase {
     private eventPublisher: DomainEventPublisher
   ) {}
 
-  async execute(data: CreateAssetPayload): Promise<CreateAssetResponse> {
+  async execute(
+    userId: string,
+    data: CreateAssetPayload
+  ): Promise<CreateAssetResponse> {
     try {
       const category = await this.categoryRepository.findById(data.categoryId)
 
-      if (!category) {
+      if (!category || category.userId !== userId) {
         return left(new CategoryNotFoundError())
       }
 

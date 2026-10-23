@@ -10,3 +10,11 @@ export function calcPercentageChange(
   if (previous === 0) return 0
   return ((current - previous) / previous) * 100
 }
+
+export function calcMonthChange(
+  current: number | null | undefined,
+  lastMonth: number | null | undefined
+): number | null {
+  if (current == null || lastMonth == null || lastMonth === 0) return null
+  return calcPercentageChange(current, lastMonth)
+}

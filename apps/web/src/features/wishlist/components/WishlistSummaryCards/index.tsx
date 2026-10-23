@@ -2,10 +2,10 @@
 
 import { AlertCircle, CheckCircle2, Eye, TrendingUp } from 'lucide-react'
 
+import type { WishlistWithCategory } from '@/features/wishlist/api/types'
+import { getTargetPriceInfo } from '@/features/wishlist/utils/target-price'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { cn } from '@/shared/lib/utils'
-
-import type { WishlistWithCategory } from '../../types/wishlist.types'
 
 interface WishlistSummaryCardsProps {
   items: WishlistWithCategory[]
@@ -18,27 +18,25 @@ export function WishlistSummaryCards({
 }: WishlistSummaryCardsProps) {
   const totalCount = items.length
 
-  // Itens com preço alvo definido
-  const itemsWithTarget = items.filter(
-    (item) => item.wishlist.targetPrice != null && item.wishlist.targetPrice > 0
+  const targetInfos = items.map(({ wishlist }) =>
+    getTargetPriceInfo(wishlist.currentClosePrice, wishlist.targetPrice)
   )
 
+  // Itens com preço alvo definido
+  const itemsWithTargetCount = targetInfos.filter(
+    (info) => info.hasTarget
+  ).length
+
   // Itens onde a cotação atual está menor ou igual ao preço alvo (oportunidade de compra!)
-  const targetReachedItems = itemsWithTarget.filter((item) => {
-    const current = item.wishlist.currentClosePrice
-    const target = item.wishlist.targetPrice
-    return current != null && target != null && current <= target
-  })
+  const targetReachedItems = targetInfos.filter(
+    (info) => info.isAtOrBelowTarget
+  )
 
   // Itens onde a cotação está acima do preço alvo
-  const aboveTargetItems = itemsWithTarget.filter((item) => {
-    const current = item.wishlist.currentClosePrice
-    const target = item.wishlist.targetPrice
-    return current != null && target != null && current > target
-  })
+  const aboveTargetItems = targetInfos.filter((info) => info.isAboveTarget)
 
   // Sem preço alvo
-  const noTargetCount = totalCount - itemsWithTarget.length
+  const noTargetCount = totalCount - itemsWithTargetCount
 
   return (
     <div
@@ -63,7 +61,7 @@ export function WishlistSummaryCards({
               {totalCount}
             </p>
             <p className="text-muted-foreground text-xs">
-              {itemsWithTarget.length} com meta de preço
+              {itemsWithTargetCount} com meta de preço
             </p>
           </div>
         </CardContent>

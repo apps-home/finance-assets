@@ -67,7 +67,7 @@ Run this command from the `apps/web` directory. **Never** use `npx` — always u
 ```
 src/
 ├── app/              # Next.js App Router pages and layouts
-├── features/         # Feature modules (categories, dashboard, profile)
+├── features/         # Feature modules (assets, categories, dashboard, profile, wishlist)
 ├── infrastructure/   # Infrastructure layer
 │   ├── api/          # API client configuration
 │   └── services/     # External services integration

@@ -1,9 +1,9 @@
 export const QUEUES = {
-  ASSET_PRICE_UPDATE: 'asset-price-update'
+  ASSET_PROCESSING: 'asset-processing'
 } as const
 
 export const JOBS = {
-  ASSET_PRICE_UPDATE: {
+  ASSET: {
     UPDATE_PRICE: 'update-price'
   }
 } as const
