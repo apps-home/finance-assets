@@ -26,9 +26,12 @@ export class CreateAssetUseCase {
     data: CreateAssetPayload
   ): Promise<CreateAssetResponse> {
     try {
-      const category = await this.categoryRepository.findById(data.categoryId)
+      const category = await this.categoryRepository.findById(
+        data.categoryId,
+        userId
+      )
 
-      if (!category || category.userId !== userId) {
+      if (!category) {
         return left(new CategoryNotFoundError())
       }
 

@@ -6,10 +6,6 @@ export abstract class CompetenceRepository {
     userId: string
   ): Promise<Competence[]>
   abstract findAvailableYears(userId: string): Promise<number[]>
-  abstract save(competence: Competence): Promise<void>
+  abstract findById(id: string, userId: string): Promise<Competence | null>
   abstract delete(id: string): Promise<void>
-  abstract findByCategoryAndYear(
-    categoryId: string,
-    year: number
-  ): Promise<Competence | null>
 }

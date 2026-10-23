@@ -13,8 +13,8 @@ type FindCategoryByIdResponse = Either<CategoryNotFoundError, CategoryProps>
 export class FindCategoryByIdUseCase {
   constructor(private categoryRepository: CategoryRepository) {}
 
-  async execute(id: string): Promise<FindCategoryByIdResponse> {
-    const category = await this.categoryRepository.findById(id)
+  async execute(userId: string, id: string): Promise<FindCategoryByIdResponse> {
+    const category = await this.categoryRepository.findById(id, userId)
 
     if (!category) {
       return left(new CategoryNotFoundError())

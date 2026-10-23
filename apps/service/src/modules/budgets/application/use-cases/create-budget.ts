@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Either, left, right } from '@/core/utils/Either'
+import { CategoryNotFoundError } from '@/modules/assets/categories/application/errors/category-not-found.error'
 import { CategoryRepository } from '@/modules/assets/categories/domain/category.repository'
 
 import { BudgetMapper } from '../../domain/budget.mapper'
@@ -17,12 +18,18 @@ export class CreateBudgetUseCase {
     private categoryRepository: CategoryRepository
   ) {}
 
-  async execute(data: CreateBudgetPayload): Promise<CreateBudgetResponse> {
+  async execute(
+    userId: string,
+    data: CreateBudgetPayload
+  ): Promise<CreateBudgetResponse> {
     try {
-      const category = await this.categoryRepository.findById(data.categoryId)
+      const category = await this.categoryRepository.findById(
+        data.categoryId,
+        userId
+      )
 
       if (!category) {
-        return left(new PayloadError('Category not found'))
+        return left(new CategoryNotFoundError())
       }
 
       if (!category.years.includes(data.year)) {
@@ -35,7 +42,7 @@ export class CreateBudgetUseCase {
 
       const budget = BudgetMapper.toDomain(data)
 
-      budget.updateAmountWithExchangeRate(data.exchangeRate || 1)
+      budget.changeAmount(data.amount, data.exchangeRate ?? 1)
 
       await this.budgetRepository.save(budget)
 

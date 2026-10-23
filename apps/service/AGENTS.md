@@ -39,18 +39,20 @@ O schema é dividido em dois namespaces PostgreSQL: `better-auth` (autenticaçã
 
 | Tabela | Descrição |
 |---|---|
-| `asset_categories` | Classe de ativos do usuário. Campos: `id`, `userId`, `name`, `type` (enum `CategoryType`), `currency` (padrão `BRL`). |
-| `assets` | Ativo individual dentro de uma categoria. Campos: `id`, `categoryId`, `name`, `ticker`, `currentClosePrice`, `lastMonthClosePrice`. |
-| `asset_wishlists` | Ativos monitorados / lista de desejos do usuário. Campos: `id`, `userId`, `categoryId`, `name`, `ticker`, `targetPrice`, `currentClosePrice`, `lastMonthClosePrice`, `notes`, `createdAt`, `updatedAt`. |
-| `asset_records` | Registro histórico mensal do valor consolidado de uma categoria. Campos: `id`, `categoryId`, `month`, `year`, `amount`, `exchangeRate`, `dividendAmount`. |
-| `asset_category_competences` | Registra em quais **anos** uma categoria possui registros, otimizando queries de filtro temporal. Campos: `id`, `categoryId`, `year`. |
+| `asset_categories` | Classe de ativos do usuário. Campos: `id`, `userId`, `name`, `type` (enum `CategoryType`), `targetPercentage` (meta de alocação, 0–100), `currency` (padrão `BRL`), `createdAt`, `updatedAt`. |
+| `assets` | Ativo individual dentro de uma categoria. Campos: `id`, `categoryId`, `name`, `ticker`, `quantity`, `averagePrice`, `broker`, `isActive`, `currentClosePrice`, `lastMonthClosePrice`, `createdAt`, `updatedAt`. |
+| `asset_wishlists` | Ativos monitorados / lista de desejos do usuário. Campos: `id`, `userId`, `categoryId`, `name`, `ticker`, `targetPrice`, `currentClosePrice`, `lastMonthClosePrice`, `notes`, `createdAt`, `updatedAt`. Único por `(userId, ticker)`. |
+| `asset_records` | Registro histórico mensal do valor consolidado de uma categoria. Campos: `id`, `categoryId`, `month`, `year`, `amount`, `exchangeRate`, `dividendAmount`, `createdAt`, `updatedAt`. Único por `(categoryId, month, year)`. |
+| `asset_category_competences` | Registra em quais **anos** uma categoria possui registros, otimizando queries de filtro temporal. Campos: `id`, `categoryId`, `year`. Único por `(categoryId, year)`. |
+
+> Todas as FKs usam `onDelete: Cascade`: excluir uma categoria remove seus ativos, wishlist, registros e competências.
 
 ### Enum: `CategoryType`
 
 | Valor | Descrição |
 |---|---|
 | `VARIABLE_BR` | Renda Variável — Mercado Brasileiro (Brapi) |
-| `VARIABLE_US` | Renda Variável — Mercado Americano (Alpha Vantage) |
+| `VARIABLE_US` | Renda Variável — Mercado Americano (Polygon, com fallback para Alpha Vantage) |
 | `CRYPTO` | Criptomoedas (CoinGecko) |
 | `FIXED` | Renda Fixa (sem cotação de mercado) |
 
@@ -82,19 +84,49 @@ Focado no desempenho individual dos ativos.
 ```
 modules/
 ├── assets/
-│   ├── asset/          # Domínio do ativo individual (CRUD + price update)
-│   ├── categories/     # Domínio das categorias de ativos
-│   ├── competences/    # Domínio das competências anuais por categoria
-│   └── wishlist/       # Domínio da lista de desejos / ativos monitorados
-├── budgets/            # Domínio dos registros mensais (AssetRecord)
-└── user/               # Domínio do usuário (perfil, avatar)
+│   ├── asset/          # Ativo individual (CRUD, atualização de preço, notificações de variação)
+│   ├── categories/     # Categorias de ativos (tipo, moeda, meta de alocação, anos)
+│   ├── competences/    # Competências anuais por categoria (somente leitura de anos + exclusão)
+│   └── wishlist/       # Lista de desejos / ativos monitorados
+├── budgets/            # Registros mensais (AssetRecord)
+└── user/               # Usuário do Better Auth (consulta e avatar)
 ```
 
 Cada módulo segue a arquitetura em camadas (DDD / Clean Architecture):
-- **`domain/`** — Entidades, repositórios (interfaces abstratas) e DTOs de domínio.
-- **`application/use-cases/`** — Casos de uso (regras de negócio).
-- **`infra/`** — Implementações concretas (repositórios Prisma conectando ao `PrismaService`, controllers HTTP NestJS, DTOs de validação de entrada).
-- **`adapters/`** — Adaptadores externos (processadores de fila BullMQ, listeners de eventos, agendamentos).
+
+```
+<modulo>/
+├── <nome>.module.ts
+├── domain/
+│   ├── <nome>.entity.ts        # Entidade (regras de negócio e validações)
+│   ├── <nome>.mapper.ts        # Mapper de domínio (payload -> entidade, entidade -> resposta HTTP)
+│   ├── <nome>.repository.ts    # Contrato abstrato do repositório (token de DI)
+│   └── dto/                    # Payloads e parâmetros de busca do domínio
+├── application/
+│   ├── use-cases/              # Casos de uso (um arquivo por caso de uso, specs ao lado)
+│   └── errors/                 # Erros do módulo (<nome>-not-found.error.ts)
+├── infra/
+│   ├── <nome>.controller.ts    # Controller HTTP
+│   ├── <nome>.dto.ts           # DTOs de entrada (class-validator)
+│   └── repositories/           # prisma.<nome>.repository.ts e prisma.<nome>.mapper.ts
+└── adapters/                   # Somente em asset: listeners, consumers BullMQ e crons
+```
+
+### Autenticação e Escopo por Usuário
+
+**Todas as rotas exigem sessão.** O `SessionAuthGuard` (`src/infra/auth`) é registrado como `APP_GUARD`, então a proteção é o padrão e não depende de cada controller:
+
+- O cliente envia `Authorization: Bearer <session.token>` (token da sessão do Better Auth, que o web obtém com `authClient.getSession()`).
+- O guard busca o token na tabela `session` (via `prismaAuth`). Token ausente, inexistente ou expirado responde **401**.
+- O `userId` vem **somente** da sessão. Nos controllers, use o decorator `@CurrentUserId()`. Não existe mais header `user-id` e nenhum controller deve ler `request.headers`.
+
+**Cada usuário só enxerga e altera o que é dele.** Isso vale por padrão, sem métodos "ByUser" paralelos:
+
+- Métodos de repositório que lêem dado do usuário recebem `userId` obrigatório: `findById(id, userId)`, `list({ userId, ... })`. Esquecer o `userId` é erro de compilação.
+- Recurso de outro usuário se comporta como inexistente: o use case devolve `...NotFoundError` (**404**, nunca 403).
+- Ao criar algo que pertence a uma categoria (ativo, wishlist, budget), o use case busca a categoria com `categoryRepository.findById(categoryId, userId)`.
+- Cron e filas não têm usuário. Eles usam métodos com nome explícito: `findByIdForSystem(id)`, `findAllWithTicker()`, `findAllActiveWithUserDetails()`.
+- IDs de domínio são UUID v4, validados nos controllers com `ParseUUIDPipe({ version: '4' })`. Os ids de `user` vêm do Better Auth e **não** são UUID.
 
 ### Padrão de Erro e Retorno dos Use Cases: `Either<Left, Right>`
 
@@ -102,61 +134,101 @@ O projeto utiliza o padrão funcional `Either` de `@/core/utils/Either` para enc
 
 ```ts
 import { Either, left, right } from '@/core/utils/Either'
-import { PayloadError } from '@/core/domain/errors/payload-error'
 
-type Response = Either<PayloadError | CustomError, { asset: Asset }>
+type Response = Either<CategoryNotFoundError | PayloadError, void>
 
+@Injectable()
 export class CreateAssetUseCase {
-  constructor(private readonly assetRepository: AssetRepository) {}
+  constructor(
+    private assetRepository: AssetRepository,
+    private categoryRepository: CategoryRepository,
+    private eventPublisher: DomainEventPublisher
+  ) {}
 
-  async execute(data: CreateAssetDTO): Promise<Response> {
-    if (!data.ticker) {
-      return left(new PayloadError('Ticker is required'))
+  async execute(userId: string, data: CreateAssetPayload): Promise<Response> {
+    const category = await this.categoryRepository.findById(
+      data.categoryId,
+      userId
+    )
+
+    if (!category) {
+      return left(new CategoryNotFoundError())
     }
 
-    const asset = await this.assetRepository.create(data)
-    return right({ asset })
+    const asset = AssetMapper.toDomain(data)
+
+    await this.assetRepository.save(asset)
+
+    return right(void 0)
   }
 }
 ```
 
-### Tratamento nos Controllers HTTP
+### Erros e Tratamento nos Controllers HTTP
 
-Nos controllers NestJS, avalie o resultado com `result.isLeft()` e mapeie para a exceção HTTP correspondente:
+Erros de "não encontrado" estendem `NotFoundError` (`@/core/domain/errors/not-found-error`) e erros de validação usam `PayloadError`. O controller não mapeia erro por erro: ele delega ao helper `toHttpException` (`@/infra/http/to-http-exception`):
+
+| Erro do use case | Resposta HTTP |
+|---|---|
+| `NotFoundError` (e subclasses: `AssetNotFoundError`, `CategoryNotFoundError`, ...) | `404 NotFoundException` |
+| `PayloadError` | `400 BadRequestException` |
+| qualquer outro | `500 InternalServerErrorException('Unexpected error')` (sem vazar a mensagem) |
 
 ```ts
 @Post()
-async create(@Body() data: CreateDTO) {
-  const result = await this.useCase.execute(data)
+async create(@Body() data: CreateAssetDTO, @CurrentUserId() userId: string) {
+  const result = await this.createAssetUseCase.execute(userId, data)
 
   if (result.isLeft()) {
-    const error = result.value
-
-    switch (error.constructor) {
-      case PayloadError:
-        throw new BadRequestException(error.message)
-      case ResourceNotFoundError:
-        throw new NotFoundException(error.message)
-      default:
-        throw new InternalServerErrorException('Unexpected error')
-    }
+    throw toHttpException(result.value)
   }
 
-  return { data: result.value }
+  return { message: 'Asset created successfully' }
 }
 ```
+
+Um novo erro de "não encontrado" só precisa estender `NotFoundError` para virar 404 automaticamente. Escritas respondem `{ message }`; leituras respondem o valor direto (`result.value`).
+
+O `AllExceptionsFilter` (`@/infra/http/all-exceptions.filter`, registrado em `main.ts`) é a rede de segurança para o que escapar dos controllers: `HttpException` mantém status e corpo; erros de domínio soltos passam por `toHttpException` (404/400); qualquer outro erro vira **500 `Unexpected error`**, sem expor a mensagem original, e a stack é registrada no log. Para rejeitar entrada inválida fora de um use case (ex.: `fileFilter` do multer), lance `BadRequestException`, não `Error`.
+
+### Entidades: `update()` Parcial
+
+- A entidade é dona da regra de atualização: o use case chama `entity.update(data)` e **nunca** atribui campo a campo.
+- `update()` recebe `Partial<Omit<Props, 'id' | <dono> | 'createdAt' | 'updatedAt'>>`. Campos `undefined` são ignorados (via `omitUndefined`, em `@/core/utils/omit-undefined`); `null` limpa campos anuláveis.
+- Validações e normalizações (trim de nome, ticker em maiúsculas) ficam dentro da entidade e lançam `PayloadError`.
+- Os payloads de update do domínio são `Partial<Omit<CreatePayload, <chave não editável>>>`: `categoryId` (assets e budgets) e `userId` (categories) não podem ser alterados por update.
+
+### Endpoints
+
+Todos exigem `Authorization: Bearer <session token>` e respondem apenas com dados do usuário da sessão.
+
+| Recurso | Rotas | Query params |
+|---|---|---|
+| **Assets** | `POST /assets` (body com `categoryId`), `GET /assets`, `GET/PATCH/DELETE /assets/:id` | `search`, `categoryId`, `type`, `status` (`ACTIVE`\|`INACTIVE`), `sort=monthChange`, `order` (`asc`\|`desc`) |
+| **Categories** | `POST /categories`, `GET /categories`, `GET/PATCH/DELETE /categories/:id` | `name`, `type`, `currency`, `year` |
+| **Wishlist** | `POST /wishlist`, `GET /wishlist`, `GET/PATCH/DELETE /wishlist/:id` | `categoryId`, `search`, `type`, `targetStatus` (`BELOW_OR_AT_TARGET`\|`ABOVE_TARGET`\|`NO_TARGET`), `sort=monthChange`, `order` |
+| **Budgets** | `POST /budgets`, `GET /budgets`, `GET/PATCH/DELETE /budgets/:id` | `categoryId`, `month`, `year` |
+| **Competences** | `GET /competences/years`, `GET /competences?categoryId=`, `DELETE /competences/:id` | `categoryId` (UUID) |
+| **Users** | `GET /users/:id`, `PATCH /users/:id/upload-avatar`, `GET /users/:id/download-avatar` (somente o próprio usuário) | — |
+
+Observações:
+- **Ordenação por variação do mês** (`sort=monthChange`): `GET /assets` e `GET /wishlist` ordenam por `(currentClosePrice - lastMonthClosePrice) / lastMonthClosePrice`. `order=asc` traz a maior queda primeiro. Itens sem comparação (preço ausente ou `lastMonthClosePrice = 0`) ficam sempre no fim. A ordenação é feita em memória, no use case, sobre o resultado já filtrado (não há paginação).
+- **Filtros no servidor:** `search` busca em nome/ticker (e corretora em assets, notas em wishlist), sem diferenciar maiúsculas. `targetStatus` é aplicado em memória, pois compara duas colunas.
+- **Wishlist:** ao criar, busca a cotação inicial de forma síncrona (falha de cotação não impede a criação). O ticker é único por usuário.
+- **Users:** o usuário só acessa o próprio registro. O `:id` precisa ser o `userId` da sessão; qualquer outro id responde 404 (`UserNotFoundError`), mesmo que exista. Não há listagem nem busca por e-mail de usuários.
+- **Budgets (câmbio):** o `amount` é guardado **já convertido** para R$ (`valor original × cotação`) e `exchangeRate` guarda a cotação usada. A conversão acontece só em `Budget.changeAmount(originalAmount, exchangeRate)`, que o `POST` e o `PATCH` usam; `originalAmount` devolve o valor na moeda da categoria (`amount ÷ exchangeRate`). Quem reenvia um valor deve mandar o original, nunca o já convertido. `categoryId`, `month` e `year` não mudam por `PATCH` (são a identidade do registro).
 
 ### Passo a Passo para Criar um Novo Módulo no Backend
 
 1. **Modelagem:** Se necessário, adicione a tabela em `packages/lib-db/src/prisma/schema.prisma` e execute `pnpm --filter @lib/db build`.
 2. **Camada Domain (`src/modules/<nome>/domain`):**
-   - Crie a entidade e o contrato do repositório (ex: `abstract class <Nome>Repository`).
+   - Crie a entidade (`create()` com defaults e `update()` parcial) e o contrato do repositório (`abstract class <Nome>Repository`) com `userId` obrigatório nos métodos que acessam dado do usuário.
 3. **Camada Application (`src/modules/<nome>/application`):**
-   - Crie os casos de uso em `use-cases/` retornando `Promise<Either<AppError, Result>>`.
+   - Crie os casos de uso em `use-cases/` retornando `Promise<Either<AppError, Result>>` e os erros em `errors/` (estendendo `NotFoundError` quando for "não encontrado"). Escreva o spec ao lado de cada caso de uso.
 4. **Camada Infra (`src/modules/<nome>/infra`):**
-   - Implemente o repositório Prisma em `repositories/prisma-<nome>.repository.ts` injetando `PrismaService`.
-   - Crie o DTO de requisição (ex: `<nome>.dto.ts`) com class-validator/zod.
-   - Crie o controller HTTP em `<nome>.controller.ts`.
+   - Implemente o repositório Prisma em `repositories/prisma.<nome>.repository.ts` (token `'prismaFinanceAssets'`) e o mapper `prisma.<nome>.mapper.ts`.
+   - Crie o DTO de requisição (`<nome>.dto.ts`) com class-validator.
+   - Crie o controller HTTP em `<nome>.controller.ts` usando `@CurrentUserId()`, `ParseUUIDPipe` nos `:id` e `toHttpException`.
 5. **Módulo NestJS (`src/modules/<nome>/<nome>.module.ts`):**
    - Declare `controllers: [<Nome>Controller]`.
    - Forneça os use-cases e vincule a interface do repositório à implementação concreta:
@@ -170,10 +242,12 @@ async create(@Body() data: CreateDTO) {
 
 ```
 infra/
-├── cron/       # Agendamento de tarefas periódicas (NestJS Schedule)
+├── auth/       # SessionAuthGuard (APP_GUARD global) e decorator @CurrentUserId()
+├── cron/       # CronModule (os crons ficam em modules/assets/asset/adapters/schedules)
+├── env/        # Validação e acesso às variáveis de ambiente
 ├── events/     # Publisher de eventos de domínio (EventEmitter)
-├── http/       # Middlewares, guards e filtros HTTP globais
-├── prisma/     # Módulo e serviço do Prisma Client
+├── http/       # Providers de cotação (Brapi, CoinGecko, Polygon, Alpha Vantage), cliente n8n, toHttpException e AllExceptionsFilter
+├── prisma/     # Providers 'prismaFinanceAssets' e 'prismaAuth'
 ├── queue/      # Publisher de jobs BullMQ
 └── storage/    # Integração com Cloudflare R2 (upload de arquivos)
 ```
@@ -181,17 +255,17 @@ infra/
 ### Fluxo de Atualização de Preços (Cron + Queue)
 
 ```
-[Cron Job] update-asset-prices.cron.ts
-      │  (dispara diariamente em horário estratégico)
+[Cron Job] adapters/schedules/update-asset-prices.cron.ts
+      │  (todo dia às 19:00, America/Sao_Paulo)
       ▼
-[JobPublisher] → BullMQ Queue ("update-asset-price")
+[JobPublisher] → BullMQ Queue ("asset-processing", job "update-price")
       │
-      ▼ (para cada ativo)
-[Processor] update-asset-price.processor.ts
-      │  (roteamento por CategoryType)
+      ▼ (um job por ticker + tipo de categoria; ativos e itens da wishlist de todos os usuários são deduplicados)
+[Consumer] adapters/jobs/update-processing.consumer.ts (UpdateAssetPriceProcessor)
+      │  (UpdateAssetPriceUseCase, roteamento por CategoryType via MarketDataGateway)
       ├──► VARIABLE_BR  → Brapi API
       ├──► CRYPTO       → CoinGecko API
-      ├──► VARIABLE_US  → Alpha Vantage API
+      ├──► VARIABLE_US  → Polygon (fallback: Alpha Vantage)
       └──► FIXED        → (ignorado)
 ```
 
@@ -199,13 +273,19 @@ infra/
 
 ```
 [Use Case] CreateAsset
-      │  (emite asset.created via EventPublisher)
+      │  (emite asset.created via DomainEventPublisher)
       ▼
-[Listener] asset-created.listener.ts
+[Listener] adapters/events/asset-created.listener.ts
       │  (enfileira job de busca de preço inicial)
       ▼
-[Processor] update-asset-price.processor.ts
+[Consumer] update-processing.consumer.ts
 ```
+
+A wishlist não usa evento: `CreateWishlistUseCase` consulta a cotação inicial diretamente pelo `MarketDataGateway`.
+
+### Notificações de Variação (n8n)
+
+`adapters/schedules/notify-asset-variations.cron.ts` roda de segunda a sexta às 09:00 (America/Sao_Paulo), executa `NotifyAssetVariationsUseCase` e, para cada usuário com alertas (maiores altas e quedas da carteira e da wishlist, e metas de preço atingidas), dispara o webhook `assets/notify` do n8n.
 
 ### Armazenamento de Arquivos (Cloudflare R2)
 
@@ -218,10 +298,12 @@ O `R2StorageService` (`src/infra/storage`) é responsável pelo upload de arquiv
 ```
 core/
 ├── domain/
-│   ├── errors/    # PayloadError base
+│   ├── errors/    # PayloadError e NotFoundError (base dos erros "não encontrado")
 │   ├── events/    # Interface DomainEventPublisher + AssetEvent
-│   └── queue/     # Interface DomainJobPublisher + constantes de filas
-└── utils/         # Utilitários genéricos (Optional, etc.)
+│   ├── queue/     # Interface DomainJobPublisher + constantes de filas (QUEUES, JOBS)
+│   └── storage/   # Interface DomainStorage + constantes de buckets/pastas
+├── http/          # Contratos de cotação de mercado (MarketDataGateway/Provider)
+└── utils/         # Either, Optional, omitUndefined, sortByMonthChange/calcMonthChange
 ```
 
 ---
@@ -238,15 +320,15 @@ core/
 | **Atualização ao Criar Ativo** | Evento `asset.created` dispara busca imediata do preço de mercado (currentClosePrice + lastMonthClosePrice). |
 | **Histórico Mensal (Budget)** | Registro do valor consolidado de uma categoria por mês/ano com suporte a taxa de câmbio e dividendos. |
 | **Filtro por Competência** | Consulta eficiente dos anos com registros via `AssetCategoryCompetence`. |
-| **Gestão de Usuário** | Atualização de perfil e upload de avatar para Cloudflare R2. |
-| **Autenticação Segura** | Better Auth com suporte a OAuth (Google), verificação de e-mail e gestão de sessões. |
+| **Gestão de Usuário** | Consulta de usuários e upload/download de avatar no Cloudflare R2. |
+| **Autenticação Segura** | Better Auth (OAuth Google, verificação de e-mail, sessões). A API valida o token da sessão em todas as rotas e isola os dados por usuário. |
 | **Sistema de Notificações** | Integração com n8n para alertas de fechamento de mês e segurança de conta. |
 
 ---
 
 ## 9. Fluxo de Operação Interna
 
-1. O usuário cria uma **categoria** e seus respectivos **ativos**.
+1. O usuário cria uma **categoria** e seus respectivos **ativos** (`POST /assets` com o `categoryId`).
 2. Ao criar um ativo com ticker, o sistema dispara um evento que busca o preço atual imediatamente.
 3. Todo dia útil, o Cron Job enfileira jobs no BullMQ para atualizar os preços de mercado de todos os ativos em background.
 4. No fechamento do mês, o usuário registra o valor total consolidado da categoria (**Budget/AssetRecord**) para manter o histórico de longo prazo.
@@ -286,6 +368,14 @@ finance-assets/
 | `format` | `pnpm --filter api format` | Formata o código com Biome na API. |
 | `check` | `pnpm --filter api check` | Executa verificação completa de linting e formatação com auto-correção. |
 | `check-versions` | `node scripts/check-version.mjs` | Executa o validador de integridade e consistência de versões no monorepo e submódulos. |
+
+Testes da API (Vitest, detalhes em `TESTING.md`):
+
+| Comando | Descrição |
+|---|---|
+| `pnpm --filter api test` | Testes unitários (`src/**/*.spec.ts`). |
+| `pnpm --filter api test:e2e` | Testes E2E (`test/**/*.e2e-spec.ts`). |
+| `pnpm --filter api test:cov` | Cobertura. |
 
 ---
 

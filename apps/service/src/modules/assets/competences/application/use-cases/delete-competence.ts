@@ -11,12 +11,15 @@ type DeleteCompetenceResponse = Either<CompetenceNotFoundError, void>
 export class DeleteCompetenceUseCase {
   constructor(private competenceRepository: CompetenceRepository) {}
 
-  async execute(id: string): Promise<DeleteCompetenceResponse> {
-    try {
-      await this.competenceRepository.delete(id)
-      return right(void 0)
-    } catch {
+  async execute(userId: string, id: string): Promise<DeleteCompetenceResponse> {
+    const competence = await this.competenceRepository.findById(id, userId)
+
+    if (!competence) {
       return left(new CompetenceNotFoundError())
     }
+
+    await this.competenceRepository.delete(id)
+
+    return right(void 0)
   }
 }

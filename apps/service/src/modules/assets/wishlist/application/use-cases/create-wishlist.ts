@@ -24,7 +24,10 @@ export class CreateWishlistUseCase {
 
   async execute(data: CreateWishlistPayload): Promise<CreateWishlistResponse> {
     try {
-      const category = await this.categoryRepository.findById(data.categoryId)
+      const category = await this.categoryRepository.findById(
+        data.categoryId,
+        data.userId
+      )
 
       if (!category) {
         return left(new CategoryNotFoundError())

@@ -14,11 +14,12 @@ export class UpdateWishlistUseCase {
   constructor(private readonly wishlistRepository: WishlistRepository) {}
 
   async execute(
+    userId: string,
     id: string,
     data: UpdateWishlistPayload
   ): Promise<UpdateWishlistResponse> {
     try {
-      const item = await this.wishlistRepository.findById(id)
+      const item = await this.wishlistRepository.findById(id, userId)
 
       if (!item) {
         return left(new WishlistNotFoundError())
@@ -26,7 +27,7 @@ export class UpdateWishlistUseCase {
 
       if (data.ticker && data.ticker.trim().toUpperCase() !== item.ticker) {
         const existing = await this.wishlistRepository.findByUserAndTicker(
-          item.userId,
+          userId,
           data.ticker.trim().toUpperCase()
         )
 

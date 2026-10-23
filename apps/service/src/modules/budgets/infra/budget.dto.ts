@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types'
+import { OmitType, PartialType } from '@nestjs/mapped-types'
 import { Expose, Transform } from 'class-transformer'
 import {
   IsInt,
@@ -82,7 +82,9 @@ export class CreateBudgetDTO {
   dividendAmount?: number | null
 }
 
-export class UpdateBudgetDTO extends PartialType(CreateBudgetDTO) {}
+export class UpdateBudgetDTO extends PartialType(
+  OmitType(CreateBudgetDTO, ['categoryId', 'month', 'year'] as const)
+) {}
 
 export class FindAllBudgetsParamsDTO {
   @Expose()

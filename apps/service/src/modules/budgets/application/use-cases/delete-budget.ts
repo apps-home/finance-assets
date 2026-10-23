@@ -11,11 +11,11 @@ type DeleteBudgetResponse = Either<BudgetNotFoundError, void>
 export class DeleteBudgetUseCase {
   constructor(private budgetRepository: BudgetRepository) {}
 
-  async execute(id: string): Promise<DeleteBudgetResponse> {
-    const budget = await this.budgetRepository.findById(id)
+  async execute(userId: string, id: string): Promise<DeleteBudgetResponse> {
+    const budget = await this.budgetRepository.findById(id, userId)
 
     if (!budget) {
-      return left(new BudgetNotFoundError('Budget not found'))
+      return left(new BudgetNotFoundError())
     }
 
     await this.budgetRepository.delete(id)

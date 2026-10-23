@@ -18,8 +18,11 @@ export class InMemoryCategoryRepository implements CategoryRepository {
     }
   }
 
-  async findById(id: string): Promise<Category | null> {
-    return this.items.find((item) => item.id === id) ?? null
+  async findById(id: string, userId: string): Promise<Category | null> {
+    return (
+      this.items.find((item) => item.id === id && item.userId === userId) ??
+      null
+    )
   }
 
   async delete(id: string): Promise<void> {

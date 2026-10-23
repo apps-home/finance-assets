@@ -12,6 +12,7 @@ import { UserRepository } from '../../domain/user.repository'
 import { UserNotFoundError } from '../errors/user-not-found.error'
 
 interface DownloadUserAvatarRequest {
+  currentUserId: string
   userId: string
 }
 
@@ -29,6 +30,10 @@ export class DownloadUserAvatarUseCase {
   ) {}
 
   async execute(data: DownloadUserAvatarRequest): Promise<Response> {
+    if (data.userId !== data.currentUserId) {
+      return left(new UserNotFoundError())
+    }
+
     const user = await this.userRepository.findById(data.userId)
 
     if (!user) {

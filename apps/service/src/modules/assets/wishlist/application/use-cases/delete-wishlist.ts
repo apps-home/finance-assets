@@ -11,8 +11,8 @@ type DeleteWishlistResponse = Either<WishlistNotFoundError, void>
 export class DeleteWishlistUseCase {
   constructor(private readonly wishlistRepository: WishlistRepository) {}
 
-  async execute(id: string): Promise<DeleteWishlistResponse> {
-    const item = await this.wishlistRepository.findById(id)
+  async execute(userId: string, id: string): Promise<DeleteWishlistResponse> {
+    const item = await this.wishlistRepository.findById(id, userId)
 
     if (!item) {
       return left(new WishlistNotFoundError())

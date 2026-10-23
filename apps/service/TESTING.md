@@ -191,7 +191,7 @@ export class InMemoryCategoryRepository implements CategoryRepository {
     const { userId, currency, name, year, type } = params
 
     return this.items.filter((item) => {
-      if (userId && item.userId !== userId) return false
+      if (item.userId !== userId) return false
       if (type && item.type !== type) return false
       if (currency && item.currency !== currency) return false
       if (name && !item.name.toLowerCase().includes(name.toLowerCase())) return false
@@ -200,8 +200,10 @@ export class InMemoryCategoryRepository implements CategoryRepository {
     })
   }
 
-  async findById(id: string): Promise<Category | null> {
-    const category = this.items.find((item) => item.id === id)
+  async findById(id: string, userId: string): Promise<Category | null> {
+    const category = this.items.find(
+      (item) => item.id === id && item.userId === userId
+    )
     return category ?? null
   }
 
@@ -319,9 +321,9 @@ describe('CategoryController', () => {
       years: [faker.date.recent().getFullYear()],
     }
     const fakeUserId = faker.string.uuid()
-    const req = { headers: { 'user-id': fakeUserId } }
 
-    const response = await controller.create(dto, req)
+    // o userId chega do decorator @CurrentUserId(), já resolvido a partir da sessão
+    const response = await controller.create(dto, fakeUserId)
 
     expect(response).toEqual({ message: 'Category created successfully' })
     expect(createCategoryUseCaseMock.execute).toHaveBeenCalledWith({
@@ -342,12 +344,34 @@ describe('CategoryController', () => {
       currency: 'BRL',
       years: [],
     }
-    const req = { headers: { 'user-id': faker.string.uuid() } }
 
-    await expect(controller.create(dto, req)).rejects.toThrow(BadRequestException)
+    await expect(
+      controller.create(dto, faker.string.uuid())
+    ).rejects.toThrow(BadRequestException)
   })
 })
 ```
+
+### 6.3. Testando o Escopo por Usuário (Ownership)
+
+Como cada usuário só enxerga o que é dele, todo caso de uso que lê ou altera um recurso por `id` deve ter um spec de ownership: o dono recebe sucesso e **outro usuário recebe `...NotFoundError`** sem que nada seja alterado. O repositório in-memory precisa reproduzir o escopo (`findById(id, userId)` só devolve o item do dono).
+
+```typescript
+it('should not delete an asset that belongs to another user', async () => {
+  const sut = new DeleteAssetUseCase(assetRepository)
+
+  const result = await sut.execute('user-2', assetId)
+
+  expect(result.value).toBeInstanceOf(AssetNotFoundError)
+  expect(assetRepository.items).toHaveLength(1)
+})
+```
+
+Exemplos reais: `asset-ownership.spec.ts`, `wishlist-ownership.spec.ts`, `category-ownership.spec.ts` e `budget-ownership.spec.ts`, ao lado dos casos de uso.
+
+### 6.4. Testando Entidades (`update()` parcial)
+
+Cada entidade com `update()` tem um spec ao lado (`<nome>.entity.spec.ts`) cobrindo: campos `undefined` não sobrescrevem, `null` limpa campos anuláveis, normalizações (trim/maiúsculas), preservação de identidade (`id`, dono, `categoryId`) e rejeição de valores inválidos com `PayloadError`.
 
 ---
 
@@ -358,30 +382,39 @@ Os testes E2E validam os endpoints simulando requisições HTTP reais usando `su
 ### 7.1. Cuidados Essenciais no Setup E2E
 
 Para que o teste E2E reproduza com fidelidade o comportamento em produção:
-1. **Configurar Pipes e Filters**: Aplicar o `ValidationPipe` e o filtro global de exceções exatamente como em `src/main.ts`.
-2. **Mock ou Isolamento do Banco**:
+1. **Configurar Pipes e Filters**: Aplicar o `ValidationPipe` e o `AllExceptionsFilter` (`app.useGlobalFilters(new AllExceptionsFilter())`) exatamente como em `src/main.ts`; sem o filtro, erros de domínio e erros inesperados não terão o status HTTP de produção.
+2. **Autenticação**: o `SessionAuthGuard` é global, então toda requisição precisa de `Authorization: Bearer <token>` e o `'prismaAuth'` deve ser mockado com `session.findUnique` devolvendo `{ userId, expiresAt }` (futuro para sessão válida, passado para sessão expirada). O `userId` da sessão é o que o controller usa; não existe header `user-id`.
+3. **Mock ou Isolamento do Banco**:
    - Para testes rápidos sem bater no Postgres real, substitua o provider `'prismaFinanceAssets'` usando `.overrideProvider('prismaFinanceAssets')`.
    - Para testes de integração reais com banco, utilize um schema isolado de testes ou container de banco dedicado.
 
 ### 7.2. Exemplo Completo de Teste E2E com Faker.js
 
-**Arquivo:** `test/categories.e2e-spec.ts`
+**Arquivo:** `test/e2e/categories.e2e-spec.ts` (referências reais: `test/e2e/users.e2e-spec.ts` e `test/e2e/assets.e2e-spec.ts`)
 
 ```typescript
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 import request from 'supertest'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { faker } from '@faker-js/faker'
 import { AppModule } from '@/app.module'
+import { AllExceptionsFilter } from '@/infra/http/all-exceptions.filter'
 import { CategoryType } from '@lib/db'
 
 describe('Categories (E2E)', () => {
   let app: INestApplication
+  let api: ReturnType<typeof request.agent>
+  const userId = faker.string.uuid()
+
+  const mockPrismaAuth = {
+    session: { findUnique: vi.fn() },
+  }
+
   const mockPrismaFinanceAssets = {
     assetCategory: {
       findMany: vi.fn(),
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
       upsert: vi.fn(),
       delete: vi.fn(),
     },
@@ -391,6 +424,8 @@ describe('Categories (E2E)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
+      .overrideProvider('prismaAuth')
+      .useValue(mockPrismaAuth)
       .overrideProvider('prismaFinanceAssets')
       .useValue(mockPrismaFinanceAssets)
       .compile()
@@ -404,12 +439,29 @@ describe('Categories (E2E)', () => {
         transform: true,
       }),
     )
+    app.useGlobalFilters(new AllExceptionsFilter())
 
     await app.init()
+
+    api = request.agent(app.getHttpServer())
+    api.set('Authorization', 'Bearer valid-session-token')
+  })
+
+  beforeEach(() => {
+    mockPrismaAuth.session.findUnique.mockResolvedValue({
+      userId,
+      expiresAt: new Date(Date.now() + 60_000),
+    })
   })
 
   afterAll(async () => {
     await app.close()
+  })
+
+  it('GET /categories — deve retornar 401 sem token de sessão', async () => {
+    const response = await request(app.getHttpServer()).get('/categories')
+
+    expect(response.status).toBe(401)
   })
 
   it('POST /categories — deve criar uma categoria quando payload for válido', async () => {
@@ -421,12 +473,8 @@ describe('Categories (E2E)', () => {
       currency: faker.finance.currencyCode(),
       years: [faker.date.past().getFullYear(), faker.date.recent().getFullYear()],
     }
-    const fakeUserId = faker.string.uuid()
 
-    const response = await request(app.getHttpServer())
-      .post('/categories')
-      .set('user-id', fakeUserId)
-      .send(dynamicPayload)
+    const response = await api.post('/categories').send(dynamicPayload)
 
     expect(response.status).toBe(201)
     expect(response.body).toEqual({
@@ -435,12 +483,9 @@ describe('Categories (E2E)', () => {
   })
 
   it('POST /categories — deve retornar 400 se faltarem campos obrigatórios no payload', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/categories')
-      .set('user-id', faker.string.uuid())
-      .send({
-        // payload vazio desrespeita o DTO e o ValidationPipe
-      })
+    const response = await api.post('/categories').send({
+      // payload vazio desrespeita o DTO e o ValidationPipe
+    })
 
     expect(response.status).toBe(400)
     expect(response.body.message).toBeDefined()
@@ -455,8 +500,9 @@ describe('Categories (E2E)', () => {
 1. **Localização dos Arquivos**:
    - **Testes Unitários**: Coloque o arquivo `.spec.ts` ao lado do arquivo sendo testado (ex: `create-category.ts` ➡️ `create-category.spec.ts`).
    - **Repositórios In-Memory**: Mantenha em `apps/service/test/repositories/` (ex: `in-memory-category.repository.ts`, `in-memory-asset.repository.ts`).
-   - **Testes E2E**: Mantenha no diretório `apps/service/test/` com extensão `.e2e-spec.ts`.
-   - **Factories**: Mantenha em `apps/service/test/factories/` (ex: `make-category.ts`, `make-asset.ts`).
+   - **Testes E2E**: Mantenha em `apps/service/test/e2e/` com extensão `.e2e-spec.ts`.
+   - **Fakes de infraestrutura**: `test/events/fake-event-publisher.ts` e `test/storage/fake-storage.ts`.
+   - **Factories**: Mantenha em `apps/service/test/factories/` (hoje: `make-user`, `make-category`, `make-asset`, `make-wishlist`, `make-budget`).
 2. **Padrão SUT (System Under Test)**:
    - Identifique a instância principal sob teste com `sut` ou o nome do componente (`controller`, `service`).
 3. **In-Memory Repositories vs Mocks em Use Cases**:

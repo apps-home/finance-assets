@@ -1,58 +1,40 @@
 import { Readable } from 'node:stream'
 import {
+  BadRequestException,
   Controller,
   Get,
-  InternalServerErrorException,
-  NotFoundException,
   Param,
   Patch,
-  Query,
   StreamableFile,
   UploadedFile,
   UseInterceptors
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 
+import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
+import { toHttpException } from '@/infra/http/to-http-exception'
+
 import { DownloadUserAvatarUseCase } from '../application/use-cases/download-avatar'
 import { FindUserByIdUseCase } from '../application/use-cases/find-user'
-import { FindUserByEmailUseCase } from '../application/use-cases/find-user-by-email'
-import { ListUsersUseCase } from '../application/use-cases/list-users'
 import { UploadUserAvatarUseCase } from '../application/use-cases/upload-user-avatar'
 
 @Controller('users')
 export class UserController {
   constructor(
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
-    private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
-    private readonly listUsersUseCase: ListUsersUseCase,
     private readonly uploadUserAvatarUseCase: UploadUserAvatarUseCase,
     private readonly downloadUserAvatarUseCase: DownloadUserAvatarUseCase
   ) {}
 
-  @Get()
-  async list() {
-    const result = await this.listUsersUseCase.execute()
-
-    return result.value
-  }
-
-  @Get('by-email')
-  async findByEmail(@Query('email') email: string) {
-    const result = await this.findUserByEmailUseCase.execute(email)
-
-    if (result.isLeft()) {
-      throw new NotFoundException(result.value.message)
-    }
-
-    return result.value
-  }
-
   @Get(':id')
-  async findById(@Param('id') id: string) {
-    const result = await this.findUserByIdUseCase.execute(id)
+  async findById(
+    @Param('id') id: string,
+    @CurrentUserId() currentUserId: string
+  ) {
+    const result = await this.findUserByIdUseCase.execute(currentUserId, id)
 
     if (result.isLeft()) {
-      throw new NotFoundException(result.value.message)
+      throw toHttpException(result.value)
     }
 
     return result.value
@@ -62,11 +44,11 @@ export class UserController {
     FileInterceptor('file', {
       fileFilter(_req, file, callback) {
         if (!file.mimetype.startsWith('image/')) {
-          return callback(new Error('Invalid file type'), false)
+          return callback(new BadRequestException('Invalid file type'), false)
         }
 
         if (typeof file.filename !== 'string') {
-          return callback(new Error('Invalid file name'), false)
+          return callback(new BadRequestException('Invalid file name'), false)
         }
 
         callback(null, true)
@@ -80,15 +62,17 @@ export class UserController {
   @Patch(':id/upload-avatar')
   async uploadAvatar(
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUserId() currentUserId: string
   ) {
     const result = await this.uploadUserAvatarUseCase.execute({
+      currentUserId,
       userId: id,
       file
     })
 
     if (result.isLeft()) {
-      throw new InternalServerErrorException(result.value.message)
+      throw toHttpException(result.value)
     }
 
     return {
@@ -97,13 +81,17 @@ export class UserController {
   }
 
   @Get(':id/download-avatar')
-  async downloadAvatar(@Param('id') id: string) {
+  async downloadAvatar(
+    @Param('id') id: string,
+    @CurrentUserId() currentUserId: string
+  ) {
     const result = await this.downloadUserAvatarUseCase.execute({
+      currentUserId,
       userId: id
     })
 
     if (result.isLeft()) {
-      throw new InternalServerErrorException(result.value.message)
+      throw toHttpException(result.value)
     }
 
     const stream = Readable.fromWeb(result.value.file)

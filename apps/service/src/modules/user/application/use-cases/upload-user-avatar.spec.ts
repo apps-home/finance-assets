@@ -35,6 +35,7 @@ describe('UploadUserAvatarUseCase', () => {
     } as Express.Multer.File
 
     const result = await sut.execute({
+      currentUserId: user.id,
       userId: user.id,
       file
     })
@@ -62,11 +63,30 @@ describe('UploadUserAvatarUseCase', () => {
     } as Express.Multer.File
 
     const result = await sut.execute({
+      currentUserId: 'non-existent-user',
       userId: 'non-existent-user',
       file
     })
 
     expect(result.isLeft()).toBe(true)
+    expect(result.value).toBeInstanceOf(UserNotFoundError)
+    expect(fakeStorage.files.size).toBe(0)
+  })
+
+  it('should not upload an avatar for another user', async () => {
+    const user = makeUser()
+    inMemoryUserRepository.items.push(user)
+
+    const result = await sut.execute({
+      currentUserId: 'another-user-id',
+      userId: user.id,
+      file: {
+        originalname: 'avatar.png',
+        mimetype: 'image/png',
+        buffer: Buffer.from('fake-image-content')
+      } as Express.Multer.File
+    })
+
     expect(result.value).toBeInstanceOf(UserNotFoundError)
     expect(fakeStorage.files.size).toBe(0)
   })
@@ -93,6 +113,7 @@ describe('UploadUserAvatarUseCase', () => {
     } as Express.Multer.File
 
     const result = await sut.execute({
+      currentUserId: user.id,
       userId: user.id,
       file
     })

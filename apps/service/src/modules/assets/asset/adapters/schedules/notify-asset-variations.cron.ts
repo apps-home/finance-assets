@@ -16,9 +16,9 @@ export class NotifyAssetVariationsCron {
   ) {}
 
   /**
-   * Executa em dias úteis (segunda a sexta-feira) às 09:00 (horário de Brasília).
+   * Executa em dias úteis (terça a sábado) às 09:00 (horário de Brasília).
    */
-  @Cron('0 9 * * 1-5', {
+  @Cron('0 9 * * 2-6', {
     timeZone: 'America/Sao_Paulo'
   })
   async handleCron(): Promise<void> {

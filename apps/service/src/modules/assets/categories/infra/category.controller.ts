@@ -1,20 +1,18 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
-  Query,
-  Req
+  Query
 } from '@nestjs/common'
 
-import { PayloadError } from '@/core/domain/errors/payload-error'
+import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
+import { toHttpException } from '@/infra/http/to-http-exception'
 
-import { CategoryNotFoundError } from '../application/errors/category-not-found.error'
 import { CreateCategoryUseCase } from '../application/use-cases/create-category'
 import { DeleteCategoryUseCase } from '../application/use-cases/delete-category'
 import { FindAllCategoriesUseCase } from '../application/use-cases/find-all-categories'
@@ -37,21 +35,17 @@ export class CategoryController {
   ) {}
 
   @Post()
-  async create(@Body() data: CreateCategoryDTO, @Req() request: any) {
+  async create(
+    @Body() data: CreateCategoryDTO,
+    @CurrentUserId() userId: string
+  ) {
     const result = await this.createCategoryUseCase.execute({
       ...data,
-      userId: request.headers['user-id']
+      userId
     })
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case PayloadError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Category created successfully' }
@@ -60,77 +54,58 @@ export class CategoryController {
   @Get()
   async findAll(
     @Query() params: FindAllCategoriesParamsDTO,
-    @Req() request: any
+    @CurrentUserId() userId: string
   ) {
     const result = await this.findAllCategoriesUseCase.execute({
       ...params,
-      userId: request.headers['user-id']
+      userId
     })
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case Error:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return result.value
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const result = await this.findCategoryByIdUseCase.execute(id)
+  async findOne(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.findCategoryByIdUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case CategoryNotFoundError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return result.value
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() data: UpdateCategoryDTO) {
-    const result = await this.updateCategoryUseCase.execute(id, data)
+  async update(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() data: UpdateCategoryDTO,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.updateCategoryUseCase.execute(userId, id, data)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case CategoryNotFoundError:
-        case PayloadError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Category updated successfully' }
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const result = await this.deleteCategoryUseCase.execute(id)
+  async remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.deleteCategoryUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case CategoryNotFoundError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Category deleted successfully' }

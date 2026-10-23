@@ -1,23 +1,18 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
-  NotFoundException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
-  Query,
-  Req,
-  UnauthorizedException
+  Query
 } from '@nestjs/common'
 
-import { PayloadError } from '@/core/domain/errors/payload-error'
-import { CategoryNotFoundError } from '@/modules/assets/categories/application/errors/category-not-found.error'
+import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
+import { toHttpException } from '@/infra/http/to-http-exception'
 
-import { AssetNotFoundError } from '../application/errors/asset-not-found.error'
 import { CreateAssetUseCase } from '../application/use-cases/create-asset'
 import { DeleteAssetUseCase } from '../application/use-cases/delete-asset'
 import { FindAssetByIdUseCase } from '../application/use-cases/find-asset-by-id'
@@ -40,58 +35,42 @@ export class AssetController {
   ) {}
 
   @Post()
-  async create(@Body() data: CreateAssetDTO, @Req() request: any) {
-    const result = await this.createAssetUseCase.execute(
-      this.getUserId(request),
-      data
-    )
+  async create(@Body() data: CreateAssetDTO, @CurrentUserId() userId: string) {
+    const result = await this.createAssetUseCase.execute(userId, data)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case CategoryNotFoundError:
-          throw new NotFoundException(error.message)
-        case PayloadError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Asset created successfully' }
   }
 
   @Get()
-  async findAll(@Query() params: FindAssetsParamsDTO, @Req() request: any) {
+  async findAll(
+    @Query() params: FindAssetsParamsDTO,
+    @CurrentUserId() userId: string
+  ) {
     const result = await this.findAssetsUseCase.execute({
       ...params,
-      userId: this.getUserId(request)
+      userId: userId
     })
 
     if (result.isLeft()) {
-      throw new InternalServerErrorException('Unexpected error')
+      throw toHttpException(result.value)
     }
 
     return result.value
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() request: any) {
-    const result = await this.findAssetByIdUseCase.execute(
-      this.getUserId(request),
-      id
-    )
+  async findOne(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.findAssetByIdUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case AssetNotFoundError:
-          throw new NotFoundException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return result.value
@@ -99,60 +78,30 @@ export class AssetController {
 
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() data: UpdateAssetDTO,
-    @Req() request: any
+    @CurrentUserId() userId: string
   ) {
-    const result = await this.updateAssetUseCase.execute(
-      this.getUserId(request),
-      id,
-      data
-    )
+    const result = await this.updateAssetUseCase.execute(userId, id, data)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case AssetNotFoundError:
-          throw new NotFoundException(error.message)
-        case PayloadError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Asset updated successfully' }
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() request: any) {
-    const result = await this.deleteAssetUseCase.execute(
-      this.getUserId(request),
-      id
-    )
+  async remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.deleteAssetUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case AssetNotFoundError:
-          throw new NotFoundException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Asset deleted successfully' }
-  }
-
-  private getUserId(request: any): string {
-    const userId = request.headers['user-id']
-
-    if (!userId) {
-      throw new UnauthorizedException('User ID is missing from headers')
-    }
-
-    return userId
   }
 }

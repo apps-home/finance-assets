@@ -40,7 +40,7 @@ export class UpdateAssetPricesCron {
     private readonly wishlistRepository: WishlistRepository
   ) {}
 
-  @Cron(CronExpression.MONDAY_TO_FRIDAY_AT_8PM, {
+  @Cron(CronExpression.EVERY_DAY_AT_7PM, {
     timeZone: 'America/Sao_Paulo'
   })
   async handleCron(): Promise<void> {

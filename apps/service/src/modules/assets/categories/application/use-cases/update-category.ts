@@ -14,10 +14,11 @@ export class UpdateCategoryUseCase {
   constructor(private categoryRepository: CategoryRepository) {}
 
   async execute(
+    userId: string,
     id: string,
     data: UpdateCategoryPayload
   ): Promise<UpdateCategoryResponse> {
-    const existingCategory = await this.categoryRepository.findById(id)
+    const existingCategory = await this.categoryRepository.findById(id, userId)
 
     if (!existingCategory) {
       return left(new CategoryNotFoundError())

@@ -1,5 +1,5 @@
 export interface FindAllBudgetsParams {
-  userId?: string
+  userId: string
   categoryId?: string
   month?: number
   year?: number

@@ -18,7 +18,7 @@ export class UpdateAssetUseCase {
     id: string,
     data: UpdateAssetPayload
   ): Promise<UpdateAssetResponse> {
-    const existingAsset = await this.assetRepository.findByIdAndUser(id, userId)
+    const existingAsset = await this.assetRepository.findById(id, userId)
 
     if (!existingAsset) {
       return left(new AssetNotFoundError())

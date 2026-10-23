@@ -1,5 +1,6 @@
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
+import { omitUndefined } from '@/core/utils/omit-undefined'
 
 export interface AssetProps {
   id: string
@@ -58,27 +59,19 @@ export class Asset implements AssetProps {
     })
   }
 
-  update(props: Partial<Omit<AssetProps, 'id' | 'categoryId' | 'createdAt'>>) {
+  update(
+    props: Partial<
+      Omit<AssetProps, 'id' | 'categoryId' | 'createdAt' | 'updatedAt'>
+    >
+  ) {
     if (props.name !== undefined && props.name.trim().length <= 1) {
       throw new PayloadError('Name must be at least 2 characters long')
     }
 
     this._props = {
       ...this._props,
+      ...omitUndefined(props),
       ...(props.name !== undefined && { name: props.name.trim() }),
-      ...(props.ticker !== undefined && { ticker: props.ticker || '' }),
-      ...(props.quantity !== undefined && { quantity: props.quantity ?? null }),
-      ...(props.averagePrice !== undefined && {
-        averagePrice: props.averagePrice ?? null
-      }),
-      ...(props.broker !== undefined && { broker: props.broker ?? null }),
-      ...(props.isActive !== undefined && { isActive: props.isActive }),
-      ...(props.currentClosePrice !== undefined && {
-        currentClosePrice: props.currentClosePrice ?? null
-      }),
-      ...(props.lastMonthClosePrice !== undefined && {
-        lastMonthClosePrice: props.lastMonthClosePrice ?? null
-      }),
       updatedAt: new Date()
     }
   }

@@ -24,14 +24,9 @@ export class PrismaCompetenceRepository implements CompetenceRepository {
     return competences.map(PrismaCompetenceMapper.toDomain)
   }
 
-  async findByCategoryAndYear(
-    categoryId: string,
-    year: number
-  ): Promise<Competence | null> {
-    const competence = await this.prisma.assetCategoryCompetence.findUnique({
-      where: {
-        categoryId_year: { categoryId, year }
-      }
+  async findById(id: string, userId: string): Promise<Competence | null> {
+    const competence = await this.prisma.assetCategoryCompetence.findFirst({
+      where: { id, category: { userId } }
     })
 
     if (!competence) return null
@@ -50,21 +45,6 @@ export class PrismaCompetenceRepository implements CompetenceRepository {
     })
 
     return competences.map((c) => c.year)
-  }
-
-  async save(competence: Competence): Promise<void> {
-    const data = PrismaCompetenceMapper.toPrisma(competence)
-
-    await this.prisma.assetCategoryCompetence.upsert({
-      where: {
-        categoryId_year: {
-          categoryId: competence.categoryId,
-          year: competence.year
-        }
-      },
-      create: data,
-      update: data
-    })
   }
 
   async delete(id: string): Promise<void> {

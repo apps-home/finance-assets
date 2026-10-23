@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { AuthModule } from './auth/auth.module'
 import { CronModule } from './cron/cron.module'
 import { EnvModule } from './env/env.module'
 import { EventModule } from './events/event.module'
@@ -10,6 +11,7 @@ import { StorageModule } from './storage/storage.module'
 
 @Module({
   imports: [
+    AuthModule,
     CronModule,
     EnvModule,
     EventModule,

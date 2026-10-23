@@ -57,7 +57,7 @@ export class UpdateAssetPriceUseCase {
     const targetAssetIds = assetIds ? [...assetIds] : assetId ? [assetId] : []
 
     for (const id of targetAssetIds) {
-      const asset = await this.assetRepository.findById(id)
+      const asset = await this.assetRepository.findByIdForSystem(id)
 
       if (!asset) {
         this.logger.warn(`Could not find asset with id: ${id}. Skipping.`)
@@ -78,7 +78,7 @@ export class UpdateAssetPriceUseCase {
 
     if (wishlistIds && wishlistIds.length > 0) {
       for (const id of wishlistIds) {
-        const wishlistItem = await this.wishlistRepository.findById(id)
+        const wishlistItem = await this.wishlistRepository.findByIdForSystem(id)
 
         if (!wishlistItem) {
           this.logger.warn(

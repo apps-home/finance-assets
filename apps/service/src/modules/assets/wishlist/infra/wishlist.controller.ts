@@ -1,23 +1,18 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
-  NotFoundException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
-  Query,
-  Req,
-  UnauthorizedException
+  Query
 } from '@nestjs/common'
 
-import { PayloadError } from '@/core/domain/errors/payload-error'
-import { CategoryNotFoundError } from '@/modules/assets/categories/application/errors/category-not-found.error'
+import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
+import { toHttpException } from '@/infra/http/to-http-exception'
 
-import { WishlistNotFoundError } from '../application/errors/wishlist-not-found.error'
 import { CreateWishlistUseCase } from '../application/use-cases/create-wishlist'
 import { DeleteWishlistUseCase } from '../application/use-cases/delete-wishlist'
 import { FindAllWishlistUseCase } from '../application/use-cases/find-all-wishlist'
@@ -40,29 +35,17 @@ export class WishlistController {
   ) {}
 
   @Post()
-  async create(@Body() data: CreateWishlistDTO, @Req() request: any) {
-    const userId = request.headers['user-id']
-
-    if (!userId) {
-      throw new UnauthorizedException('User ID is missing from headers')
-    }
-
+  async create(
+    @Body() data: CreateWishlistDTO,
+    @CurrentUserId() userId: string
+  ) {
     const result = await this.createWishlistUseCase.execute({
       ...data,
       userId
     })
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case CategoryNotFoundError:
-          throw new NotFoundException(error.message)
-        case PayloadError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Wishlist item created successfully' }
@@ -71,77 +54,58 @@ export class WishlistController {
   @Get()
   async findAll(
     @Query() params: FindAllWishlistParamsDTO,
-    @Req() request: any
+    @CurrentUserId() userId: string
   ) {
-    const userId = request.headers['user-id']
-
-    if (!userId) {
-      throw new UnauthorizedException('User ID is missing from headers')
-    }
-
     const result = await this.findAllWishlistUseCase.execute({
       ...params,
       userId
     })
 
     if (result.isLeft()) {
-      throw new InternalServerErrorException('Unexpected error')
+      throw toHttpException(result.value)
     }
 
     return result.value
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const result = await this.findWishlistByIdUseCase.execute(id)
+  async findOne(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.findWishlistByIdUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case WishlistNotFoundError:
-          throw new NotFoundException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return result.value
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() data: UpdateWishlistDTO) {
-    const result = await this.updateWishlistUseCase.execute(id, data)
+  async update(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() data: UpdateWishlistDTO,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.updateWishlistUseCase.execute(userId, id, data)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case WishlistNotFoundError:
-          throw new NotFoundException(error.message)
-        case PayloadError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Wishlist item updated successfully' }
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const result = await this.deleteWishlistUseCase.execute(id)
+  async remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.deleteWishlistUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case WishlistNotFoundError:
-          throw new NotFoundException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Wishlist item deleted successfully' }

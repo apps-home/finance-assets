@@ -20,6 +20,7 @@ import {
   StorageBucket,
   StorageFolder
 } from '@/core/domain/storage/storage.constant'
+import { AllExceptionsFilter } from '@/infra/http/all-exceptions.filter'
 
 describe('Users (E2E)', () => {
   let app: INestApplication
@@ -29,8 +30,27 @@ describe('Users (E2E)', () => {
     user: {
       findUnique: vi.fn(),
       findMany: vi.fn()
+    },
+    session: {
+      findUnique: vi.fn()
     }
   }
+
+  const sessionToken = 'valid-session-token'
+  let sessionUserId: string
+
+  function makeRawUser() {
+    return {
+      id: sessionUserId,
+      name: faker.person.fullName(),
+      email: faker.internet.email(),
+      emailVerified: true,
+      image: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  }
+  let api: ReturnType<typeof request.agent>
 
   const mockPrismaFinanceAssets = {}
 
@@ -62,116 +82,84 @@ describe('Users (E2E)', () => {
       })
     )
 
+    app.useGlobalFilters(new AllExceptionsFilter())
+
     await app.init()
+
+    api = request.agent(app.getHttpServer())
+    api.set('Authorization', `Bearer ${sessionToken}`)
   })
 
   beforeEach(() => {
     vi.clearAllMocks()
     fakeStorage.files.clear()
+
+    sessionUserId = faker.string.uuid()
+
+    mockPrismaAuth.session.findUnique.mockResolvedValue({
+      userId: sessionUserId,
+      expiresAt: new Date(Date.now() + 60_000)
+    })
   })
 
   afterAll(async () => {
     await app.close()
   })
 
-  it('GET /users — should return all users', async () => {
-    const rawUser = {
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      emailVerified: true,
-      image: faker.image.avatar(),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
-    mockPrismaAuth.user.findMany.mockResolvedValue([rawUser])
-
-    const response = await request(app.getHttpServer()).get('/users')
-
-    expect(response.status).toBe(200)
-    expect(response.body).toHaveLength(1)
-    expect(response.body[0].id).toBe(rawUser.id)
-    expect(response.body[0].email).toBe(rawUser.email)
-    expect(response.body[0].name).toBe(rawUser.name)
-  })
-
-  it('GET /users/:id — should return user by id when exists', async () => {
-    const rawUser = {
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      emailVerified: true,
-      image: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
-    mockPrismaAuth.user.findUnique.mockResolvedValue(rawUser)
-
-    const response = await request(app.getHttpServer()).get(
-      `/users/${rawUser.id}`
-    )
-
-    expect(response.status).toBe(200)
-    expect(response.body.id).toBe(rawUser.id)
-    expect(response.body.email).toBe(rawUser.email)
-  })
-
-  it('GET /users/:id — should return 404 when user is not found', async () => {
-    mockPrismaAuth.user.findUnique.mockResolvedValue(null)
-
+  it('GET /users/:id — should return 401 without a session token', async () => {
     const response = await request(app.getHttpServer()).get(
       `/users/${faker.string.uuid()}`
     )
 
-    expect(response.status).toBe(404)
-    expect(response.body.message).toBe('User not found')
+    expect(response.status).toBe(401)
   })
 
-  it('GET /users/by-email — should return user by email when exists', async () => {
-    const rawUser = {
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      emailVerified: true,
-      image: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
+  it('GET /users/:id — should return 401 when the session has expired', async () => {
+    mockPrismaAuth.session.findUnique.mockResolvedValue({
+      userId: faker.string.uuid(),
+      expiresAt: new Date(Date.now() - 60_000)
+    })
+
+    const response = await api.get(`/users/${sessionUserId}`)
+
+    expect(response.status).toBe(401)
+  })
+
+  it('GET /users — should not be exposed (users can only see themselves)', async () => {
+    const response = await api.get('/users')
+
+    expect(response.status).toBe(404)
+  })
+
+  it('GET /users/by-email — should not be exposed', async () => {
+    const response = await api.get('/users/by-email')
+
+    expect(response.status).toBe(404)
+  })
+
+  it('GET /users/:id — should return the authenticated user', async () => {
+    const rawUser = makeRawUser()
 
     mockPrismaAuth.user.findUnique.mockResolvedValue(rawUser)
 
-    const response = await request(app.getHttpServer())
-      .get('/users/by-email')
-      .query({ email: rawUser.email })
+    const response = await api.get(`/users/${rawUser.id}`)
 
     expect(response.status).toBe(200)
     expect(response.body.id).toBe(rawUser.id)
     expect(response.body.email).toBe(rawUser.email)
   })
 
-  it('GET /users/by-email — should return 404 when user email is not found', async () => {
-    mockPrismaAuth.user.findUnique.mockResolvedValue(null)
+  it('GET /users/:id — should return 404 for another user, even when it exists', async () => {
+    mockPrismaAuth.user.findUnique.mockResolvedValue(makeRawUser())
 
-    const response = await request(app.getHttpServer())
-      .get('/users/by-email')
-      .query({ email: 'unknown@example.com' })
+    const response = await api.get(`/users/${faker.string.uuid()}`)
 
     expect(response.status).toBe(404)
-    expect(response.body.message).toBe('User not found')
+    expect(response.body.message).toBe('User not found.')
   })
 
   it('GET /users/:id/download-avatar — should stream avatar file when found', async () => {
-    const rawUser = {
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      emailVerified: true,
-      image: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
+    const rawUser = makeRawUser()
 
     mockPrismaAuth.user.findUnique.mockResolvedValue(rawUser)
 
@@ -183,9 +171,7 @@ describe('Users (E2E)', () => {
       'image/png'
     )
 
-    const response = await request(app.getHttpServer()).get(
-      `/users/${rawUser.id}/download-avatar`
-    )
+    const response = await api.get(`/users/${rawUser.id}/download-avatar`)
 
     expect(response.status).toBe(200)
     expect(response.headers['content-type']).toContain(
@@ -197,21 +183,11 @@ describe('Users (E2E)', () => {
   })
 
   it('GET /users/:id/download-avatar — should return 500 when avatar does not exist in storage', async () => {
-    const rawUser = {
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      emailVerified: true,
-      image: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
+    const rawUser = makeRawUser()
 
     mockPrismaAuth.user.findUnique.mockResolvedValue(rawUser)
 
-    const response = await request(app.getHttpServer()).get(
-      `/users/${rawUser.id}/download-avatar`
-    )
+    const response = await api.get(`/users/${rawUser.id}/download-avatar`)
 
     expect(response.status).toBe(500)
   })

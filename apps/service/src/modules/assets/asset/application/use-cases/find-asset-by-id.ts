@@ -14,7 +14,7 @@ export class FindAssetByIdUseCase {
   constructor(private assetRepository: AssetRepository) {}
 
   async execute(userId: string, id: string): Promise<FindAssetByIdResponse> {
-    const asset = await this.assetRepository.findByIdAndUser(id, userId)
+    const asset = await this.assetRepository.findById(id, userId)
 
     if (!asset) {
       return left(new AssetNotFoundError())

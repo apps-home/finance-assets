@@ -1,5 +1,6 @@
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
+import { omitUndefined } from '@/core/utils/omit-undefined'
 
 export enum CategoryType {
   VARIABLE_BR = 'VARIABLE_BR',
@@ -68,7 +69,11 @@ export class Category implements CategoryProps {
     })
   }
 
-  update(props: Partial<Omit<CategoryProps, 'id' | 'userId' | 'createdAt'>>) {
+  update(
+    props: Partial<
+      Omit<CategoryProps, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+    >
+  ) {
     if (props.currency && props.currency.trim().length <= 2) {
       throw new PayloadError('Currency must be at least 3 characters long')
     }
@@ -91,7 +96,7 @@ export class Category implements CategoryProps {
 
     this._props = {
       ...this._props,
-      ...props,
+      ...omitUndefined(props),
       updatedAt: new Date()
     }
   }

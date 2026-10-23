@@ -51,7 +51,7 @@ export class PrismaAssetRepository implements AssetRepository {
     }))
   }
 
-  async findByIdAndUser(id: string, userId: string): Promise<Asset | null> {
+  async findById(id: string, userId: string): Promise<Asset | null> {
     const asset = await this.prisma.asset.findFirst({
       where: { id, category: { userId } }
     })
@@ -61,7 +61,7 @@ export class PrismaAssetRepository implements AssetRepository {
     return PrismaAssetMapper.toDomain(asset)
   }
 
-  async findById(id: string): Promise<Asset | null> {
+  async findByIdForSystem(id: string): Promise<Asset | null> {
     const asset = await this.prisma.asset.findUnique({
       where: { id }
     })

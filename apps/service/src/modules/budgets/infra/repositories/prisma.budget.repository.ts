@@ -15,7 +15,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
 
     const budgetRecords = await this.prisma.assetRecord.findMany({
       where: {
-        ...(userId && { category: { userId } }),
+        category: { userId },
         ...(categoryId && { categoryId }),
         ...(month && { month }),
         ...(year && { year })
@@ -47,9 +47,9 @@ export class PrismaBudgetRepository implements BudgetRepository {
     })
   }
 
-  async findById(id: string): Promise<Budget | null> {
-    const budgetRecord = await this.prisma.assetRecord.findUnique({
-      where: { id }
+  async findById(id: string, userId: string): Promise<Budget | null> {
+    const budgetRecord = await this.prisma.assetRecord.findFirst({
+      where: { id, category: { userId } }
     })
 
     if (!budgetRecord) {

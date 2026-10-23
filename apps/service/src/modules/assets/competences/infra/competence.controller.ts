@@ -1,15 +1,15 @@
 import {
-  BadRequestException,
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
   Param,
-  Query,
-  Req
+  ParseUUIDPipe,
+  Query
 } from '@nestjs/common'
 
-import { CompetenceNotFoundError } from '../application/errors/competence-not-found.error'
+import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
+import { toHttpException } from '@/infra/http/to-http-exception'
+
 import { DeleteCompetenceUseCase } from '../application/use-cases/delete-competence'
 import { FindAvailableYearsUseCase } from '../application/use-cases/find-available-years'
 import { FindCompetencesByCategoryUseCase } from '../application/use-cases/find-competences-by-category'
@@ -23,20 +23,11 @@ export class CompetenceController {
   ) {}
 
   @Get('years')
-  async findAvailableYears(@Req() request: any) {
-    const result = await this.findAvailableYearsUseCase.execute(
-      request.headers['user-id']
-    )
+  async findAvailableYears(@CurrentUserId() userId: string) {
+    const result = await this.findAvailableYearsUseCase.execute(userId)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case Error:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return result.value
@@ -44,41 +35,31 @@ export class CompetenceController {
 
   @Get()
   async findByCategory(
-    @Query('categoryId') categoryId: string,
-    @Req() request: any
+    @Query('categoryId', new ParseUUIDPipe({ version: '4' }))
+    categoryId: string,
+    @CurrentUserId() userId: string
   ) {
     const result = await this.findCompetencesByCategoryUseCase.execute(
       categoryId,
-      request.headers['user-id']
+      userId
     )
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case Error:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return result.value
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const result = await this.deleteCompetenceUseCase.execute(id)
+  async remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.deleteCompetenceUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case CompetenceNotFoundError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Competence deleted successfully' }

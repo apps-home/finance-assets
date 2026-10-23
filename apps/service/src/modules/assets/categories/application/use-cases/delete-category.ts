@@ -11,8 +11,8 @@ type DeleteCategoryResponse = Either<CategoryNotFoundError, void>
 export class DeleteCategoryUseCase {
   constructor(private categoryRepository: CategoryRepository) {}
 
-  async execute(id: string): Promise<DeleteCategoryResponse> {
-    const category = await this.categoryRepository.findById(id)
+  async execute(userId: string, id: string): Promise<DeleteCategoryResponse> {
+    const category = await this.categoryRepository.findById(id, userId)
 
     if (!category) {
       return left(new CategoryNotFoundError())

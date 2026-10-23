@@ -10,12 +10,4 @@ export class PrismaCompetenceMapper {
       year: raw.year
     })
   }
-
-  static toPrisma(competence: Competence) {
-    return {
-      id: competence.id,
-      categoryId: competence.categoryId,
-      year: competence.year
-    }
-  }
 }

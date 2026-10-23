@@ -49,12 +49,8 @@ export class InMemoryAssetRepository implements AssetRepository {
     }
   }
 
-  async findById(id: string): Promise<Asset | null> {
-    return this.items.find((item) => item.id === id) ?? null
-  }
-
-  async findByIdAndUser(id: string, userId: string): Promise<Asset | null> {
-    const asset = await this.findById(id)
+  async findById(id: string, userId: string): Promise<Asset | null> {
+    const asset = await this.findByIdForSystem(id)
     if (!asset) return null
 
     const category = this.categoryRepository.items.find(
@@ -62,6 +58,10 @@ export class InMemoryAssetRepository implements AssetRepository {
     )
 
     return category?.userId === userId ? asset : null
+  }
+
+  async findByIdForSystem(id: string): Promise<Asset | null> {
+    return this.items.find((item) => item.id === id) ?? null
   }
 
   async delete(id: string): Promise<void> {

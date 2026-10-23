@@ -1,20 +1,18 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
-  Query,
-  Req
+  Query
 } from '@nestjs/common'
 
-import { PayloadError } from '@/core/domain/errors/payload-error'
+import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
+import { toHttpException } from '@/infra/http/to-http-exception'
 
-import { BudgetNotFoundError } from '../application/errors/budget-not-found.error'
 import { CreateBudgetUseCase } from '../application/use-cases/create-budget'
 import { DeleteBudgetUseCase } from '../application/use-cases/delete-budget'
 import { FindAllBudgetsUseCase } from '../application/use-cases/find-all-budgets'
@@ -37,93 +35,70 @@ export class BudgetController {
   ) {}
 
   @Post()
-  async create(@Body() data: CreateBudgetDTO) {
-    const result = await this.createBudgetUseCase.execute(data)
+  async create(@Body() data: CreateBudgetDTO, @CurrentUserId() userId: string) {
+    const result = await this.createBudgetUseCase.execute(userId, data)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case PayloadError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Budget created successfully' }
   }
 
   @Get()
-  async findAll(@Query() params: FindAllBudgetsParamsDTO, @Req() request: any) {
+  async findAll(
+    @Query() params: FindAllBudgetsParamsDTO,
+    @CurrentUserId() userId: string
+  ) {
     const result = await this.findAllBudgetsUseCase.execute({
       ...params,
-      userId: request.headers['user-id']
+      userId
     })
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case Error:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
     return result.value
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const result = await this.findBudgetByIdUseCase.execute(id)
+  async findOne(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.findBudgetByIdUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case BudgetNotFoundError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return result.value
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() data: UpdateBudgetDTO) {
-    const result = await this.updateBudgetUseCase.execute(id, data)
+  async update(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() data: UpdateBudgetDTO,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.updateBudgetUseCase.execute(userId, id, data)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case BudgetNotFoundError:
-        case PayloadError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Budget updated successfully' }
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const result = await this.deleteBudgetUseCase.execute(id)
+  async remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.deleteBudgetUseCase.execute(userId, id)
 
     if (result.isLeft()) {
-      const error = result.value
-
-      switch (error.constructor) {
-        case BudgetNotFoundError:
-          throw new BadRequestException(error.message)
-        default:
-          throw new InternalServerErrorException('Unexpected error')
-      }
+      throw toHttpException(result.value)
     }
 
     return { message: 'Budget deleted successfully' }

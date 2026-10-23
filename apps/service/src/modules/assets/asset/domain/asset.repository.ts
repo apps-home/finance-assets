@@ -27,8 +27,8 @@ export interface AssetWithUserDetails extends AssetWithCategory {
 export abstract class AssetRepository {
   abstract list(params: FindAssetsParams): Promise<AssetWithCategory[]>
   abstract save(asset: Asset): Promise<void>
-  abstract findById(id: string): Promise<Asset | null>
-  abstract findByIdAndUser(id: string, userId: string): Promise<Asset | null>
+  abstract findById(id: string, userId: string): Promise<Asset | null>
+  abstract findByIdForSystem(id: string): Promise<Asset | null>
   abstract delete(id: string): Promise<void>
   abstract findAllWithTicker(): Promise<AssetWithCategoryType[]>
   abstract findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]>

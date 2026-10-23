@@ -50,7 +50,17 @@ export class PrismaWishlistRepository implements WishlistRepository {
     }))
   }
 
-  async findById(id: string): Promise<Wishlist | null> {
+  async findById(id: string, userId: string): Promise<Wishlist | null> {
+    const record = await this.prisma.assetWishlists.findFirst({
+      where: { id, userId }
+    })
+
+    if (!record) return null
+
+    return PrismaWishlistMapper.toDomain(record)
+  }
+
+  async findByIdForSystem(id: string): Promise<Wishlist | null> {
     const record = await this.prisma.assetWishlists.findUnique({
       where: { id }
     })

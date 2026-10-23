@@ -1,5 +1,6 @@
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
+import { omitUndefined } from '@/core/utils/omit-undefined'
 
 export interface WishlistProps {
   id: string
@@ -59,7 +60,10 @@ export class Wishlist implements WishlistProps {
 
   update(
     props: Partial<
-      Omit<WishlistProps, 'id' | 'userId' | 'categoryId' | 'createdAt'>
+      Omit<
+        WishlistProps,
+        'id' | 'userId' | 'categoryId' | 'createdAt' | 'updatedAt'
+      >
     >
   ) {
     if (props.name !== undefined && props.name.trim().length <= 1) {
@@ -72,8 +76,11 @@ export class Wishlist implements WishlistProps {
 
     this._props = {
       ...this._props,
-      ...props,
-      ...(props.ticker && { ticker: props.ticker.trim().toUpperCase() }),
+      ...omitUndefined(props),
+      ...(props.name !== undefined && { name: props.name.trim() }),
+      ...(props.ticker !== undefined && {
+        ticker: props.ticker.trim().toUpperCase()
+      }),
       updatedAt: new Date()
     }
   }

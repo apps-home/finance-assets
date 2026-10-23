@@ -272,9 +272,12 @@ export function FinancialTable({
     rowIndex: number,
     columnName: string,
     value: unknown,
-    dividendValue?: number
+    dividendValue?: number,
+    exchangeRate = 1
   ) => {
     const numericValue = typeof value === 'number' ? value : 0
+    // O valor guardado já está convertido pela cotação; a edição trabalha com o valor original
+    const originalValue = Number((numericValue / exchangeRate).toFixed(2))
     const isEditing =
       editingCell?.row === rowIndex && editingCell?.col === columnName
 
@@ -290,7 +293,7 @@ export function FinancialTable({
       >
         <PopoverTrigger
           onClick={() =>
-            handleEdit(rowIndex, columnName, numericValue, dividendValue)
+            handleEdit(rowIndex, columnName, originalValue, dividendValue)
           }
           className="group relative -m-1.5 flex w-full cursor-pointer items-center justify-end rounded-md p-1.5 transition-colors hover:bg-muted/80 focus:outline-none sm:pr-8"
         >
@@ -373,6 +376,12 @@ export function FinancialTable({
                   className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-base text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:py-1.5 sm:text-xs"
                   placeholder="R$ 0,00"
                 />
+                {category && category.currency !== 'BRL' && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Informe o valor em {category.currency}. Ele é convertido
+                    para R$ pela cotação do mês ao salvar.
+                  </p>
+                )}
               </div>
 
               {isVariable && (
@@ -494,13 +503,23 @@ export function FinancialTable({
                     typeof row[`${cat.name}_dividend`] === 'number'
                       ? (row[`${cat.name}_dividend`] as number)
                       : undefined
+                  const cellExchangeRate =
+                    typeof row[`${cat.name}_exchangeRate`] === 'number'
+                      ? (row[`${cat.name}_exchangeRate`] as number)
+                      : undefined
 
                   return (
                     <td
                       key={`${row.month}-${cat.id}`}
                       className="px-2 py-4 text-right text-muted-foreground sm:px-4"
                     >
-                      {renderCell(index, cat.name, row[cat.name], dividendVal)}
+                      {renderCell(
+                        index,
+                        cat.name,
+                        row[cat.name],
+                        dividendVal,
+                        cellExchangeRate
+                      )}
                     </td>
                   )
                 })}

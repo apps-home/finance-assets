@@ -15,7 +15,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
 
     const categories = await this.prisma.assetCategory.findMany({
       where: {
-        ...(userId && { userId }),
+        userId,
         ...(type && { type }),
         ...(currency && { currency }),
         ...(name && { name: { contains: name } }),
@@ -28,9 +28,9 @@ export class PrismaCategoryRepository implements CategoryRepository {
     return categories.map(PrismaCategoryMapper.toDomain)
   }
 
-  async findById(id: string): Promise<Category | null> {
-    const category = await this.prisma.assetCategory.findUnique({
-      where: { id },
+  async findById(id: string, userId: string): Promise<Category | null> {
+    const category = await this.prisma.assetCategory.findFirst({
+      where: { id, userId },
       include: { competences: true }
     })
 

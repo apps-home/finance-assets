@@ -18,7 +18,7 @@ describe('FindUserByIdUseCase', () => {
     const user = makeUser()
     inMemoryUserRepository.items.push(user)
 
-    const result = await sut.execute(user.id)
+    const result = await sut.execute(user.id, user.id)
 
     expect(result.isRight()).toBe(true)
     if (result.isRight()) {
@@ -28,8 +28,18 @@ describe('FindUserByIdUseCase', () => {
     }
   })
 
+  it('should not find another user, even when it exists', async () => {
+    const user = makeUser()
+    inMemoryUserRepository.items.push(user)
+
+    const result = await sut.execute('another-user-id', user.id)
+
+    expect(result.isLeft()).toBe(true)
+    expect(result.value).toBeInstanceOf(UserNotFoundError)
+  })
+
   it('should return left with UserNotFoundError when user is not found', async () => {
-    const result = await sut.execute('non-existent-id')
+    const result = await sut.execute('non-existent-id', 'non-existent-id')
 
     expect(result.isLeft()).toBe(true)
     expect(result.value).toBeInstanceOf(UserNotFoundError)

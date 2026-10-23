@@ -1,5 +1,6 @@
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
+import { omitUndefined } from '@/core/utils/omit-undefined'
 
 export interface BudgetProps {
   id: string
@@ -59,20 +60,20 @@ export class Budget implements BudgetProps {
   }
 
   update(
-    props: Partial<Omit<BudgetProps, 'id' | 'createdAt' | 'updatedAt'>>
+    props: Partial<
+      Omit<
+        BudgetProps,
+        | 'id'
+        | 'categoryId'
+        | 'month'
+        | 'year'
+        | 'amount'
+        | 'exchangeRate'
+        | 'createdAt'
+        | 'updatedAt'
+      >
+    >
   ): void {
-    if (props.month && (props.month < 1 || props.month > 12)) {
-      throw new PayloadError('Month must be between 1 and 12')
-    }
-
-    if (
-      props.exchangeRate !== null &&
-      props.exchangeRate !== undefined &&
-      props.exchangeRate <= 0
-    ) {
-      throw new PayloadError('Exchange rate must be greater than 0')
-    }
-
     if (
       props.dividendAmount !== null &&
       props.dividendAmount !== undefined &&
@@ -85,29 +86,24 @@ export class Budget implements BudgetProps {
 
     this._props = {
       ...this._props,
-      ...props,
+      ...omitUndefined(props),
       updatedAt: new Date()
     }
   }
 
-  updateAmountWithExchangeRate(exchangeRate: number): void {
-    if (
-      this.exchangeRate === null ||
-      this.exchangeRate === undefined ||
-      exchangeRate === null ||
-      exchangeRate === undefined ||
-      exchangeRate <= 0
-    ) {
-      throw new PayloadError(
-        'Cannot update amount with exchange rate when exchangeRate is null, undefined or less than or equal to 0'
-      )
+  /**
+   * O valor é guardado já convertido para a moeda base (amount = valor original * cotação).
+   * Esta é a única forma de alterar o valor, para nunca converter duas vezes.
+   */
+  changeAmount(originalAmount: number, exchangeRate: number): void {
+    if (exchangeRate <= 0) {
+      throw new PayloadError('Exchange rate must be greater than 0')
     }
-
-    const newAmount = this.amount * exchangeRate
 
     this._props = {
       ...this._props,
-      amount: parseFloat(newAmount.toFixed(2)),
+      amount: Number((originalAmount * exchangeRate).toFixed(2)),
+      exchangeRate,
       updatedAt: new Date()
     }
   }
@@ -134,6 +130,12 @@ export class Budget implements BudgetProps {
 
   get exchangeRate(): number | null | undefined {
     return this._props.exchangeRate
+  }
+
+  get originalAmount(): number {
+    const rate = this._props.exchangeRate
+
+    return rate ? Number((this._props.amount / rate).toFixed(2)) : this.amount
   }
 
   get dividendAmount(): number | null | undefined {

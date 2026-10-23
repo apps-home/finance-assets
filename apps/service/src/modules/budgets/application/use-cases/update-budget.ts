@@ -14,18 +14,27 @@ export class UpdateBudgetUseCase {
   constructor(private budgetRepository: BudgetRepository) {}
 
   async execute(
+    userId: string,
     id: string,
     data: UpdateBudgetPayload
   ): Promise<UpdateBudgetResponse> {
-    const existingBudget = await this.budgetRepository.findById(id)
+    const existingBudget = await this.budgetRepository.findById(id, userId)
 
     if (!existingBudget) {
-      return left(new BudgetNotFoundError('Budget not found'))
+      return left(new BudgetNotFoundError())
     }
 
     try {
-      existingBudget.updateAmountWithExchangeRate(data.exchangeRate || 1)
-      existingBudget.update(data)
+      const { amount, exchangeRate, dividendAmount } = data
+
+      existingBudget.update({ dividendAmount })
+
+      if (amount !== undefined || exchangeRate !== undefined) {
+        existingBudget.changeAmount(
+          amount ?? existingBudget.originalAmount,
+          exchangeRate ?? existingBudget.exchangeRate ?? 1
+        )
+      }
     } catch (error) {
       if (error instanceof PayloadError) {
         return left(error)

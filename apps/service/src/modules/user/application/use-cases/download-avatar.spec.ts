@@ -34,7 +34,10 @@ describe('DownloadUserAvatarUseCase', () => {
       'image/png'
     )
 
-    const result = await sut.execute({ userId: user.id })
+    const result = await sut.execute({
+      currentUserId: user.id,
+      userId: user.id
+    })
 
     expect(result.isRight()).toBe(true)
     if (result.isRight()) {
@@ -43,9 +46,24 @@ describe('DownloadUserAvatarUseCase', () => {
   })
 
   it('should return left with UserNotFoundError if user does not exist', async () => {
-    const result = await sut.execute({ userId: 'non-existent-user' })
+    const result = await sut.execute({
+      currentUserId: 'non-existent-user',
+      userId: 'non-existent-user'
+    })
 
     expect(result.isLeft()).toBe(true)
+    expect(result.value).toBeInstanceOf(UserNotFoundError)
+  })
+
+  it('should not download the avatar of another user', async () => {
+    const user = makeUser()
+    inMemoryUserRepository.items.push(user)
+
+    const result = await sut.execute({
+      currentUserId: 'another-user-id',
+      userId: user.id
+    })
+
     expect(result.value).toBeInstanceOf(UserNotFoundError)
   })
 
@@ -57,7 +75,10 @@ describe('DownloadUserAvatarUseCase', () => {
       new Error('File not found')
     )
 
-    const result = await sut.execute({ userId: user.id })
+    const result = await sut.execute({
+      currentUserId: user.id,
+      userId: user.id
+    })
 
     expect(result.isLeft()).toBe(true)
     expect(result.value).toBeInstanceOf(Error)

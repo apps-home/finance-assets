@@ -27,7 +27,8 @@ export interface WishlistWithUserDetails extends WishlistWithCategory {
 export abstract class WishlistRepository {
   abstract list(params: FindAllWishlistParams): Promise<WishlistWithCategory[]>
   abstract save(wishlist: Wishlist): Promise<void>
-  abstract findById(id: string): Promise<Wishlist | null>
+  abstract findById(id: string, userId: string): Promise<Wishlist | null>
+  abstract findByIdForSystem(id: string): Promise<Wishlist | null>
   abstract findByUserAndTicker(
     userId: string,
     ticker: string
