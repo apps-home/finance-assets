@@ -11,16 +11,20 @@ export const headerMenu: MenuItem[] = [
     path: '/'
   },
   {
-    title: 'Categorias',
-    path: '/categories'
-  },
-  {
     title: 'Meus Ativos',
     path: '/assets'
   },
   {
+    title: 'Minha Carteira',
+    path: '/portfolio'
+  },
+  {
     title: 'Lista de Desejos',
     path: '/wishlist'
+  },
+  {
+    title: 'Categorias',
+    path: '/categories'
   },
   {
     title: 'Testes',

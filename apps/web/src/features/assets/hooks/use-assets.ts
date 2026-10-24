@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import {
   createAsset,
   deleteAsset,
+  getPortfolioSummary,
   listAssets,
   updateAsset
 } from '@/features/assets/api'
@@ -21,6 +22,14 @@ export function useAssets(params?: ListAssetsParams) {
   return useQuery({
     queryKey: [ASSET_QUERY_KEY, params],
     queryFn: () => listAssets(params),
+    placeholderData: (prev) => prev
+  })
+}
+
+export function usePortfolioSummary() {
+  return useQuery({
+    queryKey: [ASSET_QUERY_KEY, 'portfolio'],
+    queryFn: getPortfolioSummary,
     placeholderData: (prev) => prev
   })
 }

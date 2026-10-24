@@ -86,7 +86,7 @@ export default function DashboardPageClient() {
               </p>
             </div>
           </div>
-          <div className="flex min-w-0 items-center gap-6 overflow-x-auto">
+          <div className="flex min-w-0 items-center gap-6 overflow-x-auto pb-1.5">
             <Tabs
               value={selectedYear}
               onValueChange={(value) => {

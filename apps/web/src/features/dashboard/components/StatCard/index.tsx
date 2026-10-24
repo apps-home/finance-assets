@@ -1,48 +1,102 @@
 import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
-import { Badge } from '@/shared/components/ui/badge'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
+import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 interface StatCardProps {
   title: string
-  value: number
+  value: number | string
   icon: LucideIcon
+  iconClassName?: string
   trend?: string
   trendUp?: boolean
-  subtitle?: string
+  subtitle?: ReactNode
+  variant?: 'default' | 'trend'
+  className?: string
+  valueClassName?: string
 }
 
 export function StatCard({
   title,
   value,
   icon: Icon,
+  iconClassName,
   trend,
   trendUp,
-  subtitle
+  subtitle,
+  variant = 'default',
+  className,
+  valueClassName
 }: StatCardProps) {
+  const isTrendVariant = variant === 'trend'
+  const isPositive = trendUp === true
+  const isNegative = trendUp === false
+
+  const defaultIconClassName = isTrendVariant
+    ? isPositive
+      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+      : isNegative
+        ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+        : 'bg-muted text-muted-foreground'
+    : 'bg-primary/10 text-primary'
+
+  const formattedValue =
+    typeof value === 'number' ? formatCurrency(value) : value
+
   return (
-    <div className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm transition-all duration-300 hover:border-primary/30 sm:p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="rounded-lg bg-primary/10 p-3">
-          <Icon className="size-6 text-primary" />
-        </div>
-        {trend && (
+    <Card className={cn('border-border shadow-xs', className)}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-muted-foreground text-xs">
+            {title}
+          </span>
           <div
-            className={`text-sm ${trendUp ? 'text-primary' : 'text-destructive'}`}
+            className={cn(
+              'flex size-8 items-center justify-center rounded-lg',
+              defaultIconClassName,
+              iconClassName
+            )}
           >
-            {trend}
+            <Icon className="size-4" />
           </div>
-        )}
-      </div>
-      <div className="mb-1 flex min-w-0 flex-wrap items-center gap-2">
-        <span className="text-muted-foreground text-sm">{title}</span>
-        {subtitle && (
-          <Badge className="bg-primary/10 text-primary text-xs">
-            {subtitle}
-          </Badge>
-        )}
-      </div>
-      <div className="font-bold text-2xl">{formatCurrency(value)}</div>
-    </div>
+        </div>
+
+        <div className="mt-2 space-y-1">
+          <div className="flex items-baseline gap-2">
+            <p
+              className={cn(
+                'font-bold text-xl tabular-nums',
+                isTrendVariant && isPositive && TREND_CLASSES.positive.text,
+                isTrendVariant && isNegative && TREND_CLASSES.negative.text,
+                (!isTrendVariant || (!isPositive && !isNegative)) &&
+                  'text-foreground',
+                valueClassName
+              )}
+            >
+              {isTrendVariant && typeof value === 'number' && value > 0 && '+'}
+              {formattedValue}
+            </p>
+            {trend && (
+              <span
+                className={cn(
+                  'font-semibold text-xs tabular-nums',
+                  isPositive && TREND_CLASSES.positive.text,
+                  isNegative && TREND_CLASSES.negative.text,
+                  !isPositive && !isNegative && 'text-muted-foreground'
+                )}
+              >
+                {trend}
+              </span>
+            )}
+          </div>
+          {subtitle && (
+            <p className="text-muted-foreground text-xs">{subtitle}</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }

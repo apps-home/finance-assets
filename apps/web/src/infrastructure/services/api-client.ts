@@ -50,6 +50,8 @@ apiClient.interceptors.request.use(
   }
 )
 
+let isLoggingOut = false
+
 // Interceptor de resposta - tratamento de erros centralizado
 apiClient.interceptors.response.use(
   (response) => response,
@@ -58,6 +60,13 @@ apiClient.interceptors.response.use(
 
     // Tratamento específico para erros de autenticação
     if (apiError.statusCode === 401) {
+      if (
+        typeof window !== 'undefined' &&
+        window.location.pathname.startsWith('/sign-in')
+      ) {
+        return Promise.reject(apiError)
+      }
+
       const session = await authClient.getSession()
 
       // Verifica se deve forçar logout
@@ -68,11 +77,16 @@ apiClient.interceptors.response.use(
           error.response?.data?.message?.includes('please log in again') ||
           error.response?.data?.error === 'Unauthorized')
 
-      if (shouldLogout) {
+      if (shouldLogout && !isLoggingOut) {
+        isLoggingOut = true
+
         await signOut({
           fetchOptions: {
             onSuccess: () => {
               window.location.href = '/sign-in?reason=session_expired'
+            },
+            onError: () => {
+              isLoggingOut = false
             }
           }
         })

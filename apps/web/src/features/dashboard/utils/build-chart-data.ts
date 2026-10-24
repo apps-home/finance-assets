@@ -11,11 +11,13 @@ export function buildCategoryChartData(
   const latestMonth = getLatestMonthWithData(data)
   if (!data.length || !latestMonth) return []
 
-  return categories.map((cat, index) => ({
-    name: cat.name,
-    value: latestMonth[cat.name] as number,
-    color: `var(--chart-${(index % 5) + 1})`
-  }))
+  return categories
+    .map((cat, index) => ({
+      name: cat.name,
+      value: (latestMonth[cat.name] as number) ?? 0,
+      color: `var(--chart-${(index % 5) + 1})`
+    }))
+    .sort((a, b) => b.value - a.value)
 }
 
 export function buildMainChartData(data: MonthData[]) {

@@ -50,3 +50,76 @@ export interface ListAssetsParams {
   sort?: 'monthChange'
   order?: 'asc' | 'desc'
 }
+
+export interface PortfolioPosition {
+  id: string
+  name: string
+  ticker: string
+  broker: string | null
+  categoryName: string
+  categoryType: CategoryType
+  investedValue: number
+  currentBalance: number
+  profitLoss: number
+  profitabilityPercentage: number | null
+  portfolioPercentage: number
+  monthChangePercentage: number | null
+}
+
+export interface PortfolioAllocation {
+  key: string
+  name: string
+  currentBalance: number
+  percentage: number
+  profitLoss: number
+  assetsCount: number
+}
+
+export interface FixedIncomePosition {
+  id: string
+  name: string
+  ticker: string
+  broker: string | null
+  categoryName: string
+  currency: string
+  originalBalance: number
+  currentBalance: number
+  percentage: number
+}
+
+export interface MacroAllocation {
+  variableBalance: number
+  variablePercentage: number
+  fixedBalance: number
+  fixedPercentage: number
+  totalBalance: number
+}
+
+export interface FixedIncomeSummary {
+  currentBalance: number
+  assetsCount: number
+  positions: FixedIncomePosition[]
+  allocationByCurrency: PortfolioAllocation[]
+  allocationByBroker: PortfolioAllocation[]
+}
+
+export interface PortfolioSummary {
+  totals: {
+    investedValue: number
+    currentBalance: number
+    profitLoss: number
+    profitabilityPercentage: number | null
+    assetsCount: number
+  }
+  fixedIncome: FixedIncomeSummary
+  macroAllocation: MacroAllocation
+  allocationByCategory: PortfolioAllocation[]
+  allocationByBroker: PortfolioAllocation[]
+  topHoldings: PortfolioPosition[]
+  bestPerformers: PortfolioPosition[]
+  worstPerformers: PortfolioPosition[]
+  monthMovers: {
+    gainers: PortfolioPosition[]
+    losers: PortfolioPosition[]
+  }
+}

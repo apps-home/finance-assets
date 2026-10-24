@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   transpilePackages: ['@t3-oss/env-nextjs', '@t3-oss/env-core', '@lib/db'],
+  // Sentry loads its diagnostics-channel hook dynamically, so file tracing can't detect it
+  outputFileTracingIncludes: {
+    '/*': [
+      '../../node_modules/.pnpm/@sentry+server-runtime-injection@*/node_modules/@sentry/server-runtime-injection/build/**/*'
+    ]
+  },
   ...(process.env.NODE_ENV === 'development' && {
     allowedDevOrigins: ['10.0.2.124', 'local.dev.terraviva', '192.168.0.4']
   }),

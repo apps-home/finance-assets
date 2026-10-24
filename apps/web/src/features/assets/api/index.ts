@@ -5,6 +5,7 @@ import type {
   AssetWithCategory,
   CreateAssetDTO,
   ListAssetsParams,
+  PortfolioSummary,
   UpdateAssetDTO
 } from './types'
 
@@ -19,6 +20,16 @@ export async function listAssets(
   const response = await apiClient.get<AssetWithCategory[]>(BASE_URL, {
     params
   })
+  return response.data
+}
+
+/**
+ * Resumo consolidado da carteira (calculado no servidor, valores em BRL)
+ */
+export async function getPortfolioSummary(): Promise<PortfolioSummary> {
+  const response = await apiClient.get<PortfolioSummary>(
+    `${BASE_URL}/portfolio`
+  )
   return response.data
 }
 

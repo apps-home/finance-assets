@@ -17,6 +17,7 @@ import { CreateAssetUseCase } from '../application/use-cases/create-asset'
 import { DeleteAssetUseCase } from '../application/use-cases/delete-asset'
 import { FindAssetByIdUseCase } from '../application/use-cases/find-asset-by-id'
 import { FindAssetsUseCase } from '../application/use-cases/find-assets'
+import { GetPortfolioSummaryUseCase } from '../application/use-cases/get-portfolio-summary'
 import { UpdateAssetUseCase } from '../application/use-cases/update-asset'
 import {
   CreateAssetDTO,
@@ -31,7 +32,8 @@ export class AssetController {
     private readonly findAssetsUseCase: FindAssetsUseCase,
     private readonly findAssetByIdUseCase: FindAssetByIdUseCase,
     private readonly updateAssetUseCase: UpdateAssetUseCase,
-    private readonly deleteAssetUseCase: DeleteAssetUseCase
+    private readonly deleteAssetUseCase: DeleteAssetUseCase,
+    private readonly getPortfolioSummaryUseCase: GetPortfolioSummaryUseCase
   ) {}
 
   @Post()
@@ -54,6 +56,17 @@ export class AssetController {
       ...params,
       userId: userId
     })
+
+    if (result.isLeft()) {
+      throw toHttpException(result.value)
+    }
+
+    return result.value
+  }
+
+  @Get('portfolio')
+  async portfolio(@CurrentUserId() userId: string) {
+    const result = await this.getPortfolioSummaryUseCase.execute(userId)
 
     if (result.isLeft()) {
       throw toHttpException(result.value)

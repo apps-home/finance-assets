@@ -178,17 +178,19 @@ export default function CategoriesClient() {
 
         <div className="flex flex-col gap-8 sm:flex-row sm:items-center">
           <Tabs value={selectedFilter} onValueChange={setSelectedFilter}>
-            <TabsList variant="line" className="max-w-full overflow-x-auto">
-              {FILTER_TABS.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="cursor-pointer text-xs"
-                >
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <div className="max-w-full overflow-x-auto pb-1.5">
+              <TabsList variant="line">
+                {FILTER_TABS.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="cursor-pointer text-xs"
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
           </Tabs>
 
           <div className="flex items-center gap-2">

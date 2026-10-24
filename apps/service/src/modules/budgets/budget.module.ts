@@ -20,6 +20,7 @@ import { PrismaBudgetRepository } from './infra/repositories/prisma.budget.repos
     FindBudgetByIdUseCase,
     UpdateBudgetUseCase,
     DeleteBudgetUseCase
-  ]
+  ],
+  exports: [BudgetRepository]
 })
 export class BudgetModule {}
