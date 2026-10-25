@@ -25,6 +25,14 @@ const SYMBOLS = {
 } as const
 
 /**
+ * Cada barra mensal é carimbada no início do mês no fuso da bolsa: o dólar
+ * (`BRL=X`, Londres) vem às 23:00 UTC do último dia do mês anterior no horário
+ * de verão, e índices americanos às 04:00/05:00 UTC do dia 1º. Somar 12h leva
+ * qualquer fuso entre UTC-12 e UTC+12 para dentro do mês certo.
+ */
+const MONTH_BAR_OFFSET_MS = 12 * 60 * 60 * 1000
+
+/**
  * Yahoo Finance (gratuito, sem chave) para Ibovespa, S&P 500 e dólar.
  * Os índices são de preço (sem dividendos reinvestidos).
  */
@@ -113,7 +121,7 @@ export class YahooBenchmarkProvider {
         return
       }
 
-      const date = new Date(ts * 1000)
+      const date = new Date(ts * 1000 + MONTH_BAR_OFFSET_MS)
 
       byMonth.set(
         monthIndex({

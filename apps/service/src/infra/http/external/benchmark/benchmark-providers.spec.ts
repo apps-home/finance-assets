@@ -168,6 +168,39 @@ describe('benchmark providers', () => {
       expect(result?.[0].returnPct).toBeCloseTo(21)
     })
 
+    it('should attribute dollar bars stamped on the last day of the previous month', async () => {
+      // Dólar (Londres): a barra de setembro vem às 23:00 UTC de 31/08, a de
+      // agosto às 23:00 UTC de 31/07. Os índices vêm às 04:00 UTC do dia 1º.
+      const utc = (iso: string) => Date.parse(iso) / 1000
+      const http = httpWith((url) =>
+        url.includes('BRL')
+          ? yahooChart([
+              { ts: utc('2026-06-30T23:00:00Z'), close: 5.0 },
+              { ts: utc('2026-07-31T23:00:00Z'), close: 5.5 },
+              { ts: utc('2026-08-31T23:00:00Z'), close: 6.05 }
+            ])
+          : yahooChart([
+              { ts: utc('2026-07-01T04:00:00Z'), close: 100 },
+              { ts: utc('2026-08-01T04:00:00Z'), close: 110 },
+              { ts: utc('2026-09-01T04:00:00Z'), close: 121 }
+            ])
+      )
+      const provider = new YahooBenchmarkProvider(http)
+
+      const result = await provider.fetchMonthlyReturns(
+        BenchmarkType.SP500_BRL,
+        { year: 2026, month: 8 }
+      )
+
+      // Agosto e setembro: (1 + 10%) × (1 + 10%) − 1 = 21%, sem buracos
+      expect(result?.map(({ year, month }) => [year, month])).toEqual([
+        [2026, 8],
+        [2026, 9]
+      ])
+      expect(result?.[0].returnPct).toBeCloseTo(21)
+      expect(result?.[1].returnPct).toBeCloseTo(21)
+    })
+
     it('should return null when the request fails', async () => {
       const provider = new YahooBenchmarkProvider(
         httpWith(() => new Error('blocked'))
