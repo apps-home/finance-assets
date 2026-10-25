@@ -20,7 +20,8 @@ export class PerformanceController {
   ) {
     const result = await this.getPortfolioPerformanceUseCase.execute(userId, {
       from: params.from ? (parseMonthRef(params.from) ?? undefined) : undefined,
-      to: params.to ? (parseMonthRef(params.to) ?? undefined) : undefined
+      to: params.to ? (parseMonthRef(params.to) ?? undefined) : undefined,
+      scope: params.scope
     })
 
     if (result.isLeft()) {

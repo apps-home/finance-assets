@@ -267,10 +267,23 @@ describe('SyncAssetDividendsUseCase', () => {
     })
   })
 
-  it('should use the latest budget exchange rate for foreign assets', async () => {
+  it('should use the exchange rate of the payment month for foreign assets', async () => {
     const { category, payload } = await seed('USD')
     await budgetRepository.save(
-      makeBudget({ categoryId: category.id, exchangeRate: 5.2 })
+      makeBudget({
+        categoryId: category.id,
+        month: 3,
+        year: 2026,
+        exchangeRate: 5.2
+      })
+    )
+    await budgetRepository.save(
+      makeBudget({
+        categoryId: category.id,
+        month: 9,
+        year: 2026,
+        exchangeRate: 5.0
+      })
     )
     gateway.dividends = [
       {
@@ -285,6 +298,80 @@ describe('SyncAssetDividendsUseCase', () => {
 
     expect(dividendRepository.items[0].exchangeRate).toBe(5.2)
     expect(dividendRepository.items[0].amount).toBe(25)
+  })
+
+  it('should use the nearest registered month when the payment month has no budget', async () => {
+    const { category, payload } = await seed('USD')
+    await budgetRepository.save(
+      makeBudget({
+        categoryId: category.id,
+        month: 1,
+        year: 2026,
+        exchangeRate: 5.5
+      })
+    )
+    await budgetRepository.save(
+      makeBudget({
+        categoryId: category.id,
+        month: 9,
+        year: 2026,
+        exchangeRate: 5.0
+      })
+    )
+    gateway.dividends = [
+      {
+        type: 'DIVIDEND',
+        rateAmount: 0.25,
+        comDate: null,
+        paymentDate: day('2026-02-10')
+      },
+      {
+        type: 'DIVIDEND',
+        rateAmount: 0.25,
+        comDate: null,
+        paymentDate: day('2026-12-10')
+      }
+    ]
+
+    await sut.execute(payload)
+
+    const rates = dividendRepository.items
+      .sort((a, b) => a.paymentDate.getTime() - b.paymentDate.getTime())
+      .map((item) => item.exchangeRate)
+
+    expect(rates).toEqual([5.5, 5.0])
+  })
+
+  it('should ignore budgets without exchange rate when picking the rate', async () => {
+    const { category, payload } = await seed('USD')
+    await budgetRepository.save(
+      makeBudget({
+        categoryId: category.id,
+        month: 3,
+        year: 2026,
+        exchangeRate: null
+      })
+    )
+    await budgetRepository.save(
+      makeBudget({
+        categoryId: category.id,
+        month: 8,
+        year: 2026,
+        exchangeRate: 5.1
+      })
+    )
+    gateway.dividends = [
+      {
+        type: 'DIVIDEND',
+        rateAmount: 0.25,
+        comDate: null,
+        paymentDate: day('2026-03-10')
+      }
+    ]
+
+    await sut.execute(payload)
+
+    expect(dividendRepository.items[0].exchangeRate).toBe(5.1)
   })
 
   it('should skip foreign assets without any known exchange rate', async () => {

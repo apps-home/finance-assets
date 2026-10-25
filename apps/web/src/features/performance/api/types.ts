@@ -1,5 +1,8 @@
 export type PerformancePeriodKey = 'ytd' | '12m' | 'all'
 
+/** Quais categorias entram no cálculo */
+export type PerformanceScope = 'all' | 'variable' | 'fixed'
+
 export interface PerformancePoint {
   year: number
   /** 1-12 */
@@ -35,4 +38,5 @@ export interface GetPerformanceParams {
   from?: string
   /** AAAA-MM */
   to?: string
+  scope?: PerformanceScope
 }

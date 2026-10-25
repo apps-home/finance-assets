@@ -3,20 +3,31 @@
 import { Activity } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import type { PerformancePeriodKey } from '@/features/performance/api/types'
+import type {
+  PerformancePeriodKey,
+  PerformanceScope
+} from '@/features/performance/api/types'
 import { PerformanceChart } from '@/features/performance/components/PerformanceChart'
 import { PerformanceSummary } from '@/features/performance/components/PerformanceSummary'
 import { usePortfolioPerformance } from '@/features/performance/hooks/use-performance'
-import { PERIOD_LABELS, sliceSeries } from '@/features/performance/utils'
+import {
+  PERIOD_LABELS,
+  SCOPE_DESCRIPTIONS,
+  SCOPE_LABELS,
+  sliceSeries
+} from '@/features/performance/utils'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 
 const PERIODS: PerformancePeriodKey[] = ['ytd', '12m', 'all']
+const SCOPES: PerformanceScope[] = ['all', 'variable', 'fixed']
 
 export default function PerformanceClient() {
   const [period, setPeriod] = useState<PerformancePeriodKey>('12m')
 
-  const { data, isLoading } = usePortfolioPerformance()
+  const [scope, setScope] = useState<PerformanceScope>('all')
+
+  const { data, isLoading } = usePortfolioPerformance({ scope })
 
   const points = useMemo(
     () => sliceSeries(data?.series ?? [], period),
@@ -40,27 +51,49 @@ export default function PerformanceClient() {
                 Rentabilidade
               </h1>
               <p className="text-muted-foreground text-xs">
-                Sua carteira contra CDI, Ibovespa e S&P 500 em reais
+                {SCOPE_DESCRIPTIONS[scope]} contra CDI, Ibovespa e S&P 500 em
+                reais
               </p>
             </div>
           </div>
 
-          <Tabs
-            value={period}
-            onValueChange={(value) => setPeriod(value as PerformancePeriodKey)}
-          >
-            <TabsList variant="line" className="gap-5">
-              {PERIODS.map((item) => (
-                <TabsTrigger
-                  key={item}
-                  value={item}
-                  className="cursor-pointer font-semibold text-sm"
-                >
-                  {PERIOD_LABELS[item]}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="flex min-w-0 flex-wrap items-center gap-4 self-start md:self-auto">
+            <Tabs
+              value={scope}
+              onValueChange={(value) => setScope(value as PerformanceScope)}
+            >
+              <TabsList>
+                {SCOPES.map((item) => (
+                  <TabsTrigger
+                    key={item}
+                    value={item}
+                    className="cursor-pointer font-semibold text-xs"
+                  >
+                    {SCOPE_LABELS[item]}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <Tabs
+              value={period}
+              onValueChange={(value) =>
+                setPeriod(value as PerformancePeriodKey)
+              }
+            >
+              <TabsList variant="line" className="gap-5">
+                {PERIODS.map((item) => (
+                  <TabsTrigger
+                    key={item}
+                    value={item}
+                    className="cursor-pointer font-semibold text-sm"
+                  >
+                    {PERIOD_LABELS[item]}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
 
         {isLoading && !data ? (

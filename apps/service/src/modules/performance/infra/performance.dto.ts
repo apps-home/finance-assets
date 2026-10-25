@@ -1,5 +1,10 @@
 import { Expose } from 'class-transformer'
-import { IsOptional, Matches } from 'class-validator'
+import { IsIn, IsOptional, Matches } from 'class-validator'
+
+import {
+  PERFORMANCE_SCOPES,
+  type PerformanceScope
+} from '../domain/performance-scope'
 
 export class PerformanceParamsDTO {
   @Expose()
@@ -15,4 +20,11 @@ export class PerformanceParamsDTO {
     message: 'O período final deve estar no formato AAAA-MM'
   })
   to?: string
+
+  @Expose()
+  @IsOptional()
+  @IsIn(PERFORMANCE_SCOPES, {
+    message: 'O escopo deve ser all, variable ou fixed'
+  })
+  scope?: PerformanceScope
 }

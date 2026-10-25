@@ -9,6 +9,7 @@ import {
   type BenchmarkDataGateway,
   BenchmarkType
 } from '@/core/http/external/benchmark/benchmark-data.gateway'
+import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 
 import { GetPortfolioPerformanceUseCase } from './get-portfolio-performance'
 import { SyncBenchmarksUseCase } from './sync-benchmarks'
@@ -45,6 +46,7 @@ describe('GetPortfolioPerformanceUseCase', () => {
 
     useCase = new GetPortfolioPerformanceUseCase(
       budgetRepository,
+      categoryRepository,
       benchmarkRepository,
       new SyncBenchmarksUseCase(benchmarkRepository, {
         fetchMonthlyReturns
@@ -149,6 +151,69 @@ describe('GetPortfolioPerformanceUseCase', () => {
     expect(fetchMonthlyReturns).toHaveBeenCalledWith(BenchmarkType.CDI, {
       year: 2026,
       month: 2
+    })
+  })
+
+  describe('scope', () => {
+    beforeEach(() => {
+      categoryRepository.items.push(
+        makeCategory({
+          id: 'cat-fixed',
+          userId: 'user-1',
+          type: CategoryType.FIXED,
+          years: [2026]
+        }),
+        makeCategory({
+          id: 'cat-stocks',
+          userId: 'user-1',
+          type: CategoryType.VARIABLE_BR,
+          years: [2026]
+        })
+      )
+
+      // Renda fixa rende 1%/mês e renda variável 10%/mês
+      for (const [month, fixed, stocks] of [
+        [1, 1000, 1000],
+        [2, 1010, 1100]
+      ] as const) {
+        addBudget('user-1', 'cat-fixed', month, fixed)
+        addBudget('user-1', 'cat-stocks', month, stocks)
+      }
+    })
+
+    function portfolioOf(result: { value: unknown }) {
+      return (result.value as { series: Array<{ portfolio: number }> })
+        .series[1].portfolio
+    }
+
+    it('should use every category by default', async () => {
+      // 2000 -> 2110: 5,5%
+      expect(portfolioOf(await useCase.execute('user-1'))).toBeCloseTo(5.5)
+    })
+
+    it('should consider only variable income', async () => {
+      expect(
+        portfolioOf(await useCase.execute('user-1', { scope: 'variable' }))
+      ).toBeCloseTo(10)
+    })
+
+    it('should consider only fixed income', async () => {
+      expect(
+        portfolioOf(await useCase.execute('user-1', { scope: 'fixed' }))
+      ).toBeCloseTo(1)
+    })
+
+    it('should return an empty result when the scope has no records', async () => {
+      categoryRepository.items = categoryRepository.items.filter(
+        (category) => category.type !== CategoryType.FIXED
+      )
+      budgetRepository.items = budgetRepository.items.filter(
+        (budget) => budget.categoryId !== 'cat-fixed'
+      )
+
+      const result = await useCase.execute('user-1', { scope: 'fixed' })
+
+      expect((result.value as { series: unknown[] }).series).toEqual([])
     })
   })
 

@@ -85,15 +85,15 @@ export class SyncAssetDividendsUseCase {
 
       if (!asset?.isActive || !asset.quantity) continue
 
-      let exchangeRate: number | null = null
+      let monthlyRates: MonthlyRate[] = []
 
       if (target.currency !== 'BRL') {
-        exchangeRate = await this.findLatestExchangeRate(
+        monthlyRates = await this.loadMonthlyRates(
           target.userId,
           target.categoryId
         )
 
-        if (!exchangeRate) {
+        if (monthlyRates.length === 0) {
           this.logger.warn(
             `No exchange rate found for category ${target.categoryId}; skipping ${ticker} dividends for this asset.`
           )
@@ -113,6 +113,12 @@ export class SyncAssetDividendsUseCase {
 
           if (entitlementDate < ownedSince) continue
         }
+
+        // Câmbio do budget do mês do pagamento (ou do mês registrado mais próximo)
+        const exchangeRate =
+          target.currency === 'BRL'
+            ? null
+            : pickRate(monthlyRates, item.paymentDate)
 
         const type = item.type as DividendType
         const amount = Math.round(item.rateAmount * asset.quantity * 100) / 100
@@ -176,16 +182,43 @@ export class SyncAssetDividendsUseCase {
     return right(result)
   }
 
-  private async findLatestExchangeRate(
+  private async loadMonthlyRates(
     userId: string,
     categoryId: string
-  ): Promise<number | null> {
-    // Budgets vêm do mais recente para o mais antigo
+  ): Promise<MonthlyRate[]> {
     const budgets = await this.budgetRepository.list({ userId, categoryId })
 
-    return (
-      budgets.find((budget) => (budget.exchangeRate ?? 0) > 0)?.exchangeRate ??
-      null
+    return budgets.flatMap((budget) =>
+      (budget.exchangeRate ?? 0) > 0
+        ? [
+            {
+              monthIndex: budget.year * 12 + (budget.month - 1),
+              rate: budget.exchangeRate as number
+            }
+          ]
+        : []
     )
   }
+}
+
+interface MonthlyRate {
+  /** ano * 12 + (mês - 1), para comparar a distância entre meses */
+  monthIndex: number
+  rate: number
+}
+
+/** Câmbio do mês da data; sem budget no mês, o do mês registrado mais próximo */
+function pickRate(rates: MonthlyRate[], date: Date): number {
+  const target = date.getUTCFullYear() * 12 + date.getUTCMonth()
+
+  return rates.reduce((best, current) => {
+    const bestDistance = Math.abs(best.monthIndex - target)
+    const currentDistance = Math.abs(current.monthIndex - target)
+
+    // Empate: prefere o mês anterior, que já tinha o câmbio fechado
+    return currentDistance < bestDistance ||
+      (currentDistance === bestDistance && current.monthIndex < best.monthIndex)
+      ? current
+      : best
+  }).rate
 }

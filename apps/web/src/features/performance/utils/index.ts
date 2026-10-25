@@ -1,4 +1,8 @@
-import type { PerformancePeriodKey, PerformancePoint } from '../api/types'
+import type {
+  PerformancePeriodKey,
+  PerformancePoint,
+  PerformanceScope
+} from '../api/types'
 
 export type SeriesKey = 'portfolio' | 'cdi' | 'ibov' | 'sp500'
 
@@ -18,6 +22,18 @@ export const SERIES_COLORS: Record<SeriesKey, string> = {
 }
 
 export const SERIES_KEYS: SeriesKey[] = ['portfolio', 'cdi', 'ibov', 'sp500']
+
+export const SCOPE_LABELS: Record<PerformanceScope, string> = {
+  all: 'Tudo',
+  variable: 'Renda variável',
+  fixed: 'Renda fixa'
+}
+
+export const SCOPE_DESCRIPTIONS: Record<PerformanceScope, string> = {
+  all: 'Todas as categorias',
+  variable: 'Ações, FIIs e cripto',
+  fixed: 'Somente renda fixa'
+}
 
 export const PERIOD_LABELS: Record<PerformancePeriodKey, string> = {
   ytd: 'No ano',

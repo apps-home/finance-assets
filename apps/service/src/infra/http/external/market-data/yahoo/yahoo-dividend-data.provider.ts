@@ -39,7 +39,8 @@ export class YahooDividendDataProvider implements DividendDataProvider {
         this.httpService.get<YahooChartResponse>(
           `${this.baseUrl}/${encodeURIComponent(`${ticker}.SA`)}`,
           {
-            params: { range: '2y', interval: '3mo', events: 'div' },
+            // 1d: com barras maiores o Yahoo agrupa os eventos por barra e perde proventos
+            params: { range: '2y', interval: '1d', events: 'div' },
             headers: { 'User-Agent': 'Mozilla/5.0' }
           }
         )
