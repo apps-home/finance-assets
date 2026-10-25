@@ -17,9 +17,11 @@ import { CreateAssetUseCase } from '../application/use-cases/create-asset'
 import { DeleteAssetUseCase } from '../application/use-cases/delete-asset'
 import { FindAssetByIdUseCase } from '../application/use-cases/find-asset-by-id'
 import { FindAssetsUseCase } from '../application/use-cases/find-assets'
+import { GetAssetPriceHistoryUseCase } from '../application/use-cases/get-asset-price-history'
 import { GetPortfolioSummaryUseCase } from '../application/use-cases/get-portfolio-summary'
 import { UpdateAssetUseCase } from '../application/use-cases/update-asset'
 import {
+  AssetPriceHistoryParamsDTO,
   CreateAssetDTO,
   FindAssetsParamsDTO,
   UpdateAssetDTO
@@ -33,7 +35,8 @@ export class AssetController {
     private readonly findAssetByIdUseCase: FindAssetByIdUseCase,
     private readonly updateAssetUseCase: UpdateAssetUseCase,
     private readonly deleteAssetUseCase: DeleteAssetUseCase,
-    private readonly getPortfolioSummaryUseCase: GetPortfolioSummaryUseCase
+    private readonly getPortfolioSummaryUseCase: GetPortfolioSummaryUseCase,
+    private readonly getAssetPriceHistoryUseCase: GetAssetPriceHistoryUseCase
   ) {}
 
   @Post()
@@ -67,6 +70,25 @@ export class AssetController {
   @Get('portfolio')
   async portfolio(@CurrentUserId() userId: string) {
     const result = await this.getPortfolioSummaryUseCase.execute(userId)
+
+    if (result.isLeft()) {
+      throw toHttpException(result.value)
+    }
+
+    return result.value
+  }
+
+  @Get(':id/history')
+  async history(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Query() { range }: AssetPriceHistoryParamsDTO,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.getAssetPriceHistoryUseCase.execute(
+      userId,
+      id,
+      range
+    )
 
     if (result.isLeft()) {
       throw toHttpException(result.value)

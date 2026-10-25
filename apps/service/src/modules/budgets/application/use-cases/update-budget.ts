@@ -25,9 +25,9 @@ export class UpdateBudgetUseCase {
     }
 
     try {
-      const { amount, exchangeRate, dividendAmount } = data
+      const { amount, exchangeRate, dividendAmount, contributionAmount } = data
 
-      existingBudget.update({ dividendAmount })
+      existingBudget.update({ dividendAmount, contributionAmount })
 
       if (amount !== undefined || exchangeRate !== undefined) {
         existingBudget.changeAmount(

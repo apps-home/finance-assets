@@ -6,6 +6,8 @@ import type {
   CreateAssetDTO,
   ListAssetsParams,
   PortfolioSummary,
+  PriceHistory,
+  PriceHistoryRange,
   UpdateAssetDTO
 } from './types'
 
@@ -63,4 +65,18 @@ export async function updateAsset(
  */
 export async function deleteAsset(id: string): Promise<void> {
   await apiClient.delete(`${BASE_URL}/${id}`)
+}
+
+/**
+ * Histórico de cotação do ativo no período (fonte externa, com cache no servidor)
+ */
+export async function getAssetPriceHistory(
+  id: string,
+  range: PriceHistoryRange
+): Promise<PriceHistory> {
+  const response = await apiClient.get<PriceHistory>(
+    `${BASE_URL}/${id}/history`,
+    { params: { range } }
+  )
+  return response.data
 }

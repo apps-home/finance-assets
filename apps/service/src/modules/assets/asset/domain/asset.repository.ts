@@ -30,6 +30,7 @@ export abstract class AssetRepository {
   abstract findById(id: string, userId: string): Promise<Asset | null>
   abstract findByIdForSystem(id: string): Promise<Asset | null>
   abstract delete(id: string): Promise<void>
+  abstract markDividendsImported(assetIds: string[], at: Date): Promise<void>
   abstract findAllWithTicker(): Promise<AssetWithCategoryType[]>
   abstract findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]>
 }

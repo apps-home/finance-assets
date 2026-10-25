@@ -46,6 +46,7 @@ import { formatPercentage } from '@/shared/utils/format-percentage'
 import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 import { AssetDividends } from './AssetDividends'
+import { PriceHistoryChart } from './PriceHistoryChart'
 import { DetailItem, MetricCard, PMGauge, Section, Stat } from './parts'
 
 interface AssetDetailSheetProps {
@@ -55,6 +56,13 @@ interface AssetDetailSheetProps {
   onEdit: (asset: AssetWithCategory) => void
   onDelete: (asset: AssetWithCategory) => void
 }
+
+// Histórico de cotação só existe para ativos com cotação de mercado (e ticker)
+const PRICE_HISTORY_TYPES: CategoryType[] = [
+  CategoryType.VARIABLE_BR,
+  CategoryType.FII,
+  CategoryType.VARIABLE_US
+]
 
 const trendBadge = (positive: boolean) =>
   positive ? TREND_CLASSES.positive.badge : TREND_CLASSES.negative.badge
@@ -173,6 +181,14 @@ export function AssetDetailSheet({
         </SheetHeader>
 
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
+          {asset.ticker && PRICE_HISTORY_TYPES.includes(catType) && (
+            <>
+              <PriceHistoryChart assetId={asset.id} currency={currency} />
+
+              <Separator />
+            </>
+          )}
+
           <Section title="Indicadores para decisão">
             <MetricCard
               title="Cotação vs. mês anterior (MTD)"

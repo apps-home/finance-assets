@@ -7,6 +7,7 @@ import { CompetenceModule } from './modules/assets/competences/competence.module
 import { WishlistModule } from './modules/assets/wishlist/wishlist.module'
 import { BudgetModule } from './modules/budgets/budget.module'
 import { DividendModule } from './modules/dividends/dividend.module'
+import { PerformanceModule } from './modules/performance/performance.module'
 import { UserModule } from './modules/user/user.module'
 
 @Module({
@@ -18,7 +19,8 @@ import { UserModule } from './modules/user/user.module'
     AssetModule,
     UserModule,
     WishlistModule,
-    DividendModule
+    DividendModule,
+    PerformanceModule
   ]
 })
 export class AppModule {}

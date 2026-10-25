@@ -125,4 +125,40 @@ describe('BackfillDividendsUseCase', () => {
     ]
     expect(jobs[0].data.targets).toHaveLength(2)
   })
+
+  it('should skip assets whose dividends were already imported', async () => {
+    const { asset } = await seedAsset('user-1', CategoryType.FII, 'MXRF11')
+    await seedAsset('user-1', CategoryType.FII, 'BTCI11')
+    asset.markDividendsImported(new Date())
+
+    const result = await sut.execute('user-1')
+
+    expect(result.value).toEqual({ enqueued: 1 })
+
+    const [, jobs] = publisher.publishBulk.mock.calls[0] as unknown as [
+      string,
+      Array<{ data: { ticker: string } }>
+    ]
+    expect(jobs.map((job) => job.data.ticker)).toEqual(['BTCI11'])
+  })
+
+  it('should not publish anything when every asset was already imported', async () => {
+    const { asset } = await seedAsset('user-1', CategoryType.FII, 'MXRF11')
+    asset.markDividendsImported(new Date())
+
+    const result = await sut.execute('user-1')
+
+    expect(result.value).toEqual({ enqueued: 0 })
+    expect(publisher.publishBulk).not.toHaveBeenCalled()
+  })
+
+  it('should import again after the ticker changes', async () => {
+    const { asset } = await seedAsset('user-1', CategoryType.FII, 'MXRF11')
+    asset.markDividendsImported(new Date())
+    asset.update({ ticker: 'BTCI11' })
+
+    const result = await sut.execute('user-1')
+
+    expect(result.value).toEqual({ enqueued: 1 })
+  })
 })

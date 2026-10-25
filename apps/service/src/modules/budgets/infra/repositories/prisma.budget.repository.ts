@@ -42,6 +42,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
         amount: budget.amount,
         exchangeRate: budget.exchangeRate,
         dividendAmount: budget.dividendAmount,
+        contributionAmount: budget.contributionAmount,
         updatedAt: budget.updatedAt
       }
     })

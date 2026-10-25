@@ -19,7 +19,7 @@ import { DividendSource, DividendType } from '../../domain/dividend.entity'
 import { SyncAssetDividendsUseCase } from './sync-asset-dividends'
 
 class FakeDividendDataGateway extends DividendDataGateway {
-  public dividends: ExternalDividend[] = []
+  public dividends: ExternalDividend[] | null = []
 
   getProvider(): DividendDataProvider {
     return { fetchDividends: async () => this.dividends }
@@ -189,6 +189,33 @@ describe('SyncAssetDividendsUseCase', () => {
         paymentDate: day('2020-09-10')
       }
     ]
+
+    it('should mark the asset as imported, even when the ticker has no dividends', async () => {
+      const { asset, payload } = await seed()
+      gateway.dividends = []
+
+      await sut.execute({ ...payload, since: '2020-01-01T00:00:00.000Z' })
+
+      expect(asset.dividendsImportedAt).toBeInstanceOf(Date)
+    })
+
+    it('should not mark the asset as imported when the provider fails', async () => {
+      const { asset, payload } = await seed()
+      gateway.dividends = null
+
+      await sut.execute({ ...payload, since: '2020-01-01T00:00:00.000Z' })
+
+      expect(asset.dividendsImportedAt).toBeNull()
+    })
+
+    it('should not mark the asset as imported by the regular (non-backfill) sync', async () => {
+      const { asset, payload } = await seed()
+      gateway.dividends = history
+
+      await sut.execute(payload)
+
+      expect(asset.dividendsImportedAt).toBeNull()
+    })
 
     it('should import payments made after "since" even if before the asset registration', async () => {
       const { payload } = await seed()

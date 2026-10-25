@@ -71,7 +71,7 @@ export function useBackfillDividends() {
 
       if (enqueued === 0) {
         toast.info(
-          'Nenhum ativo elegível: é preciso ter ticker e categoria de Ações BR, FIIs ou Ações US.'
+          'Nada a importar: todos os ativos elegíveis (com ticker, em Ações BR, FIIs ou Ações US) já foram importados.'
         )
         return
       }

@@ -12,6 +12,8 @@ export class PrismaBudgetMapper {
       amount: Number(raw.amount),
       exchangeRate: Number(raw.exchangeRate) || null,
       dividendAmount: raw.dividendAmount ? Number(raw.dividendAmount) : null,
+      contributionAmount:
+        raw.contributionAmount != null ? Number(raw.contributionAmount) : null,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     })
@@ -26,6 +28,7 @@ export class PrismaBudgetMapper {
       amount: budget.amount,
       exchangeRate: budget.exchangeRate,
       dividendAmount: budget.dividendAmount,
+      contributionAmount: budget.contributionAmount,
       createdAt: budget.createdAt,
       updatedAt: budget.updatedAt
     }

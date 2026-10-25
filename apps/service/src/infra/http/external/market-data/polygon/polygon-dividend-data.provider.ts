@@ -33,10 +33,10 @@ export class PolygonDividendDataProvider implements DividendDataProvider {
     this.POLYGON_API_KEY = this.env.get('POLYGON_API_KEY')
   }
 
-  async fetchDividends(ticker: string): Promise<ExternalDividend[]> {
+  async fetchDividends(ticker: string): Promise<ExternalDividend[] | null> {
     if (!this.POLYGON_API_KEY) {
       this.logger.warn('POLYGON_API_KEY is not configured. Skipping dividends.')
-      return []
+      return null
     }
 
     try {
@@ -79,7 +79,7 @@ export class PolygonDividendDataProvider implements DividendDataProvider {
           error instanceof Error ? error.message : error
         )
       }
-      return []
+      return null
     }
   }
 }

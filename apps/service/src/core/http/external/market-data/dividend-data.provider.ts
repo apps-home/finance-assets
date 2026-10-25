@@ -9,5 +9,6 @@ export interface ExternalDividend {
 }
 
 export abstract class DividendDataProvider {
-  abstract fetchDividends(ticker: string): Promise<ExternalDividend[]>
+  /** `null` quando a consulta falhou (diferente de um ticker sem proventos, `[]`) */
+  abstract fetchDividends(ticker: string): Promise<ExternalDividend[] | null>
 }

@@ -10,6 +10,8 @@ export interface BudgetProps {
   amount: number
   exchangeRate?: number | null
   dividendAmount?: number | null
+  /** Aporte líquido do mês em R$ (usado no cálculo de rentabilidade) */
+  contributionAmount?: number | null
   createdAt: Date
   updatedAt: Date
 }
@@ -46,6 +48,8 @@ export class Budget implements BudgetProps {
       )
     }
 
+    Budget.assertValidContribution(props.contributionAmount)
+
     return new Budget({
       id: props.id || crypto.randomUUID(),
       categoryId: props.categoryId,
@@ -54,6 +58,7 @@ export class Budget implements BudgetProps {
       amount: props.amount,
       exchangeRate: props.exchangeRate,
       dividendAmount: props.dividendAmount,
+      contributionAmount: props.contributionAmount,
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date()
     })
@@ -84,10 +89,18 @@ export class Budget implements BudgetProps {
       )
     }
 
+    Budget.assertValidContribution(props.contributionAmount)
+
     this._props = {
       ...this._props,
       ...omitUndefined(props),
       updatedAt: new Date()
+    }
+  }
+
+  private static assertValidContribution(value?: number | null): void {
+    if (value !== null && value !== undefined && !Number.isFinite(value)) {
+      throw new PayloadError('Contribution amount must be a valid number')
     }
   }
 
@@ -140,6 +153,10 @@ export class Budget implements BudgetProps {
 
   get dividendAmount(): number | null | undefined {
     return this._props.dividendAmount
+  }
+
+  get contributionAmount(): number | null | undefined {
+    return this._props.contributionAmount
   }
 
   get createdAt(): Date {

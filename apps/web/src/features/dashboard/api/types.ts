@@ -6,6 +6,7 @@ export interface Budget {
   amount: number
   exchangeRate?: number | null
   dividendAmount?: number | null
+  contributionAmount?: number | null
   createdAt: string
   updatedAt: string
 }
@@ -17,6 +18,7 @@ export interface CreateBudgetDTO {
   amount: number
   exchangeRate?: number | null
   dividendAmount?: number | null
+  contributionAmount?: number | null
 }
 
 export interface UpdateBudgetDTO {
@@ -26,6 +28,7 @@ export interface UpdateBudgetDTO {
   amount?: number
   exchangeRate?: number | null
   dividendAmount?: number | null
+  contributionAmount?: number | null
 }
 
 export interface ListBudgetsParams {

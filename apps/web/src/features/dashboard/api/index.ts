@@ -38,7 +38,8 @@ export async function createBudget(data: CreateBudgetDTO): Promise<Budget> {
     year: data.year,
     amount: data.amount,
     exchangeRate: data.exchangeRate || 1,
-    dividendAmount: data.dividendAmount || 0
+    dividendAmount: data.dividendAmount || 0,
+    contributionAmount: data.contributionAmount || 0
   })
   return response.data
 }

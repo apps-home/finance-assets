@@ -86,6 +86,7 @@ export class PrismaAssetRepository implements AssetRepository {
         isActive: asset.isActive,
         currentClosePrice: asset.currentClosePrice,
         lastMonthClosePrice: asset.lastMonthClosePrice,
+        dividendsImportedAt: asset.dividendsImportedAt,
         updatedAt: asset.updatedAt
       }
     })
@@ -94,6 +95,15 @@ export class PrismaAssetRepository implements AssetRepository {
   async delete(id: string): Promise<void> {
     await this.prisma.asset.delete({
       where: { id }
+    })
+  }
+
+  async markDividendsImported(assetIds: string[], at: Date): Promise<void> {
+    if (assetIds.length === 0) return
+
+    await this.prisma.asset.updateMany({
+      where: { id: { in: assetIds } },
+      data: { dividendsImportedAt: at }
     })
   }
 

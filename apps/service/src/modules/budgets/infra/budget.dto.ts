@@ -80,6 +80,24 @@ export class CreateBudgetDTO {
   )
   @Min(0, { message: 'O valor de dividendos não pode ser negativo' })
   dividendAmount?: number | null
+
+  @Expose()
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') {
+      return null
+    }
+    return Number(value)
+  })
+  @IsNumber(
+    {
+      allowNaN: false,
+      allowInfinity: false,
+      maxDecimalPlaces: 2
+    },
+    { message: 'O valor do aporte deve ser um número válido' }
+  )
+  contributionAmount?: number | null
 }
 
 export class UpdateBudgetDTO extends PartialType(

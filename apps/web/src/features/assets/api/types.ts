@@ -123,3 +123,19 @@ export interface PortfolioSummary {
     losers: PortfolioPosition[]
   }
 }
+
+export type PriceHistoryRange = '5d' | '1m' | 'ytd' | '1y' | '3y' | '5y'
+
+export interface PriceHistoryPoint {
+  date: string
+  close: number
+}
+
+export interface PriceHistory {
+  ticker: string
+  currency: string
+  range: PriceHistoryRange
+  points: PriceHistoryPoint[]
+  change: number
+  changePercent: number | null
+}

@@ -50,13 +50,15 @@ export function FinancialTable({
 
   const [tempValue, setTempValue] = useState('')
   const [tempDividend, setTempDividend] = useState('')
+  const [tempContribution, setTempContribution] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
   const handleEdit = (
     rowIndex: number,
     columnName: string,
     currentValue: number,
-    currentDividend?: number
+    currentDividend?: number,
+    currentContribution?: number
   ) => {
     setEditingCell({ row: rowIndex, col: columnName })
 
@@ -67,6 +69,14 @@ export function FinancialTable({
       setTempDividend(formatCurrencyInput(dividendCentavos))
     } else {
       setTempDividend('')
+    }
+    if (currentContribution && currentContribution > 0) {
+      const contributionCentavos = Math.round(
+        currentContribution * 100
+      ).toString()
+      setTempContribution(formatCurrencyInput(contributionCentavos))
+    } else {
+      setTempContribution('')
     }
   }
 
@@ -101,7 +111,8 @@ export function FinancialTable({
       year: year,
       amount: amount,
       exchangeRate: exchangeRate,
-      dividendAmount: dividendAmount
+      dividendAmount: dividendAmount,
+      contributionAmount: tempContribution ? parseValue(tempContribution) : null
     }
 
     try {
@@ -112,6 +123,7 @@ export function FinancialTable({
       setEditingCell(null)
       setTempValue('')
       setTempDividend('')
+      setTempContribution('')
     } catch (error) {
       console.error('Erro ao salvar', error)
     } finally {
@@ -123,6 +135,7 @@ export function FinancialTable({
     setEditingCell(null)
     setTempValue('')
     setTempDividend('')
+    setTempContribution('')
   }
 
   const summaryStats = useMemo(() => {
@@ -274,7 +287,8 @@ export function FinancialTable({
     columnName: string,
     value: unknown,
     dividendValue?: number,
-    exchangeRate = 1
+    exchangeRate = 1,
+    contributionValue?: number
   ) => {
     const numericValue = typeof value === 'number' ? value : 0
     // O valor guardado já está convertido pela cotação; a edição trabalha com o valor original
@@ -294,7 +308,13 @@ export function FinancialTable({
       >
         <PopoverTrigger
           onClick={() =>
-            handleEdit(rowIndex, columnName, originalValue, dividendValue)
+            handleEdit(
+              rowIndex,
+              columnName,
+              originalValue,
+              dividendValue,
+              contributionValue
+            )
           }
           className="group relative -m-1.5 flex w-full cursor-pointer items-center justify-end rounded-md p-1.5 transition-colors hover:bg-muted/80 focus:outline-none sm:pr-8"
         >
@@ -410,6 +430,34 @@ export function FinancialTable({
                   />
                 </div>
               )}
+
+              <div className="space-y-1">
+                <label
+                  htmlFor={`contrib-${rowIndex}-${columnName}`}
+                  className="font-medium text-[11px] text-muted-foreground"
+                >
+                  Aporte líquido no mês (R$):
+                </label>
+                <input
+                  id={`contrib-${rowIndex}-${columnName}`}
+                  type="text"
+                  value={tempContribution}
+                  disabled={isSaving}
+                  onChange={(e) =>
+                    setTempContribution(formatCurrencyInput(e.target.value))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSave()
+                    if (e.key === 'Escape') handleCancel()
+                  }}
+                  className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-base text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:py-1.5 sm:text-xs"
+                  placeholder="R$ 0,00"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Quanto você investiu a mais neste mês. Usado para calcular a
+                  rentabilidade real da carteira.
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-1">
@@ -504,6 +552,10 @@ export function FinancialTable({
                     typeof row[`${cat.name}_dividend`] === 'number'
                       ? (row[`${cat.name}_dividend`] as number)
                       : undefined
+                  const contributionVal =
+                    typeof row[`${cat.name}_contribution`] === 'number'
+                      ? (row[`${cat.name}_contribution`] as number)
+                      : undefined
                   const cellExchangeRate =
                     typeof row[`${cat.name}_exchangeRate`] === 'number'
                       ? (row[`${cat.name}_exchangeRate`] as number)
@@ -519,7 +571,8 @@ export function FinancialTable({
                         cat.name,
                         row[cat.name],
                         dividendVal,
-                        cellExchangeRate
+                        cellExchangeRate,
+                        contributionVal
                       )}
                     </td>
                   )

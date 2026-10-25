@@ -5,4 +5,5 @@ export class CreateBudgetPayload {
   amount: number
   exchangeRate?: number | null
   dividendAmount?: number | null
+  contributionAmount?: number | null
 }

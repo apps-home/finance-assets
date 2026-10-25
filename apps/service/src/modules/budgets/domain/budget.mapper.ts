@@ -9,7 +9,8 @@ export class BudgetMapper {
       year: raw.year,
       amount: raw.amount,
       exchangeRate: raw.exchangeRate,
-      dividendAmount: raw.dividendAmount
+      dividendAmount: raw.dividendAmount,
+      contributionAmount: raw.contributionAmount
     })
   }
 
@@ -22,6 +23,7 @@ export class BudgetMapper {
       amount: budget.amount,
       exchangeRate: budget.exchangeRate,
       dividendAmount: budget.dividendAmount,
+      contributionAmount: budget.contributionAmount,
       createdAt: budget.createdAt,
       updatedAt: budget.updatedAt
     }

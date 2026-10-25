@@ -50,8 +50,9 @@ export function BackfillDividendsDialog({
             <span className="block">
               Busca os dividendos pagos nos últimos 12 meses de todos os seus
               ativos ativos com ticker (Ações BR, FIIs e Ações US) e registra na
-              sua lista. Lançamentos manuais não são alterados e importar de
-              novo não duplica nada.
+              sua lista. Ativos que já foram importados são pulados, então
+              clicar de novo só busca os ativos novos. Lançamentos manuais não
+              são alterados.
             </span>
             <span className="block font-medium text-foreground">
               Atenção: o valor é calculado com a quantidade ATUAL de cada ativo.

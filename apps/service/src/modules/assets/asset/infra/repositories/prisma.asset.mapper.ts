@@ -19,6 +19,7 @@ export class PrismaAssetMapper {
       lastMonthClosePrice: raw.lastMonthClosePrice
         ? Number(raw.lastMonthClosePrice)
         : null,
+      dividendsImportedAt: raw.dividendsImportedAt,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     })
@@ -36,6 +37,7 @@ export class PrismaAssetMapper {
       isActive: asset.isActive,
       currentClosePrice: asset.currentClosePrice,
       lastMonthClosePrice: asset.lastMonthClosePrice,
+      dividendsImportedAt: asset.dividendsImportedAt,
       createdAt: asset.createdAt,
       updatedAt: asset.updatedAt
     }

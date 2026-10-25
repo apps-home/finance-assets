@@ -71,6 +71,14 @@ export class InMemoryAssetRepository implements AssetRepository {
     this.items = this.items.filter((item) => item.id !== id)
   }
 
+  async markDividendsImported(assetIds: string[], at: Date): Promise<void> {
+    for (const asset of this.items) {
+      if (assetIds.includes(asset.id)) {
+        asset.markDividendsImported(at)
+      }
+    }
+  }
+
   async findAllWithTicker(): Promise<AssetWithCategoryType[]> {
     return []
   }

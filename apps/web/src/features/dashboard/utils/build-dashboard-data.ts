@@ -32,6 +32,8 @@ export function buildDashboardData(
     months[monthIndex][`${category.name}_dividend`] = budget.dividendAmount
       ? Number(budget.dividendAmount)
       : 0
+    months[monthIndex][`${category.name}_contribution`] =
+      budget.contributionAmount ? Number(budget.contributionAmount) : 0
     months[monthIndex][`${category.name}_exchangeRate`] =
       Number(budget.exchangeRate) || 1
   })

@@ -15,7 +15,8 @@ export const DEFAULT_BACKFILL_MONTHS = 12
  * Importa o histórico recente de proventos dos ativos ativos do usuário.
  * Enfileira os mesmos jobs do sync semanal (respeitando os rate limits dos
  * providers), em modo backfill: ignora a data de cadastro do ativo e usa a
- * quantidade atual.
+ * quantidade atual. Ativos já importados (`dividendsImportedAt`) são pulados:
+ * só entram os ainda não importados.
  */
 @Injectable()
 export class BackfillDividendsUseCase {
@@ -43,14 +44,16 @@ export class BackfillDividendsUseCase {
     })
 
     const jobs = buildSyncJobs(
-      items.map(({ asset, category }) => ({
-        assetId: asset.id,
-        ticker: asset.ticker,
-        userId,
-        categoryId: category.id,
-        categoryType: category.type,
-        currency: category.currency
-      })),
+      items
+        .filter(({ asset }) => !asset.dividendsImportedAt)
+        .map(({ asset, category }) => ({
+          assetId: asset.id,
+          ticker: asset.ticker,
+          userId,
+          categoryId: category.id,
+          categoryType: category.type,
+          currency: category.currency
+        })),
       since
     )
 

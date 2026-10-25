@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import {
   createAsset,
   deleteAsset,
+  getAssetPriceHistory,
   getPortfolioSummary,
   listAssets,
   updateAsset
@@ -11,6 +12,7 @@ import {
 import type {
   CreateAssetDTO,
   ListAssetsParams,
+  PriceHistoryRange,
   UpdateAssetDTO
 } from '@/features/assets/api/types'
 import { queryClient } from '@/shared/providers/query-client'
@@ -30,6 +32,17 @@ export function usePortfolioSummary() {
   return useQuery({
     queryKey: [ASSET_QUERY_KEY, 'portfolio'],
     queryFn: getPortfolioSummary,
+    placeholderData: (prev) => prev
+  })
+}
+
+// Fonte externa com cache no servidor: não refaz a consulta a cada abertura
+export function useAssetPriceHistory(id: string, range: PriceHistoryRange) {
+  return useQuery({
+    queryKey: [ASSET_QUERY_KEY, 'history', id, range],
+    queryFn: () => getAssetPriceHistory(id, range),
+    staleTime: 15 * 60 * 1000,
+    retry: false,
     placeholderData: (prev) => prev
   })
 }

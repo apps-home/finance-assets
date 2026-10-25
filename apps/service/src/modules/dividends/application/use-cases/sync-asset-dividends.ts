@@ -66,12 +66,19 @@ export class SyncAssetDividendsUseCase {
     // Uma única chamada externa por ticker, aplicada a todos os usuários
     const external = await provider.fetchDividends(ticker)
 
-    if (external.length === 0) {
+    // Falha na consulta: não marca como importado para tentar de novo depois
+    if (external === null) {
+      return right(result)
+    }
+
+    // Sem proventos só encerra o sync semanal; o backfill ainda marca o ativo
+    if (external.length === 0 && !since) {
       return right(result)
     }
 
     const now = new Date()
     const sinceTime = since ? new Date(since).getTime() : null
+    const imported: string[] = []
 
     for (const target of targets) {
       const asset = await this.assetRepository.findByIdForSystem(target.assetId)
@@ -93,6 +100,8 @@ export class SyncAssetDividendsUseCase {
           continue
         }
       }
+
+      imported.push(asset.id)
 
       for (const item of external) {
         if (sinceTime !== null) {
@@ -154,6 +163,10 @@ export class SyncAssetDividendsUseCase {
         await this.dividendRepository.save(existing)
         result.updated++
       }
+    }
+
+    if (since && imported.length > 0) {
+      await this.assetRepository.markDividendsImported(imported, now)
     }
 
     this.logger.log(

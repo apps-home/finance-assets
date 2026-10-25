@@ -17,8 +17,8 @@ export class SyncDividendsCron {
     private readonly assetRepository: AssetRepository
   ) {}
 
-  // Toda segunda-feira às 08:00 (America/Sao_Paulo)
-  @Cron('0 8 * * 1', { timeZone: 'America/Sao_Paulo' })
+  // Todo domingo às 08:00 (America/Sao_Paulo)
+  @Cron('0 8 * * 0', { timeZone: 'America/Sao_Paulo' })
   async handleCron(): Promise<void> {
     if (this.isRunning) {
       this.logger.log('Dividends sync cron job is already running.')

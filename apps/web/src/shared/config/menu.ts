@@ -1,4 +1,5 @@
 import {
+  Activity,
   BadgeDollarSign,
   Briefcase,
   FlaskConical,
@@ -42,6 +43,7 @@ export const headerMenu: MenuEntry[] = [
     items: [
       { title: 'Meus Ativos', path: '/assets', icon: Briefcase },
       { title: 'Minha Carteira', path: '/portfolio', icon: Wallet },
+      { title: 'Rentabilidade', path: '/performance', icon: Activity },
       { title: 'Categorias', path: '/categories', icon: Tags }
     ]
   },

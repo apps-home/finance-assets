@@ -13,6 +13,7 @@ export interface AssetProps {
   isActive: boolean
   currentClosePrice: number | null
   lastMonthClosePrice: number | null
+  dividendsImportedAt: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -35,6 +36,7 @@ export class Asset implements AssetProps {
       | 'isActive'
       | 'currentClosePrice'
       | 'lastMonthClosePrice'
+      | 'dividendsImportedAt'
       | 'createdAt'
       | 'updatedAt'
     >
@@ -54,6 +56,7 @@ export class Asset implements AssetProps {
       isActive: props.isActive ?? true,
       currentClosePrice: props.currentClosePrice ?? null,
       lastMonthClosePrice: props.lastMonthClosePrice ?? null,
+      dividendsImportedAt: props.dividendsImportedAt ?? null,
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date()
     })
@@ -61,7 +64,10 @@ export class Asset implements AssetProps {
 
   update(
     props: Partial<
-      Omit<AssetProps, 'id' | 'categoryId' | 'createdAt' | 'updatedAt'>
+      Omit<
+        AssetProps,
+        'id' | 'categoryId' | 'dividendsImportedAt' | 'createdAt' | 'updatedAt'
+      >
     >
   ) {
     if (props.name !== undefined && props.name.trim().length <= 1) {
@@ -72,8 +78,15 @@ export class Asset implements AssetProps {
       ...this._props,
       ...omitUndefined(props),
       ...(props.name !== undefined && { name: props.name.trim() }),
+      // Outro ticker tem outro histórico de proventos
+      ...(props.ticker !== undefined &&
+        props.ticker !== this._props.ticker && { dividendsImportedAt: null }),
       updatedAt: new Date()
     }
+  }
+
+  markDividendsImported(at: Date) {
+    this._props.dividendsImportedAt = at
   }
 
   get id(): string {
@@ -114,6 +127,10 @@ export class Asset implements AssetProps {
 
   get lastMonthClosePrice(): number | null {
     return this._props.lastMonthClosePrice
+  }
+
+  get dividendsImportedAt(): Date | null {
+    return this._props.dividendsImportedAt
   }
 
   get createdAt(): Date {

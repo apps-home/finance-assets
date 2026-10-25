@@ -11,6 +11,10 @@ import {
   ValidateIf
 } from 'class-validator'
 
+import {
+  PRICE_HISTORY_RANGES,
+  type PriceHistoryRange
+} from '@/core/http/external/market-data/price-history.gateway'
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 
 export class CreateAssetDTO {
@@ -117,4 +121,12 @@ export class FindAssetsParamsDTO {
   @IsOptional()
   @IsIn(['asc', 'desc'], { message: 'Direção da ordenação inválida' })
   order?: 'asc' | 'desc'
+}
+
+export class AssetPriceHistoryParamsDTO {
+  @IsOptional()
+  @IsIn(PRICE_HISTORY_RANGES, {
+    message: `Range must be one of: ${PRICE_HISTORY_RANGES.join(', ')}`
+  })
+  range: PriceHistoryRange = '1m'
 }

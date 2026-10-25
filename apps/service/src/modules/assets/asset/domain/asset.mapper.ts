@@ -64,6 +64,7 @@ export class AssetMapper {
       isActive: asset.isActive,
       currentClosePrice: asset.currentClosePrice ?? currentClosePrice,
       lastMonthClosePrice: asset.lastMonthClosePrice,
+      dividendsImportedAt: asset.dividendsImportedAt,
       investedValue,
       currentBalance,
       profitLoss,
