@@ -11,13 +11,14 @@ import { FindAllWithTickerAssetsUseCase } from '../../application/use-cases/find
 /**
  * Delay between requests per provider (in ms).
  * - Polygon.io / Alpha Vantage (VARIABLE_US): 18s spacing ensures max ~3.3 req/min (well under the 5 req/min ceiling).
- * - Brapi (VARIABLE_BR): has rate limits, 8s spacing as safety margin.
+ * - Brapi (VARIABLE_BR / FII): has rate limits, 8s spacing as safety margin.
  * - CoinGecko (CRYPTO): free tier ~100 req/min, 20s spacing as safety margin.
  * - FIXED: no external API call, no delay needed.
  */
 const PROVIDER_DELAY_MS: Record<CategoryType, number> = {
   [CategoryType.VARIABLE_US]: 18_000,
   [CategoryType.VARIABLE_BR]: 8_000,
+  [CategoryType.FII]: 8_000,
   [CategoryType.CRYPTO]: 20_000,
   [CategoryType.FIXED]: 0
 }

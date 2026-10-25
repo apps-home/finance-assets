@@ -456,7 +456,7 @@ export function PortfolioDashboard() {
               trend={formatPercent(totals.profitabilityPercentage)}
               trendUp={isProfit}
               variant="trend"
-            />  
+            />
           </div>
 
           {/* Gráficos de Alocação de Renda Variável */}

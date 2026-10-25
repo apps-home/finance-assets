@@ -36,6 +36,7 @@ export class MarketDataFactory implements MarketDataGateway {
         return null
 
       case CategoryType.VARIABLE_BR:
+      case CategoryType.FII:
         return this.brapiProvider
 
       case CategoryType.VARIABLE_US:

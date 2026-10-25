@@ -3,6 +3,7 @@
 import {
   Building2,
   CircleOff,
+  Eye,
   Pencil,
   Trash2,
   TrendingDown,
@@ -36,6 +37,9 @@ interface AssetCardProps {
   asset: AssetWithCategory
   onEdit: (asset: AssetWithCategory) => void
   onDelete: (asset: AssetWithCategory) => void
+  onViewDetails?: (asset: AssetWithCategory) => void
+  /** Yield on Cost (%) dos últimos 12 meses, vindo do resumo de proventos */
+  yieldOnCost?: number | null
   className?: string
 }
 
@@ -43,6 +47,8 @@ export function AssetCard({
   asset,
   onEdit,
   onDelete,
+  onViewDetails,
+  yieldOnCost,
   className
 }: AssetCardProps) {
   const hasPL = asset.profitLoss != null && asset.profitLoss !== 0
@@ -56,9 +62,11 @@ export function AssetCard({
       data-slot="asset-card"
       className={cn(
         'flex flex-col border-border transition-shadow hover:shadow-md',
+        onViewDetails && 'cursor-pointer hover:border-primary/40',
         !asset.isActive && 'bg-muted/10 opacity-60',
         className
       )}
+      onClick={() => onViewDetails?.(asset)}
     >
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-3">
         <div className="flex items-center gap-2.5">
@@ -102,7 +110,10 @@ export function AssetCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div
+          className="flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
           {!asset.isActive && (
             <Badge
               variant="secondary"
@@ -112,6 +123,25 @@ export function AssetCard({
               Inativo
             </Badge>
           )}
+
+          {onViewDetails && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 text-muted-foreground hover:text-foreground"
+                    onClick={() => onViewDetails(asset)}
+                  >
+                    <Eye className="size-3.5" />
+                  </Button>
+                }
+              />
+              <TooltipContent>Métricas e Detalhes</TooltipContent>
+            </Tooltip>
+          )}
+
           <Tooltip>
             <TooltipTrigger
               render={
@@ -148,36 +178,32 @@ export function AssetCard({
       <CardContent className="flex flex-1 flex-col justify-between gap-4 pt-1">
         <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/20 p-3 sm:grid-cols-4">
           <div className="space-y-0.5">
-            <span className="text-muted-foreground/60 text-xs">Quantidade</span>
-            <p className="font-semibold text-foreground text-xs tabular-nums">
+            <span className="text-muted-foreground text-xs">Quantidade</span>
+            <p className="font-semibold text-foreground text-sm tabular-nums">
               {asset.quantity != null ? formatQuantity(asset.quantity) : '—'}
             </p>
           </div>
           <div className="space-y-0.5">
-            <span className="text-muted-foreground/60 text-xs">
-              Preço Médio
-            </span>
-            <p className="font-semibold text-foreground text-xs tabular-nums">
+            <span className="text-muted-foreground text-xs">Preço médio</span>
+            <p className="font-semibold text-foreground text-sm tabular-nums">
               {asset.averagePrice != null
                 ? formatCurrency(asset.averagePrice, currency)
                 : '—'}
             </p>
           </div>
           <div className="space-y-0.5">
-            <span className="text-muted-foreground/60 text-xs">
-              Valor Investido
+            <span className="text-muted-foreground text-xs">
+              Total investido
             </span>
-            <p className="font-medium text-foreground text-xs tabular-nums">
+            <p className="font-semibold text-foreground text-sm tabular-nums">
               {asset.investedValue != null
                 ? formatCurrency(asset.investedValue, currency)
                 : '—'}
             </p>
           </div>
           <div className="space-y-0.5">
-            <span className="text-muted-foreground/60 text-xs">
-              Saldo Atual
-            </span>
-            <p className="font-semibold text-foreground text-xs tabular-nums">
+            <span className="text-muted-foreground text-xs">Saldo atual</span>
+            <p className="font-semibold text-foreground text-sm tabular-nums">
               {asset.currentBalance != null
                 ? formatCurrency(asset.currentBalance, currency)
                 : '—'}
@@ -185,12 +211,19 @@ export function AssetCard({
           </div>
         </div>
 
-        {catType !== 'FIXED' && (
-          <AssetPriceInfo
-            currentClosePrice={asset.currentClosePrice}
-            lastMonthClosePrice={asset.lastMonthClosePrice}
-            currency={currency}
-          />
+        <AssetPriceInfo
+          currentClosePrice={asset.currentClosePrice}
+          lastMonthClosePrice={asset.lastMonthClosePrice}
+          currency={currency}
+        />
+
+        {yieldOnCost != null && (
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground text-xs">Yield on Cost</span>
+            <span className="rounded-sm bg-emerald-500/15 px-1.5 py-0.5 font-semibold text-emerald-600 text-xs tabular-nums dark:text-emerald-400">
+              {yieldOnCost.toFixed(2)}%
+            </span>
+          </div>
         )}
 
         {hasPL && (

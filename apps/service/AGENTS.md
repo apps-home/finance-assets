@@ -44,6 +44,7 @@ O schema é dividido em dois namespaces PostgreSQL: `better-auth` (autenticaçã
 | `asset_wishlists` | Ativos monitorados / lista de desejos do usuário. Campos: `id`, `userId`, `categoryId`, `name`, `ticker`, `targetPrice`, `currentClosePrice`, `lastMonthClosePrice`, `notes`, `createdAt`, `updatedAt`. Único por `(userId, ticker)`. |
 | `asset_records` | Registro histórico mensal do valor consolidado de uma categoria. Campos: `id`, `categoryId`, `month`, `year`, `amount`, `exchangeRate`, `dividendAmount`, `createdAt`, `updatedAt`. Único por `(categoryId, month, year)`. |
 | `asset_category_competences` | Registra em quais **anos** uma categoria possui registros, otimizando queries de filtro temporal. Campos: `id`, `categoryId`, `year`. Único por `(categoryId, year)`. |
+| `asset_dividends` | Provento de um ativo (dividendo, JCP, rendimento). Campos: `id`, `assetId`, `userId`, `type` (`DividendType`), `source` (`MANUAL`\|`SYNC`), `amount` (total na moeda da categoria), `rateAmount`, `quantity`, `exchangeRate`, `comDate`, `paymentDate`. Único por `(assetId, type, paymentDate)`. |
 
 > Todas as FKs usam `onDelete: Cascade`: excluir uma categoria remove seus ativos, wishlist, registros e competências.
 
@@ -52,6 +53,7 @@ O schema é dividido em dois namespaces PostgreSQL: `better-auth` (autenticaçã
 | Valor | Descrição |
 |---|---|
 | `VARIABLE_BR` | Renda Variável — Mercado Brasileiro (Brapi) |
+| `FII` | Fundos Imobiliários (Brapi) |
 | `VARIABLE_US` | Renda Variável — Mercado Americano (Polygon, com fallback para Alpha Vantage) |
 | `CRYPTO` | Criptomoedas (CoinGecko) |
 | `FIXED` | Renda Fixa (sem cotação de mercado) |
@@ -89,6 +91,7 @@ modules/
 │   ├── competences/    # Competências anuais por categoria (somente leitura de anos + exclusão)
 │   └── wishlist/       # Lista de desejos / ativos monitorados
 ├── budgets/            # Registros mensais (AssetRecord)
+├── dividends/          # Proventos por ativo (CRUD, resumos, próximos pagamentos, sync Brapi/Polygon)
 └── user/               # Usuário do Better Auth (consulta e avatar)
 ```
 
@@ -209,6 +212,7 @@ Todos exigem `Authorization: Bearer <session token>` e respondem apenas com dado
 | **Wishlist** | `POST /wishlist`, `GET /wishlist`, `GET/PATCH/DELETE /wishlist/:id` | `categoryId`, `search`, `type`, `targetStatus` (`BELOW_OR_AT_TARGET`\|`ABOVE_TARGET`\|`NO_TARGET`), `sort=monthChange`, `order` |
 | **Budgets** | `POST /budgets`, `GET /budgets`, `GET/PATCH/DELETE /budgets/:id` | `categoryId`, `month`, `year` |
 | **Competences** | `GET /competences/years`, `GET /competences?categoryId=`, `DELETE /competences/:id` | `categoryId` (UUID) |
+| **Dividends** | `POST /dividends`, `POST /dividends/backfill`, `GET /dividends`, `GET /dividends/summary`, `GET /dividends/upcoming`, `GET/PATCH/DELETE /dividends/:id` | `assetId`, `categoryId`, `categoryType`, `type`, `year` (em `GET /dividends`); `year` (em `/summary`) |
 | **Users** | `GET /users/:id`, `PATCH /users/:id/upload-avatar`, `GET /users/:id/download-avatar` (somente o próprio usuário) | — |
 
 Observações:
@@ -287,6 +291,13 @@ A wishlist não usa evento: `CreateWishlistUseCase` consulta a cotação inicial
 
 `adapters/schedules/notify-asset-variations.cron.ts` roda de segunda a sexta às 09:00 (America/Sao_Paulo), executa `NotifyAssetVariationsUseCase` e, para cada usuário com alertas (maiores altas e quedas da carteira e da wishlist, e metas de preço atingidas), dispara o webhook `assets/notify` do n8n.
 
+### Proventos (`modules/dividends`)
+
+- **Lançamento:** `POST /dividends` recebe `assetId`, `paymentDate` e `amount` (total) **ou** `rateAmount` (por cota; o total vira `rateAmount × quantidade do ativo`). Em categorias fora de BRL o `exchangeRate` é obrigatório. `paymentDate` é uma data de calendário normalizada para 00:00 UTC; `(assetId, type, paymentDate)` é único.
+- **Resumo** (`GET /dividends/summary?year=`): só conta proventos com `paymentDate <= hoje`, em **BRL** (`amount × exchangeRate`). Retorna `totalYear`, `totalCurrentMonth`, `monthlyAverage` (ano corrente: dividido pelos meses decorridos; anos passados: por 12), `byMonth`, `last12Months`, `byCategoryType` (Ações BR / FIIs / Stocks US…), `byCategory` e `byAsset` com **Yield on Cost** (proventos dos últimos 12 meses na moeda do ativo ÷ `quantidade × preço médio`). Proventos futuros aparecem em `GET /dividends/upcoming`.
+- **Sync automático:** `adapters/schedules/sync-dividends.cron.ts` (segunda 08:00, America/Sao_Paulo) enfileira um job por ticker + tipo na fila `dividend-processing`; o `SyncDividendsProcessor` chama `SyncAssetDividendsUseCase`, que busca via `DividendDataGateway` (Brapi `?dividends=true` para `VARIABLE_BR`/`FII`; Polygon/Massive `/stocks/v1/dividends` para `VARIABLE_US`) e grava com `source = SYNC`. Regras: só entra provento cuja data COM (ou de pagamento) é posterior ao cadastro do ativo; lançamentos `MANUAL` nunca são sobrescritos (editar um provento sincronizado o torna `MANUAL`); pagamentos já realizados não são recalculados; em USD usa o câmbio do budget mais recente da categoria e ignora o ativo se não houver. A quantidade usada é a atual do ativo (o sistema não guarda histórico de posição).
+- **Backfill:** `POST /dividends/backfill` (body opcional `{ months }`, 1–24, padrão 12) enfileira os mesmos jobs do sync, só para os ativos ativos do usuário da sessão, com `since` no payload. Em modo `since` o filtro por data de cadastro é ignorado e entra todo pagamento a partir da data. Continua idempotente e sem sobrescrever lançamentos `MANUAL`. Como usa a quantidade atual, meses anteriores a aportes ficam superestimados e meses anteriores à compra podem entrar: o usuário corrige editando a quantidade (o total é recalculado pelo valor por cota) ou excluindo. A montagem dos jobs (dedup por ticker + tipo e delays por provider) está em `adapters/build-sync-jobs.ts`, compartilhada com o cron. Resposta: `{ message, enqueued }`.
+
 ### Armazenamento de Arquivos (Cloudflare R2)
 
 O `R2StorageService` (`src/infra/storage`) é responsável pelo upload de arquivos (ex: avatar do usuário) para o bucket Cloudflare R2, retornando a URL pública do objeto armazenado.
@@ -322,6 +333,7 @@ core/
 | **Filtro por Competência** | Consulta eficiente dos anos com registros via `AssetCategoryCompetence`. |
 | **Gestão de Usuário** | Consulta de usuários e upload/download de avatar no Cloudflare R2. |
 | **Autenticação Segura** | Better Auth (OAuth Google, verificação de e-mail, sessões). A API valida o token da sessão em todas as rotas e isola os dados por usuário. |
+| **Proventos** | Registro e sincronização de dividendos/JCP/rendimentos por ativo, com resumos por mês, ano e classe (Ações BR, FIIs, Stocks US) e Yield on Cost. |
 | **Sistema de Notificações** | Integração com n8n para alertas de fechamento de mês e segurança de conta. |
 
 ---

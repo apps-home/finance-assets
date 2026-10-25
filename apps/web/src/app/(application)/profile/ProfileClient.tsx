@@ -61,7 +61,7 @@ export default function ProfileClient({ user }: ProfileClientProps) {
         >
           <TabsList
             variant="line"
-            className="w-full justify-start gap-4 overflow-x-auto"
+            className="no-scrollbar w-full justify-start gap-4 overflow-x-auto"
           >
             {TABS_LIST.map((tab) => (
               <TabsTrigger

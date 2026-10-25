@@ -6,6 +6,7 @@ import { CategoryModule } from './modules/assets/categories/category.module'
 import { CompetenceModule } from './modules/assets/competences/competence.module'
 import { WishlistModule } from './modules/assets/wishlist/wishlist.module'
 import { BudgetModule } from './modules/budgets/budget.module'
+import { DividendModule } from './modules/dividends/dividend.module'
 import { UserModule } from './modules/user/user.module'
 
 @Module({
@@ -16,7 +17,8 @@ import { UserModule } from './modules/user/user.module'
     CompetenceModule,
     AssetModule,
     UserModule,
-    WishlistModule
+    WishlistModule,
+    DividendModule
   ]
 })
 export class AppModule {}

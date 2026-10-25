@@ -25,6 +25,7 @@ import { parseValue } from '@/shared/utils/parse-value'
 
 const VARIABLE_TYPES: CategoryType[] = [
   CategoryType.VARIABLE_BR,
+  CategoryType.FII,
   CategoryType.VARIABLE_US,
   CategoryType.CRYPTO
 ]
@@ -450,7 +451,7 @@ export function FinancialTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="no-scrollbar overflow-x-auto rounded-md">
       <table className="w-full min-w-max">
         <thead className="border-border border-b bg-muted/50 text-xs">
           <tr>

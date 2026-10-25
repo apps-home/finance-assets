@@ -24,6 +24,9 @@ export class InMemoryAssetRepository implements AssetRepository {
 
       if (!category || category.userId !== params.userId) continue
       if (params.categoryId && category.id !== params.categoryId) continue
+      if (params.status && asset.isActive !== (params.status === 'ACTIVE')) {
+        continue
+      }
 
       result.push({
         asset,

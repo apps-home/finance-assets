@@ -1,20 +1,12 @@
 'use client'
 
-import { Building2, CircleOff, Pencil, Trash2 } from 'lucide-react'
+import { Fragment, useState } from 'react'
 
 import type { AssetWithCategory } from '@/features/assets/api/types'
-import { CategoryType } from '@/features/categories/api/types'
-import {
-  CATEGORY_TYPE_COLORS,
-  CATEGORY_TYPE_LABELS,
-  getCategoryCurrency
-} from '@/features/categories/utils'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
+import { AssetDetailSheet } from '@/features/assets/components/AssetDetailSheet'
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow
@@ -25,18 +17,16 @@ import {
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { formatCurrency } from '@/shared/utils/format-currency'
-import { formatQuantity } from '@/shared/utils/format-number'
-import {
-  calcMonthChange,
-  formatPercentage
-} from '@/shared/utils/format-percentage'
-import { TREND_CLASSES } from '@/shared/utils/trend-classes'
+
+import { AssetTableRow } from './AssetTableRow'
 
 interface AssetTableProps {
   assets: AssetWithCategory[]
   onEdit: (asset: AssetWithCategory) => void
   onDelete: (asset: AssetWithCategory) => void
+  onViewDetails?: (asset: AssetWithCategory) => void
+  /** Yield on Cost (%) por id de ativo, vindo do resumo de proventos */
+  yieldOnCostByAssetId?: Record<string, number>
   className?: string
 }
 
@@ -44,261 +34,95 @@ export function AssetTable({
   assets,
   onEdit,
   onDelete,
+  onViewDetails,
+  yieldOnCostByAssetId,
   className
 }: AssetTableProps) {
+  const [internalSelectedAsset, setInternalSelectedAsset] =
+    useState<AssetWithCategory | null>(null)
+  const [internalDetailOpen, setInternalDetailOpen] = useState(false)
+
   if (assets.length === 0) {
     return null
   }
 
+  const handleOpenDetail = (asset: AssetWithCategory) => {
+    if (onViewDetails) {
+      onViewDetails(asset)
+    } else {
+      setInternalSelectedAsset(asset)
+      setInternalDetailOpen(true)
+    }
+  }
+
   return (
-    <div
-      data-slot="asset-table-wrapper"
-      className={cn(
-        'overflow-hidden rounded-xl border border-border bg-card shadow-xs',
-        className
-      )}
-    >
-      <Table data-slot="asset-table">
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="sticky left-0 z-10 w-55 bg-card font-semibold text-xs">
-              Ativo
-            </TableHead>
-            <TableHead className="font-semibold text-xs">Categoria</TableHead>
-            <TableHead className="font-semibold text-xs">Corretora</TableHead>
-            <TableHead className="text-right font-semibold text-xs">
-              Quantidade
-            </TableHead>
-            <TableHead className="text-right font-semibold text-xs">
-              Preço Médio
-            </TableHead>
-            <TableHead className="text-right font-semibold text-xs">
-              Cotação Atual
-            </TableHead>
-            <TableHead className="text-right font-semibold text-xs">
-              Total Investido
-            </TableHead>
-            <TableHead className="text-right font-semibold text-xs">
-              Saldo Atual
-            </TableHead>
-            <TableHead className="text-right font-semibold text-xs">
-              Lucro / Prejuízo
-            </TableHead>
-            <TableHead className="w-22.5 text-center font-semibold text-xs">
-              Status
-            </TableHead>
-            <TableHead className="w-20 text-right font-semibold text-xs">
-              Ações
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {assets.map((asset) => {
-            const hasPL = asset.profitLoss != null && asset.profitLoss !== 0
-            const isPositivePL = hasPL && asset.profitLoss! > 0
-            const isNegativePL = hasPL && asset.profitLoss! < 0
-
-            const percentagePriceChange = calcMonthChange(
-              asset.currentClosePrice,
-              asset.lastMonthClosePrice
-            )
-
-            const catType = asset.category?.type || CategoryType.FIXED
-            const currency = getCategoryCurrency(asset.category)
-
-            return (
-              <TableRow
+    <Fragment>
+      <div
+        data-slot="asset-table-wrapper"
+        className={cn(
+          'overflow-hidden rounded-xl border border-border bg-card shadow-xs',
+          className
+        )}
+      >
+        <Table data-slot="asset-table" className="min-w-220">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="sticky left-0 z-10 w-80 bg-card font-semibold text-xs">
+                Ativo & Alocação
+              </TableHead>
+              <TableHead className="text-right font-semibold text-xs">
+                Cotação & Mês (MTD)
+              </TableHead>
+              <TableHead className="text-right font-semibold text-xs">
+                Preço Médio & Margem
+              </TableHead>
+              <TableHead className="text-right font-semibold text-xs">
+                Posição & Retorno Total
+              </TableHead>
+              <TableHead className="text-right font-semibold text-xs">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <span className="cursor-help underline decoration-dotted">
+                        Yield on Cost
+                      </span>
+                    }
+                  />
+                  <TooltipContent>
+                    Proventos dos últimos 12 meses ÷ valor investido (quantidade
+                    × preço médio)
+                  </TooltipContent>
+                </Tooltip>
+              </TableHead>
+              <TableHead className="w-20 text-right font-semibold text-xs">
+                Ações
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {assets.map((asset) => (
+              <AssetTableRow
                 key={asset.id}
-                className={cn(
-                  'transition-colors',
-                  !asset.isActive && 'bg-muted/20 opacity-60'
-                )}
-              >
-                <TableCell className="sticky left-0 z-10 bg-card">
-                  <div className="flex items-center gap-2.5">
-                    <Badge
-                      variant="default"
-                      className="shrink-0 px-2 py-0.5 font-bold text-xs"
-                    >
-                      {asset.ticker || asset.name.substring(0, 3).toUpperCase()}
-                    </Badge>
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <span className="truncate font-medium text-foreground text-xs">
-                            {asset.name}
-                          </span>
-                        }
-                      />
-                      <TooltipContent>{asset.name}</TooltipContent>
-                    </Tooltip>
-                  </div>
-                </TableCell>
+                asset={asset}
+                yieldOnCost={yieldOnCostByAssetId?.[asset.id]}
+                onView={handleOpenDetail}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
-                <TableCell>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-foreground text-xs">
-                      {asset.category?.name || '—'}
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        'w-fit border-0 px-1.5 py-0 text-[10px]',
-                        CATEGORY_TYPE_COLORS[catType]
-                      )}
-                    >
-                      {CATEGORY_TYPE_LABELS[catType] || catType}
-                    </Badge>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  {asset.broker ? (
-                    <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                      <Building2 className="size-3" />
-                      <span>{asset.broker}</span>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground/60 text-xs">—</span>
-                  )}
-                </TableCell>
-
-                <TableCell className="text-right font-medium text-foreground text-xs tabular-nums">
-                  {asset.quantity != null
-                    ? formatQuantity(asset.quantity)
-                    : '—'}
-                </TableCell>
-
-                <TableCell className="text-right font-medium text-foreground text-xs tabular-nums">
-                  {asset.averagePrice != null
-                    ? formatCurrency(asset.averagePrice, currency)
-                    : '—'}
-                </TableCell>
-
-                <TableCell className="text-right text-xs tabular-nums">
-                  {asset.currentClosePrice != null ? (
-                    <div className="flex flex-col items-end">
-                      <span className="font-semibold text-foreground">
-                        {formatCurrency(asset.currentClosePrice, currency)}
-                      </span>
-                      {percentagePriceChange !== null && (
-                        <span
-                          className={cn(
-                            'font-medium text-[10px]',
-                            percentagePriceChange >= 0
-                              ? TREND_CLASSES.positive.text
-                              : TREND_CLASSES.negative.text
-                          )}
-                        >
-                          {formatPercentage(percentagePriceChange)}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground/60 italic">—</span>
-                  )}
-                </TableCell>
-
-                <TableCell className="text-right font-medium text-foreground text-xs tabular-nums">
-                  {asset.investedValue != null
-                    ? formatCurrency(asset.investedValue, currency)
-                    : '—'}
-                </TableCell>
-
-                <TableCell className="text-right font-semibold text-foreground text-xs tabular-nums">
-                  {asset.currentBalance != null
-                    ? formatCurrency(asset.currentBalance, currency)
-                    : '—'}
-                </TableCell>
-
-                <TableCell className="text-right text-xs tabular-nums">
-                  {hasPL ? (
-                    <div className="flex flex-col items-end gap-0.5">
-                      <span
-                        className={cn(
-                          'font-semibold',
-                          isPositivePL && TREND_CLASSES.positive.text,
-                          isNegativePL && TREND_CLASSES.negative.text
-                        )}
-                      >
-                        {isPositivePL ? '+' : ''}
-                        {formatCurrency(asset.profitLoss!, currency)}
-                      </span>
-                      {asset.profitabilityPercentage != null && (
-                        <span
-                          className={cn(
-                            'font-medium text-[10px]',
-                            isPositivePL && TREND_CLASSES.positive.text,
-                            isNegativePL && TREND_CLASSES.negative.text
-                          )}
-                        >
-                          {formatPercentage(asset.profitabilityPercentage)}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground/60 text-xs">—</span>
-                  )}
-                </TableCell>
-
-                <TableCell className="text-center">
-                  {asset.isActive ? (
-                    <Badge
-                      variant="secondary"
-                      className="border-0 bg-emerald-500/10 text-[10px] text-emerald-600 dark:text-emerald-400"
-                    >
-                      Ativo
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className="gap-1 border-0 bg-muted text-[10px] text-muted-foreground"
-                    >
-                      <CircleOff className="size-2.5" />
-                      Inativo
-                    </Badge>
-                  )}
-                </TableCell>
-
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-7"
-                            onClick={() => onEdit(asset)}
-                          >
-                            <Pencil className="size-3.5 text-muted-foreground" />
-                          </Button>
-                        }
-                      />
-                      <TooltipContent>Editar Ativo</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-7 text-destructive hover:text-destructive/80"
-                            onClick={() => onDelete(asset)}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        }
-                      />
-                      <TooltipContent>Remover Ativo</TooltipContent>
-                    </Tooltip>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
-    </div>
+      {!onViewDetails && (
+        <AssetDetailSheet
+          asset={internalSelectedAsset}
+          open={internalDetailOpen}
+          onOpenChange={setInternalDetailOpen}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      )}
+    </Fragment>
   )
 }

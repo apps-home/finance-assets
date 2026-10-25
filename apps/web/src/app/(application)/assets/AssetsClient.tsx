@@ -9,6 +9,7 @@ import {
   ListAssetsParams
 } from '@/features/assets/api/types'
 import { AssetCard } from '@/features/assets/components/AssetCard'
+import { AssetDetailSheet } from '@/features/assets/components/AssetDetailSheet'
 import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
 import { AssetSummaryCards } from '@/features/assets/components/AssetSummaryCards'
 import { AssetTable } from '@/features/assets/components/AssetTable'
@@ -21,6 +22,7 @@ import {
 import { CategoryType } from '@/features/categories/api/types'
 import { useCategories } from '@/features/categories/hooks/use-category'
 import { CATEGORY_TYPE_OPTIONS } from '@/features/categories/utils'
+import { useDividendsSummary } from '@/features/dividends/hooks/use-dividends'
 import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { DollarRateBadge } from '@/shared/components/DollarRateBadge'
 import { ListFilters } from '@/shared/components/ListFilters'
@@ -42,6 +44,9 @@ export default function AssetsClient() {
     null
   )
   const [deletingAsset, setDeletingAsset] = useState<AssetWithCategory | null>(
+    null
+  )
+  const [viewingAsset, setViewingAsset] = useState<AssetWithCategory | null>(
     null
   )
 
@@ -76,6 +81,17 @@ export default function AssetsClient() {
   const { mutateAsync: updateAsset, isPending: isUpdating } = useUpdateAsset()
   const { mutateAsync: deleteAsset, isPending: isDeleting } = useDeleteAsset()
   const isLoading = isLoadingCategories || isLoadingAssets
+
+  const { data: dividendsSummary } = useDividendsSummary()
+  const yieldOnCostByAssetId = useMemo(
+    () =>
+      Object.fromEntries(
+        (dividendsSummary?.byAsset ?? [])
+          .filter((item) => item.yieldOnCost != null)
+          .map((item) => [item.assetId, item.yieldOnCost as number])
+      ),
+    [dividendsSummary]
+  )
 
   const handleOpenCreate = () => {
     setEditingAsset(null)
@@ -232,6 +248,8 @@ export default function AssetsClient() {
             assets={assets}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onViewDetails={setViewingAsset}
+            yieldOnCostByAssetId={yieldOnCostByAssetId}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -241,6 +259,8 @@ export default function AssetsClient() {
                 asset={asset}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onViewDetails={setViewingAsset}
+                yieldOnCost={yieldOnCostByAssetId[asset.id]}
               />
             ))}
           </div>
@@ -289,6 +309,16 @@ export default function AssetsClient() {
           }
         }}
         isPending={isDeleting}
+      />
+
+      <AssetDetailSheet
+        asset={viewingAsset}
+        open={!!viewingAsset}
+        onOpenChange={(open) => {
+          if (!open) setViewingAsset(null)
+        }}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </div>
   )

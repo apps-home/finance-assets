@@ -1,5 +1,6 @@
 export enum CategoryType {
   VARIABLE_BR = 'VARIABLE_BR',
+  FII = 'FII',
   VARIABLE_US = 'VARIABLE_US',
   CRYPTO = 'CRYPTO',
   FIXED = 'FIXED'

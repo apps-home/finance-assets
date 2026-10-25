@@ -2,8 +2,8 @@
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
-import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { Toaster } from '@/shared/components/ui/sonner'
+import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { QueryClientProvider } from '@/shared/providers/query-client'
 import { ThemeProvider } from '@/shared/providers/theme-provider'
 
