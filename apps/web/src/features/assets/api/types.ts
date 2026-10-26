@@ -139,3 +139,13 @@ export interface PriceHistory {
   change: number
   changePercent: number | null
 }
+
+export interface RefreshQuotesResult {
+  message: string
+  /** Cotações buscadas agora */
+  updated: number
+  /** Atualizadas há menos de 5 min: o servidor não buscou de novo */
+  skipped: number
+  /** Sem cotação do provider; o preço anterior foi mantido */
+  failedTickers: string[]
+}

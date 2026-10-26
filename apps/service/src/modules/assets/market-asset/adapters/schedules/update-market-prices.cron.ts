@@ -10,13 +10,15 @@ import { UpdateMarketPriceJobData } from '../jobs/update-price-job.dto'
 
 /**
  * Delay between requests per provider (in ms).
- * - Polygon.io / Alpha Vantage (VARIABLE_US): 18s spacing ensures max ~3.3 req/min (well under the 5 req/min ceiling).
+ * - Yahoo Finance (VARIABLE_US): no published limit, 3s spacing (~20 req/min) is far below
+ *   what triggers a block. If Yahoo fails, the Polygon/Alpha Vantage fallback may hit its
+ *   5 req/min limit and leave some tickers with the previous price until the next run.
  * - Brapi (VARIABLE_BR / FII): has rate limits, 8s spacing as safety margin.
  * - CoinGecko (CRYPTO): free tier ~100 req/min, 20s spacing as safety margin.
  * - FIXED: no external API call, no delay needed.
  */
 const PROVIDER_DELAY_MS: Record<CategoryType, number> = {
-  [CategoryType.VARIABLE_US]: 18_000,
+  [CategoryType.VARIABLE_US]: 3_000,
   [CategoryType.VARIABLE_BR]: 8_000,
   [CategoryType.FII]: 8_000,
   [CategoryType.CRYPTO]: 20_000,

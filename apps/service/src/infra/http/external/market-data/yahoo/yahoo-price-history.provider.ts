@@ -112,7 +112,7 @@ export class YahooPriceHistoryProvider implements PriceHistoryGateway {
   }
 }
 
-function toYahooSymbol(
+export function toYahooSymbol(
   ticker: string,
   categoryType: CategoryType
 ): string | null {

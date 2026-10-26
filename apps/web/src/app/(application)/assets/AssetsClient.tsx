@@ -13,6 +13,7 @@ import { AssetDetailSheet } from '@/features/assets/components/AssetDetailSheet'
 import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
 import { AssetSummaryCards } from '@/features/assets/components/AssetSummaryCards'
 import { AssetTable } from '@/features/assets/components/AssetTable'
+import { RefreshQuotesMenu } from '@/features/assets/components/RefreshQuotesMenu'
 import {
   useAssets,
   useCreateAsset,
@@ -172,6 +173,7 @@ export default function AssetsClient() {
 
           <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
             <DollarRateBadge />
+            <RefreshQuotesMenu categories={categories} />
             <Button onClick={handleOpenCreate} className="gap-2">
               <PlusIcon className="size-4" />
               Novo Ativo

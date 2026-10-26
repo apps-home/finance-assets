@@ -87,6 +87,11 @@ export class CreateAssetDTO {
   currentClosePrice?: number | null
 }
 
+export class RefreshQuotesDTO {
+  @IsUUID('4', { message: 'A categoria deve ser um UUID válido' })
+  categoryId: string
+}
+
 export class UpdateAssetDTO extends PartialType(
   OmitType(CreateAssetDTO, ['categoryId'] as const)
 ) {}

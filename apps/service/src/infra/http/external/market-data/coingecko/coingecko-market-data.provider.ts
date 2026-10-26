@@ -65,6 +65,8 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
         `Fetching crypto quote for ${ticker} (${coinId}) from CoinGecko...`
       )
 
+      // Sem 'interval: daily': nesse modo o último ponto vem defasado. Em 90 dias
+      // a granularidade é horária e o último ponto é a cotação atual.
       let responseData: CoinGeckoMarketChartResponse
 
       const headers: Record<string, string> = {}
@@ -79,8 +81,7 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
             {
               params: {
                 vs_currency: 'brl',
-                days: '90',
-                interval: 'daily'
+                days: '90'
               },
               ...(Object.keys(headers).length > 0 && { headers })
             }
@@ -106,8 +107,7 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
               {
                 params: {
                   vs_currency: 'brl',
-                  days: '90',
-                  interval: 'daily'
+                  days: '90'
                 },
                 headers: {
                   [this.authHeader]: this.COINGECKO_API_KEY
@@ -133,8 +133,7 @@ export class CoinGeckoMarketDataProvider implements MarketDataProvider {
               {
                 params: {
                   vs_currency: 'brl',
-                  days: '90',
-                  interval: 'daily'
+                  days: '90'
                 }
               }
             )

@@ -14,6 +14,7 @@ import { FindAssetsUseCase } from './application/use-cases/find-assets'
 import { GetAssetPriceHistoryUseCase } from './application/use-cases/get-asset-price-history'
 import { GetPortfolioSummaryUseCase } from './application/use-cases/get-portfolio-summary'
 import { NotifyAssetVariationsUseCase } from './application/use-cases/notify-asset-variations'
+import { RefreshCategoryQuotesUseCase } from './application/use-cases/refresh-category-quotes'
 import { UpdateAssetUseCase } from './application/use-cases/update-asset'
 import { AssetRepository } from './domain/asset.repository'
 import { AssetController } from './infra/asset.controller'
@@ -37,6 +38,7 @@ import { PrismaAssetRepository } from './infra/repositories/prisma.asset.reposit
     FindAssetByIdUseCase,
     UpdateAssetUseCase,
     DeleteAssetUseCase,
+    RefreshCategoryQuotesUseCase,
     NotifyAssetVariationsCron,
     NotifyAssetVariationsUseCase
   ],

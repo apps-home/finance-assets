@@ -13,6 +13,9 @@ export const MARKET_QUOTED_TYPES: CategoryType[] = [
 /** Cotação mais nova que isso é reaproveitada ao cadastrar um ativo */
 export const QUOTE_FRESHNESS_MS = 12 * 60 * 60 * 1000
 
+/** Atualização manual pula cotação mais nova que isso (evita cliques repetidos) */
+export const MANUAL_REFRESH_COOLDOWN_MS = 5 * 60 * 1000
+
 export interface MarketAssetProps {
   id: string
   ticker: string
@@ -87,11 +90,14 @@ export class MarketAsset implements MarketAssetProps {
     }
   }
 
-  hasFreshQuote(now: Date = new Date()): boolean {
+  hasFreshQuote(
+    now: Date = new Date(),
+    freshnessMs: number = QUOTE_FRESHNESS_MS
+  ): boolean {
     return (
       this._props.currentClosePrice !== null &&
       this._props.priceUpdatedAt !== null &&
-      now.getTime() - this._props.priceUpdatedAt.getTime() < QUOTE_FRESHNESS_MS
+      now.getTime() - this._props.priceUpdatedAt.getTime() < freshnessMs
     )
   }
 

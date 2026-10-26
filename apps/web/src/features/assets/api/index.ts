@@ -8,6 +8,7 @@ import type {
   PortfolioSummary,
   PriceHistory,
   PriceHistoryRange,
+  RefreshQuotesResult,
   UpdateAssetDTO
 } from './types'
 
@@ -77,6 +78,21 @@ export async function getAssetPriceHistory(
   const response = await apiClient.get<PriceHistory>(
     `${BASE_URL}/${id}/history`,
     { params: { range } }
+  )
+  return response.data
+}
+
+/**
+ * Busca agora as cotações dos ativos ativos da categoria (um ticker por vez no
+ * servidor, por isso o timeout maior que o padrão)
+ */
+export async function refreshCategoryQuotes(
+  categoryId: string
+): Promise<RefreshQuotesResult> {
+  const response = await apiClient.post<RefreshQuotesResult>(
+    `${BASE_URL}/refresh-quotes`,
+    { categoryId },
+    { timeout: 120_000 }
   )
   return response.data
 }

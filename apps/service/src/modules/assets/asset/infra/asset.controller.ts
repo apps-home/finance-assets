@@ -19,11 +19,13 @@ import { FindAssetByIdUseCase } from '../application/use-cases/find-asset-by-id'
 import { FindAssetsUseCase } from '../application/use-cases/find-assets'
 import { GetAssetPriceHistoryUseCase } from '../application/use-cases/get-asset-price-history'
 import { GetPortfolioSummaryUseCase } from '../application/use-cases/get-portfolio-summary'
+import { RefreshCategoryQuotesUseCase } from '../application/use-cases/refresh-category-quotes'
 import { UpdateAssetUseCase } from '../application/use-cases/update-asset'
 import {
   AssetPriceHistoryParamsDTO,
   CreateAssetDTO,
   FindAssetsParamsDTO,
+  RefreshQuotesDTO,
   UpdateAssetDTO
 } from './asset.dto'
 
@@ -36,7 +38,8 @@ export class AssetController {
     private readonly updateAssetUseCase: UpdateAssetUseCase,
     private readonly deleteAssetUseCase: DeleteAssetUseCase,
     private readonly getPortfolioSummaryUseCase: GetPortfolioSummaryUseCase,
-    private readonly getAssetPriceHistoryUseCase: GetAssetPriceHistoryUseCase
+    private readonly getAssetPriceHistoryUseCase: GetAssetPriceHistoryUseCase,
+    private readonly refreshCategoryQuotesUseCase: RefreshCategoryQuotesUseCase
   ) {}
 
   @Post()
@@ -48,6 +51,23 @@ export class AssetController {
     }
 
     return { message: 'Asset created successfully' }
+  }
+
+  @Post('refresh-quotes')
+  async refreshQuotes(
+    @Body() { categoryId }: RefreshQuotesDTO,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.refreshCategoryQuotesUseCase.execute(
+      userId,
+      categoryId
+    )
+
+    if (result.isLeft()) {
+      throw toHttpException(result.value)
+    }
+
+    return { message: 'Quotes refreshed successfully', ...result.value }
   }
 
   @Get()

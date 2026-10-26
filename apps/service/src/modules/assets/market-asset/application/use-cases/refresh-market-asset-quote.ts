@@ -3,13 +3,18 @@ import { Injectable, Logger } from '@nestjs/common'
 import { MarketDataGateway } from '@/core/http/external/market-data/market-data.gateway'
 import { Either, left, right } from '@/core/utils/Either'
 
-import { MarketAsset } from '../../domain/market-asset.entity'
+import {
+  MarketAsset,
+  QUOTE_FRESHNESS_MS
+} from '../../domain/market-asset.entity'
 import { MarketAssetRepository } from '../../domain/market-asset.repository'
 import { MarketAssetNotFoundError } from '../errors/market-asset-not-found.error'
 
 interface RefreshMarketAssetQuoteOptions {
   /** Busca mesmo com cotação recente (cron diário) */
   force?: boolean
+  /** Cotação mais nova que isso é reaproveitada (padrão: 12h) */
+  freshnessMs?: number
 }
 
 type RefreshMarketAssetQuoteResponse = Either<
@@ -32,7 +37,10 @@ export class RefreshMarketAssetQuoteUseCase {
 
   async execute(
     id: string,
-    { force = false }: RefreshMarketAssetQuoteOptions = {}
+    {
+      force = false,
+      freshnessMs = QUOTE_FRESHNESS_MS
+    }: RefreshMarketAssetQuoteOptions = {}
   ): Promise<RefreshMarketAssetQuoteResponse> {
     const marketAsset = await this.marketAssetRepository.findById(id)
 
@@ -40,7 +48,7 @@ export class RefreshMarketAssetQuoteUseCase {
       return left(new MarketAssetNotFoundError())
     }
 
-    if (!force && marketAsset.hasFreshQuote()) {
+    if (!force && marketAsset.hasFreshQuote(new Date(), freshnessMs)) {
       return right(marketAsset)
     }
 

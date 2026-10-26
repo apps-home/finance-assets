@@ -56,7 +56,7 @@ O schema é dividido em dois namespaces PostgreSQL: `better-auth` (autenticaçã
 |---|---|
 | `VARIABLE_BR` | Renda Variável — Mercado Brasileiro (Brapi) |
 | `FII` | Fundos Imobiliários (Brapi) |
-| `VARIABLE_US` | Renda Variável — Mercado Americano (Polygon, com fallback para Alpha Vantage) |
+| `VARIABLE_US` | Renda Variável — Mercado Americano (Yahoo Finance, com fallback para Polygon e Alpha Vantage) |
 | `CRYPTO` | Criptomoedas (CoinGecko) |
 | `FIXED` | Renda Fixa (sem cotação de mercado) |
 
@@ -212,7 +212,7 @@ Todos exigem `Authorization: Bearer <session token>` e respondem apenas com dado
 
 | Recurso | Rotas | Query params |
 |---|---|---|
-| **Assets** | `POST /assets` (body com `categoryId`), `GET /assets`, `GET /assets/:id/history`, `GET/PATCH/DELETE /assets/:id` | `search`, `categoryId`, `type`, `status` (`ACTIVE`\|`INACTIVE`), `sort=monthChange`, `order` (`asc`\|`desc`) |
+| **Assets** | `POST /assets` (body com `categoryId`), `POST /assets/refresh-quotes` (body com `categoryId`), `GET /assets`, `GET /assets/:id/history`, `GET/PATCH/DELETE /assets/:id` | `search`, `categoryId`, `type`, `status` (`ACTIVE`\|`INACTIVE`), `sort=monthChange`, `order` (`asc`\|`desc`) |
 | **Categories** | `POST /categories`, `GET /categories`, `GET/PATCH/DELETE /categories/:id` | `name`, `type`, `currency`, `year` |
 | **Wishlist** | `POST /wishlist`, `GET /wishlist`, `GET/PATCH/DELETE /wishlist/:id` | `categoryId`, `search`, `type`, `targetStatus` (`BELOW_OR_AT_TARGET`\|`ABOVE_TARGET`\|`NO_TARGET`), `sort=monthChange`, `order` |
 | **Budgets** | `POST /budgets`, `GET /budgets`, `GET/PATCH/DELETE /budgets/:id` | `categoryId`, `month`, `year` |
@@ -226,6 +226,7 @@ Observações:
 - **Histórico de cotação** (`GET /assets/:id/history?range=5d|1m|ytd|1y|3y|5y`, padrão `1m`): série de fechamento do ativo do usuário, com `points`, `change`, `changePercent` e `currency` da categoria. Fonte: Yahoo Finance (`PriceHistoryGateway`, sem chave; BR/FII com `.SA`, US com `.` trocado por `-`), com cache em memória de 15 min por ticker + período. `3y` pede `5y` e corta no servidor. Cripto e renda fixa não têm histórico (404 `PriceHistoryUnavailableError`, assim como falha do Yahoo ou ativo sem ticker). A web mostra o gráfico no `AssetDetailSheet`.
 - **Filtros no servidor:** `search` busca em nome/ticker (e corretora em assets, notas em wishlist), sem diferenciar maiúsculas. `targetStatus` é aplicado em memória, pois compara duas colunas.
 - **Wishlist:** ao criar (ou trocar o ticker), aponta para o catálogo e só busca a cotação, de forma síncrona, se o catálogo não tiver uma recente (falha de cotação não impede a criação). O ticker é único por usuário.
+- **Atualização manual de cotações** (`POST /assets/refresh-quotes`): busca na hora, um ticker por vez, as cotações do catálogo usadas pelos ativos **ativos** da categoria do usuário (`RefreshCategoryQuotesUseCase`). Cotação atualizada há menos de 5 min (`MANUAL_REFRESH_COOLDOWN_MS`) é pulada, para cliques repetidos não chamarem os providers. Como o catálogo é compartilhado, o preço novo vale para todos os usuários do ticker. Resposta: `{ message, updated, skipped, failedTickers }`. A web chama pelo botão "Atualizar cotações" em `/assets`.
 - **Catálogo de mercado:** ao criar um ativo ou item da wishlist, `ResolveMarketAssetUseCase` reaproveita o `MarketAsset` do mesmo ticker + tipo ou cria um. Uma cotação com menos de 12h (`QUOTE_FRESHNESS_MS`) é reaproveitada sem chamada externa. Com cotação de mercado, o preço enviado no `PATCH /assets/:id` é ignorado.
 - **Users:** o usuário só acessa o próprio registro. O `:id` precisa ser o `userId` da sessão; qualquer outro id responde 404 (`UserNotFoundError`), mesmo que exista. Não há listagem nem busca por e-mail de usuários.
 - **Budgets (câmbio):** o `amount` é guardado **já convertido** para R$ (`valor original × cotação`) e `exchangeRate` guarda a cotação usada. A conversão acontece só em `Budget.changeAmount(originalAmount, exchangeRate)`, que o `POST` e o `PATCH` usam; `originalAmount` devolve o valor na moeda da categoria (`amount ÷ exchangeRate`). Quem reenvia um valor deve mandar o original, nunca o já convertido. `categoryId`, `month` e `year` não mudam por `PATCH` (são a identidade do registro).
@@ -258,7 +259,7 @@ infra/
 ├── cron/       # CronModule (os crons ficam em modules/assets/asset/adapters/schedules)
 ├── env/        # Validação e acesso às variáveis de ambiente
 ├── events/     # Publisher de eventos de domínio (EventEmitter)
-├── http/       # Providers de cotação (Brapi, CoinGecko, Polygon, Alpha Vantage), cliente n8n, toHttpException e AllExceptionsFilter
+├── http/       # Providers de cotação (Brapi, CoinGecko, Yahoo, Polygon, Alpha Vantage), cliente n8n, toHttpException e AllExceptionsFilter
 ├── prisma/     # Providers 'prismaFinanceAssets' e 'prismaAuth'
 ├── queue/      # Publisher de jobs BullMQ
 └── storage/    # Integração com Cloudflare R2 (upload de arquivos)
@@ -280,7 +281,7 @@ infra/
       │  (RefreshMarketAssetQuoteUseCase com force, roteamento por tipo via MarketDataGateway)
       ├──► VARIABLE_BR / FII → Brapi API
       ├──► CRYPTO            → CoinGecko API
-      └──► VARIABLE_US       → Polygon (fallback: Alpha Vantage)
+      └──► VARIABLE_US       → Yahoo Finance (fallback: Polygon → Alpha Vantage)
 ```
 
 Uma linha do catálogo é gravada por ticker; todos os ativos e itens da wishlist que apontam para ela passam a ler o preço novo.

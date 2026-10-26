@@ -7,6 +7,7 @@ import {
   getAssetPriceHistory,
   getPortfolioSummary,
   listAssets,
+  refreshCategoryQuotes,
   updateAsset
 } from '@/features/assets/api'
 import type {
@@ -15,6 +16,7 @@ import type {
   PriceHistoryRange,
   UpdateAssetDTO
 } from '@/features/assets/api/types'
+import { WISHLIST_QUERY_KEY } from '@/features/wishlist/hooks/use-wishlist'
 import { queryClient } from '@/shared/providers/query-client'
 
 export const ASSET_QUERY_KEY = 'assets'
@@ -93,6 +95,43 @@ export function useDeleteAsset() {
         error.response?.data?.message ||
         error.message ||
         'Erro ao remover ativo.'
+      toast.error(message)
+    }
+  })
+}
+
+export function useRefreshCategoryQuotes() {
+  return useMutation({
+    mutationFn: (categoryId: string) => refreshCategoryQuotes(categoryId),
+    onSuccess: ({ updated, skipped, failedTickers }) => {
+      // A cotação é do catálogo compartilhado: a wishlist também muda
+      queryClient.invalidateQueries({ queryKey: [ASSET_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: [WISHLIST_QUERY_KEY] })
+
+      if (failedTickers.length > 0) {
+        toast.warning(
+          `${updated} cotação(ões) atualizada(s). Sem resposta do provider para: ${failedTickers.join(', ')}.`
+        )
+        return
+      }
+
+      if (updated === 0 && skipped === 0) {
+        toast.info('Nenhum ativo com cotação de mercado nesta categoria.')
+        return
+      }
+
+      if (updated === 0) {
+        toast.info('As cotações já foram atualizadas há menos de 5 minutos.')
+        return
+      }
+
+      toast.success(`${updated} cotação(ões) atualizada(s)!`)
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Erro ao atualizar cotações.'
       toast.error(message)
     }
   })

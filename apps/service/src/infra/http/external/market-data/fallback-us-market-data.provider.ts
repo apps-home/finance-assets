@@ -5,43 +5,41 @@ import {
   MarketQuote
 } from '@/core/http/external/market-data/market-data.provider'
 
-import { AlphaVantageMarketDataProvider } from './alpha-vantage/alpha-vantage-market-data.provider'
-import { PolygonMarketDataProvider } from './polygon/polygon-market-data.provider'
+interface NamedProvider {
+  name: string
+  provider: MarketDataProvider
+}
 
+/**
+ * Tenta os providers US em ordem e devolve a primeira cotação obtida.
+ */
 export class UsMarketDataFallbackProvider implements MarketDataProvider {
   private readonly logger = new Logger(UsMarketDataFallbackProvider.name)
 
-  constructor(
-    private readonly primaryProvider: PolygonMarketDataProvider,
-    private readonly fallbackProvider: AlphaVantageMarketDataProvider
-  ) {}
+  constructor(private readonly providers: NamedProvider[]) {}
 
   async fetchQuote(ticker: string): Promise<MarketQuote | null> {
-    this.logger.log(
-      `Attempting to fetch quote for US ticker "${ticker}" via primary provider (Polygon.io)...`
-    )
-
-    const primaryQuote = await this.primaryProvider.fetchQuote(ticker)
-
-    if (primaryQuote) {
-      return primaryQuote
-    }
-
-    this.logger.warn(
-      `Primary provider (Polygon.io) returned no data for "${ticker}". Falling back to Alpha Vantage...`
-    )
-
-    const fallbackQuote = await this.fallbackProvider.fetchQuote(ticker)
-
-    if (fallbackQuote) {
+    for (const [index, { name, provider }] of this.providers.entries()) {
       this.logger.log(
-        `Successfully recovered quote for US ticker "${ticker}" via fallback provider (Alpha Vantage).`
+        `Attempting to fetch quote for US ticker "${ticker}" via ${name}...`
       )
-      return fallbackQuote
+
+      const quote = await provider.fetchQuote(ticker)
+
+      if (quote) {
+        if (index > 0) {
+          this.logger.log(
+            `Successfully recovered quote for US ticker "${ticker}" via fallback provider (${name}).`
+          )
+        }
+        return quote
+      }
+
+      this.logger.warn(`${name} returned no data for "${ticker}".`)
     }
 
     this.logger.error(
-      `Both Polygon.io and Alpha Vantage failed to retrieve quote for ticker: ${ticker}`
+      `All US market data providers failed to retrieve quote for ticker: ${ticker}`
     )
 
     return null

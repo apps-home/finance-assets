@@ -9,6 +9,7 @@ import { BrapiMarketDataProvider } from './brapi/brapi-market-data.provider'
 import { CoinGeckoMarketDataProvider } from './coingecko/coingecko-market-data.provider'
 import { UsMarketDataFallbackProvider } from './fallback-us-market-data.provider'
 import { PolygonMarketDataProvider } from './polygon/polygon-market-data.provider'
+import { YahooMarketDataProvider } from './yahoo/yahoo-market-data.provider'
 
 @Injectable()
 export class MarketDataFactory implements MarketDataGateway {
@@ -19,12 +20,15 @@ export class MarketDataFactory implements MarketDataGateway {
     private readonly brapiProvider: BrapiMarketDataProvider,
     private readonly coingeckoProvider: CoinGeckoMarketDataProvider,
     private readonly alphaVantageProvider: AlphaVantageMarketDataProvider,
-    private readonly polygonProvider: PolygonMarketDataProvider
+    private readonly polygonProvider: PolygonMarketDataProvider,
+    private readonly yahooProvider: YahooMarketDataProvider
   ) {
-    this.usMarketDataProvider = new UsMarketDataFallbackProvider(
-      this.polygonProvider,
-      this.alphaVantageProvider
-    )
+    this.usMarketDataProvider = new UsMarketDataFallbackProvider([
+      // O plano gratuito do Polygon só entrega o candle do dia no dia seguinte
+      { name: 'Yahoo Finance', provider: this.yahooProvider },
+      { name: 'Polygon.io', provider: this.polygonProvider },
+      { name: 'Alpha Vantage', provider: this.alphaVantageProvider }
+    ])
   }
 
   getProvider(categoryType: CategoryType): MarketDataProvider | null {

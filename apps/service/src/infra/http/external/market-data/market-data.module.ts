@@ -8,14 +8,17 @@ import { BrapiMarketDataProvider } from './brapi/brapi-market-data.provider'
 import { CoinGeckoMarketDataProvider } from './coingecko/coingecko-market-data.provider'
 import { MarketDataFactory } from './market-data.factory'
 import { PolygonMarketDataProvider } from './polygon/polygon-market-data.provider'
+import { YahooMarketDataProvider } from './yahoo/yahoo-market-data.provider'
 
 @Module({
-  imports: [HttpModule],
+  // Sem timeout o axios espera para sempre se o provider travar a conexão
+  imports: [HttpModule.register({ timeout: 10_000 })],
   providers: [
     BrapiMarketDataProvider,
     CoinGeckoMarketDataProvider,
     AlphaVantageMarketDataProvider,
     PolygonMarketDataProvider,
+    YahooMarketDataProvider,
     { provide: MarketDataGateway, useClass: MarketDataFactory }
   ],
   exports: [MarketDataGateway]
