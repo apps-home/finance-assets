@@ -12,7 +12,10 @@ export interface CategoryAllocation {
   categoryName: string
   categoryType: CategoryType
   currency: string
+  /** Saldo na moeda da categoria */
   currentBalance: number
+  /** Saldo convertido para R$, base dos percentuais */
+  balanceInBRL: number
   targetPercentage: number | null
   actualPercentage: number
   gap: number

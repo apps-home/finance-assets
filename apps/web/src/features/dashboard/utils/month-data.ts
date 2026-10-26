@@ -6,6 +6,7 @@ export function isCategoryKey(key: string) {
     key !== 'monthIndex' &&
     key !== 'id' &&
     !key.endsWith('_dividend') &&
+    !key.endsWith('_contribution') &&
     !key.endsWith('_exchangeRate')
   )
 }

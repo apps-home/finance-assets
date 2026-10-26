@@ -2,6 +2,7 @@
 
 import {
   ArrowUpRightFromSquare,
+  CalendarCheck,
   ChevronDown,
   Coins,
   Landmark,
@@ -18,6 +19,7 @@ import { CategoryBreakdown } from '@/features/dashboard/components/CategoryBreak
 import { FinancialChart } from '@/features/dashboard/components/FinancialChart'
 import { FinancialTable } from '@/features/dashboard/components/FinancialTable'
 import { InsightsDialog } from '@/features/dashboard/components/InsightsDialog'
+import { MonthClosingDialog } from '@/features/dashboard/components/MonthClosingDialog'
 import { StatCard } from '@/features/dashboard/components/StatCard'
 import { useSaveBudget } from '@/features/dashboard/hooks/use-budget'
 import { useDashboard } from '@/features/dashboard/hooks/use-dashboard'
@@ -38,6 +40,7 @@ export default function DashboardPageClient() {
   )
   const [insightsOpen, setInsightsOpen] = useState(false)
   const [insightsMode, setInsightsMode] = useState<'month' | 'year'>('month')
+  const [closingOpen, setClosingOpen] = useState(false)
   const hasInitializedYear = useRef(false)
 
   const { data: availableYears } = useAvailableYears()
@@ -169,6 +172,16 @@ export default function DashboardPageClient() {
             </div>
             {categories.length > 0 && (
               <div className="flex flex-wrap items-center gap-2.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setClosingOpen(true)}
+                  className="h-9 gap-2 text-xs"
+                >
+                  <CalendarCheck className="size-3.5 text-primary" />
+                  Fechar mês
+                </Button>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={cn(
@@ -244,6 +257,17 @@ export default function DashboardPageClient() {
             </div>
           )}
         </div>
+
+        {closingOpen && (
+          <MonthClosingDialog
+            key={selectedYear}
+            open={closingOpen}
+            onOpenChange={setClosingOpen}
+            year={parseInt(selectedYear, 10)}
+            categories={categories}
+            data={dashboardData}
+          />
+        )}
 
         <InsightsDialog
           open={insightsOpen}

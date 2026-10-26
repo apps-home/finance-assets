@@ -1,6 +1,6 @@
 'use client'
 
-import { ChartBarStacked, PlusIcon, Search } from 'lucide-react'
+import { Calculator, ChartBarStacked, PlusIcon, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { AssetWithCategory } from '@/features/assets/api/types'
@@ -10,6 +10,7 @@ import { Category, CategoryType } from '@/features/categories/api/types'
 import { AllocationOverview } from '@/features/categories/components/AllocationOverview'
 import { CategoryCard } from '@/features/categories/components/CategoryCard'
 import { CategoryFormDialog } from '@/features/categories/components/CategoryFormDialog'
+import { ContributionPlannerDialog } from '@/features/categories/components/ContributionPlannerDialog'
 import {
   useCategories,
   useDeleteCategory
@@ -24,6 +25,7 @@ import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
+import { useDollarRate } from '@/shared/hooks/use-dollar-rate'
 
 const FILTER_TABS: { value: CategoryType | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'Todos' },
@@ -42,8 +44,17 @@ export default function CategoriesClient() {
   const [assetModalCategory, setAssetModalCategory] = useState<Category | null>(
     null
   )
+  const [plannerOpen, setPlannerOpen] = useState(false)
 
   const { data: categories = [], isLoading } = useCategories()
+  const { data: dollarQuote } = useDollarRate()
+
+  const exchangeRates = useMemo(() => {
+    const rates: Record<string, number> = {}
+    const usd = dollarQuote?.bid ? Number.parseFloat(dollarQuote.bid) : NaN
+    if (Number.isFinite(usd) && usd > 0) rates.USD = usd
+    return rates
+  }, [dollarQuote])
 
   const { data: assets = [], isLoading: isLoadingAssets } = useAssets()
 
@@ -68,8 +79,12 @@ export default function CategoriesClient() {
   }, [categories, assetsByCategory])
 
   const allocationSummary = useMemo(() => {
-    return calculateAllocations(categories, categoryBalances)
-  }, [categories, categoryBalances])
+    return calculateAllocations(categories, categoryBalances, exchangeRates)
+  }, [categories, categoryBalances, exchangeRates])
+
+  const hasTargets = allocationSummary.allocations.some(
+    (item) => item.targetPercentage != null && item.targetPercentage > 0
+  )
 
   const allocationMap = useMemo(() => {
     const map = new Map<string, CategoryAllocation>()
@@ -169,6 +184,16 @@ export default function CategoriesClient() {
                 className="h-9 pl-9 text-xs"
               />
             </div>
+            {hasTargets && (
+              <Button
+                variant="outline"
+                onClick={() => setPlannerOpen(true)}
+                className="gap-2 text-xs"
+              >
+                <Calculator className="size-4" />
+                Simular aporte
+              </Button>
+            )}
             <Button onClick={() => setFormOpen(true)} className="gap-2 text-xs">
               <PlusIcon className="size-4" />
               Nova Categoria
@@ -254,6 +279,13 @@ export default function CategoriesClient() {
           </div>
         )}
       </div>
+
+      <ContributionPlannerDialog
+        open={plannerOpen}
+        onOpenChange={setPlannerOpen}
+        summary={allocationSummary}
+        exchangeRates={exchangeRates}
+      />
 
       <CategoryFormDialog
         open={formOpen}

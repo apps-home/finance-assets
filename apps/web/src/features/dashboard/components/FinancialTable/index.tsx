@@ -3,9 +3,10 @@
 import { Coins, Edit, Loader2, Save, TrendingUp, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { Category, CategoryType } from '@/features/categories/api/types'
+import { Category } from '@/features/categories/api/types'
 import type { CreateBudgetDTO } from '@/features/dashboard/api/types'
 import type { MonthData } from '@/features/dashboard/types/month-data'
+import { VARIABLE_TYPES } from '@/features/dashboard/utils/month-closing'
 import { calculateMonthTotal } from '@/features/dashboard/utils/month-data'
 import { getCurrencyData } from '@/infrastructure/services/external/get-currency'
 import { Button } from '@/shared/components/ui/button'
@@ -22,13 +23,6 @@ import {
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
 import { parseValue } from '@/shared/utils/parse-value'
-
-const VARIABLE_TYPES: CategoryType[] = [
-  CategoryType.VARIABLE_BR,
-  CategoryType.FII,
-  CategoryType.VARIABLE_US,
-  CategoryType.CRYPTO
-]
 
 interface FinancialTableProps {
   data: MonthData[]
