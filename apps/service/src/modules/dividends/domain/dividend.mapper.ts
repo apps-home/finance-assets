@@ -18,6 +18,7 @@ export class DividendMapper {
       type: dividend.type,
       source: dividend.source,
       amount: dividend.amount,
+      taxAmount: dividend.taxAmount,
       rateAmount: dividend.rateAmount,
       quantity: dividend.quantity,
       exchangeRate: dividend.exchangeRate,

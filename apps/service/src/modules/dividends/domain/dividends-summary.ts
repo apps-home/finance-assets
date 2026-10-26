@@ -146,7 +146,7 @@ export function buildDividendsSummary(
     }
 
     if (inLast12Months) {
-      assetSummary.last12Months += dividend.amount
+      assetSummary.last12Months += dividend.netAmount
     }
 
     if (paymentYear === year) {

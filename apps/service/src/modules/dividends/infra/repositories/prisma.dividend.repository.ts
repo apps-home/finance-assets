@@ -95,6 +95,7 @@ export class PrismaDividendRepository implements DividendRepository {
         type: data.type,
         source: data.source,
         amount: data.amount,
+        taxAmount: data.taxAmount,
         rateAmount: data.rateAmount,
         quantity: data.quantity,
         exchangeRate: data.exchangeRate,

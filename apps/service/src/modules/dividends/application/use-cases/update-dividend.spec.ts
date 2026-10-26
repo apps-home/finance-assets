@@ -34,6 +34,24 @@ describe('UpdateDividendUseCase', () => {
     expect(dividend.amount).toBe(25)
   })
 
+  it('should set the tax and keep the recalculated gross amount', async () => {
+    const dividend = makeDividend({
+      userId: 'user-1',
+      assetId: 'asset-1',
+      amount: 10,
+      rateAmount: 0.1,
+      quantity: 100
+    })
+    dividendRepository.items.push(dividend)
+
+    await sut.execute('user-1', dividend.id, { taxAmount: 3 })
+    await sut.execute('user-1', dividend.id, { rateAmount: 0.2 })
+
+    expect(dividend.amount).toBe(20)
+    expect(dividend.taxAmount).toBe(3)
+    expect(dividend.netAmount).toBe(17)
+  })
+
   it('should turn a synced dividend into a manual one when edited', async () => {
     const dividend = makeDividend({
       userId: 'user-1',

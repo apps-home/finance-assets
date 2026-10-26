@@ -81,4 +81,56 @@ describe('Dividend entity', () => {
 
     expect(dividend.comDate).toBeNull()
   })
+
+  it('should deduct the tax from the net amount and the BRL amount', () => {
+    const dividend = makeDividend({
+      userId: 'user-1',
+      assetId: 'asset-1',
+      amount: 10,
+      taxAmount: 3,
+      exchangeRate: 5
+    })
+
+    expect(dividend.netAmount).toBe(7)
+    expect(dividend.amountInBRL).toBe(35)
+  })
+
+  it('should treat a missing tax as zero', () => {
+    const dividend = makeDividend({
+      userId: 'user-1',
+      assetId: 'asset-1',
+      amount: 10
+    })
+
+    expect(dividend.taxAmount).toBeNull()
+    expect(dividend.netAmount).toBe(10)
+  })
+
+  it('should reject a negative tax or one that is not below the amount', () => {
+    const build = (taxAmount: number) => () =>
+      makeDividend({
+        userId: 'user-1',
+        assetId: 'asset-1',
+        amount: 10,
+        taxAmount
+      })
+
+    expect(build(-1)).toThrow(PayloadError)
+    expect(build(10)).toThrow(PayloadError)
+  })
+
+  it('should validate the tax against the amount on update', () => {
+    const dividend = makeDividend({
+      userId: 'user-1',
+      assetId: 'asset-1',
+      amount: 10,
+      taxAmount: 3
+    })
+
+    expect(() => dividend.update({ amount: 2 })).toThrow(PayloadError)
+
+    dividend.update({ taxAmount: 0 })
+
+    expect(dividend.netAmount).toBe(10)
+  })
 })

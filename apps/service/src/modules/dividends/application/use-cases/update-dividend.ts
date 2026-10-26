@@ -43,6 +43,7 @@ export class UpdateDividendUseCase {
       dividend.update({
         type: data.type,
         amount,
+        taxAmount: data.taxAmount,
         rateAmount: data.rateAmount,
         quantity: data.quantity,
         exchangeRate: data.exchangeRate,

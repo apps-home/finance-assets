@@ -127,7 +127,22 @@ export function DividendTable({
                 </TableCell>
 
                 <TableCell className="py-3 text-right font-semibold text-xs tabular-nums">
-                  {formatCurrency(dividend.amount, category.currency)}
+                  {dividend.taxAmount ? (
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span>
+                        {formatCurrency(
+                          dividend.amount - dividend.taxAmount,
+                          category.currency
+                        )}
+                      </span>
+                      <span className="font-normal text-[10px] text-muted-foreground">
+                        bruto{' '}
+                        {formatCurrency(dividend.amount, category.currency)}
+                      </span>
+                    </div>
+                  ) : (
+                    formatCurrency(dividend.amount, category.currency)
+                  )}
                 </TableCell>
 
                 <TableCell className="py-3 text-right text-xs tabular-nums">

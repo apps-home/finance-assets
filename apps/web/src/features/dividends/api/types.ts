@@ -21,8 +21,10 @@ export interface Dividend {
   assetId: string
   type: DividendType
   source: DividendSource
-  /** Total recebido, na moeda da categoria do ativo */
+  /** Total bruto recebido, na moeda da categoria do ativo */
   amount: number
+  /** Impostos/taxas retidos; o líquido é `amount - taxAmount` */
+  taxAmount: number | null
   rateAmount: number | null
   quantity: number | null
   exchangeRate: number | null
@@ -51,6 +53,7 @@ export interface CreateDividendDTO {
   assetId: string
   type?: DividendType
   amount?: number
+  taxAmount?: number
   rateAmount?: number
   quantity?: number
   exchangeRate?: number

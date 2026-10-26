@@ -55,7 +55,10 @@ export function UpcomingDividends({ items }: UpcomingDividendsProps) {
               </div>
               <div className="flex shrink-0 flex-col items-end text-xs tabular-nums">
                 <span className="font-semibold">
-                  {formatCurrency(dividend.amount, category.currency)}
+                  {formatCurrency(
+                    dividend.amount - (dividend.taxAmount ?? 0),
+                    category.currency
+                  )}
                 </span>
                 <span className="text-[10px] text-muted-foreground">
                   {formatDate(dividend.paymentDate)}

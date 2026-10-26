@@ -72,6 +72,7 @@ export class CreateDividendUseCase {
         assetId: asset.id,
         type: data.type,
         amount,
+        taxAmount: data.taxAmount,
         rateAmount: data.rateAmount,
         quantity,
         exchangeRate: category.currency === 'BRL' ? null : data.exchangeRate,

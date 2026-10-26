@@ -22,6 +22,8 @@ export interface DividendProps {
   source: DividendSource
   /** Total recebido, na moeda da categoria do ativo */
   amount: number
+  /** Impostos/taxas retidos (opcional), na mesma moeda do `amount` */
+  taxAmount: number | null
   /** Valor pago por cota/ação */
   rateAmount: number | null
   quantity: number | null
@@ -41,13 +43,30 @@ export function toCalendarDate(value: Date): Date {
   )
 }
 
+function assertTaxBelowAmount(amount: number, taxAmount: number | null) {
+  if (taxAmount !== null && taxAmount >= amount) {
+    throw new PayloadError('Tax amount must be less than the amount')
+  }
+}
+
 function validate(
   props: Partial<
-    Pick<DividendProps, 'amount' | 'exchangeRate' | 'paymentDate' | 'quantity'>
+    Pick<
+      DividendProps,
+      'amount' | 'taxAmount' | 'exchangeRate' | 'paymentDate' | 'quantity'
+    >
   >
 ) {
   if (props.amount !== undefined && !(props.amount > 0)) {
     throw new PayloadError('Amount must be greater than zero')
+  }
+
+  if (
+    props.taxAmount !== undefined &&
+    props.taxAmount !== null &&
+    !(props.taxAmount >= 0)
+  ) {
+    throw new PayloadError('Tax amount cannot be negative')
   }
 
   if (
@@ -88,6 +107,7 @@ export class Dividend implements DividendProps {
       | 'type'
       | 'source'
       | 'rateAmount'
+      | 'taxAmount'
       | 'quantity'
       | 'exchangeRate'
       | 'comDate'
@@ -96,6 +116,7 @@ export class Dividend implements DividendProps {
     >
   ): Dividend {
     validate(props)
+    assertTaxBelowAmount(props.amount, props.taxAmount ?? null)
 
     return new Dividend({
       id: props.id || crypto.randomUUID(),
@@ -104,6 +125,7 @@ export class Dividend implements DividendProps {
       type: props.type ?? DividendType.DIVIDEND,
       source: props.source ?? DividendSource.MANUAL,
       amount: props.amount,
+      taxAmount: props.taxAmount ?? null,
       rateAmount: props.rateAmount ?? null,
       quantity: props.quantity ?? null,
       exchangeRate: props.exchangeRate ?? null,
@@ -124,6 +146,9 @@ export class Dividend implements DividendProps {
   ) {
     validate(props)
 
+    const next = { ...this._props, ...omitUndefined(props) }
+    assertTaxBelowAmount(next.amount, next.taxAmount)
+
     this._props = {
       ...this._props,
       ...omitUndefined(props),
@@ -135,9 +160,17 @@ export class Dividend implements DividendProps {
     }
   }
 
-  /** Total recebido convertido para BRL */
+  /** Valor líquido: total recebido menos impostos/taxas retidos */
+  get netAmount(): number {
+    return (
+      Math.round((this._props.amount - (this._props.taxAmount ?? 0)) * 100) /
+      100
+    )
+  }
+
+  /** Líquido convertido para BRL */
   get amountInBRL(): number {
-    return this._props.amount * (this._props.exchangeRate ?? 1)
+    return this.netAmount * (this._props.exchangeRate ?? 1)
   }
 
   get id(): string {
@@ -162,6 +195,10 @@ export class Dividend implements DividendProps {
 
   get amount(): number {
     return this._props.amount
+  }
+
+  get taxAmount(): number | null {
+    return this._props.taxAmount
   }
 
   get rateAmount(): number | null {

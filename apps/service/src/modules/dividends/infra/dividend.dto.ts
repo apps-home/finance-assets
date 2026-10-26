@@ -32,6 +32,11 @@ export class CreateDividendDTO {
   amount?: number
 
   @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Tax amount must be a number' })
+  @Min(0, { message: 'Tax amount cannot be negative' })
+  taxAmount?: number
+
+  @IsOptional()
   @IsNumber(
     { maxDecimalPlaces: 4 },
     { message: 'Rate amount must be a number' }

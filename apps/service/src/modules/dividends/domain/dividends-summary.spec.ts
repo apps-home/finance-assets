@@ -56,6 +56,17 @@ function item(
 }
 
 describe('buildDividendsSummary', () => {
+  it('should count the net amount (gross minus tax) in totals and yield', () => {
+    const withTax = item('aapl', categories.us, '2026-10-01', 10, 5)
+    withTax.dividend.update({ taxAmount: 3 })
+
+    const summary = buildDividendsSummary([withTax], 2026, NOW)
+
+    // (10 - 3) × 5
+    expect(summary.totalYear).toBe(35)
+    expect(summary.byAsset[0].last12Months).toBe(7)
+  })
+
   const items = [
     item('itsa4', categories.br, '2026-10-15', 100),
     item('itsa4', categories.br, '2026-03-15', 50),

@@ -52,6 +52,40 @@ describe('CreateDividendUseCase', () => {
     expect(dividendRepository.items[0].amount).toBe(150.5)
   })
 
+  it('should store the withheld tax next to the gross amount', async () => {
+    const asset = await seed('USD')
+
+    const result = await sut.execute({
+      userId: 'user-1',
+      assetId: asset.id,
+      amount: 10,
+      taxAmount: 3,
+      exchangeRate: 5,
+      paymentDate: new Date('2026-03-10')
+    })
+
+    expect(result.isRight()).toBe(true)
+    expect(dividendRepository.items[0].amount).toBe(10)
+    expect(dividendRepository.items[0].taxAmount).toBe(3)
+    expect(dividendRepository.items[0].amountInBRL).toBe(35)
+  })
+
+  it('should reject a tax equal to or above the amount', async () => {
+    const asset = await seed()
+
+    const result = await sut.execute({
+      userId: 'user-1',
+      assetId: asset.id,
+      amount: 10,
+      taxAmount: 10,
+      paymentDate: new Date('2026-03-10')
+    })
+
+    expect(result.isLeft()).toBe(true)
+    expect(result.value).toBeInstanceOf(PayloadError)
+    expect(dividendRepository.items).toHaveLength(0)
+  })
+
   it('should compute the amount from the rate and the asset quantity', async () => {
     const asset = await seed('BRL', 200)
 

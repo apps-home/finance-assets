@@ -64,6 +64,7 @@ export function DividendFormDialog({
   const [comDate, setComDate] = useState('')
   const [rateAmount, setRateAmount] = useState('')
   const [amount, setAmount] = useState('')
+  const [taxAmount, setTaxAmount] = useState('')
   const [quantity, setQuantity] = useState('')
   const [exchangeRate, setExchangeRate] = useState('')
 
@@ -83,6 +84,7 @@ export function DividendFormDialog({
         dividend.rateAmount != null ? String(dividend.rateAmount) : ''
       )
       setAmount(toCurrencyInput(dividend.amount))
+      setTaxAmount(toCurrencyInput(dividend.taxAmount))
       setQuantity(dividend.quantity != null ? String(dividend.quantity) : '')
       setExchangeRate(
         dividend.exchangeRate != null ? String(dividend.exchangeRate) : ''
@@ -96,6 +98,7 @@ export function DividendFormDialog({
     setComDate('')
     setRateAmount('')
     setAmount('')
+    setTaxAmount('')
     setQuantity('')
     setExchangeRate('')
   }, [open, editing, assets])
@@ -119,6 +122,9 @@ export function DividendFormDialog({
     !editing || Number(rateAmount) !== (editing.dividend.rateAmount ?? 0)
   const quantityChanged =
     !editing || Number(quantity) !== (editing.dividend.quantity ?? 0)
+  const hasTax = taxAmount.trim() !== '' && parseValue(taxAmount) > 0
+  // Ao editar, limpar o campo envia 0 para remover a taxa já salva
+  const taxChanged = taxAmount !== toCurrencyInput(editing?.dividend.taxAmount)
   const hasExchangeRate = exchangeRate.trim() !== '' && Number(exchangeRate) > 0
 
   const canSubmit =
@@ -140,6 +146,7 @@ export function DividendFormDialog({
       ...(hasRate && rateChanged && { rateAmount: Number(rateAmount) }),
       ...(hasQuantity && quantityChanged && { quantity: Number(quantity) }),
       ...(hasAmount && amountTouched && { amount: parseValue(amount) }),
+      ...(taxChanged && { taxAmount: hasTax ? parseValue(taxAmount) : 0 }),
       ...(isForeign &&
         hasExchangeRate && { exchangeRate: Number(exchangeRate) })
     })
@@ -271,6 +278,21 @@ export function DividendFormDialog({
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
+              <Label htmlFor="dividend-tax" className="font-medium text-xs">
+                Impostos/taxas retidos {isForeign ? `(${currency})` : ''}
+              </Label>
+              <Input
+                id="dividend-tax"
+                type="text"
+                placeholder="0,00 (opcional)"
+                value={taxAmount}
+                onChange={(e) =>
+                  setTaxAmount(formatCurrencyInput(e.target.value))
+                }
+                disabled={isPending}
+              />
+            </div>
+            <div className="space-y-2">
               <Label
                 htmlFor="dividend-quantity"
                 className="font-medium text-xs"
@@ -290,10 +312,11 @@ export function DividendFormDialog({
             </div>
           </div>
           <p className="-mt-2 text-[11px] text-muted-foreground">
-            Informe o total recebido ou apenas o valor por cota — nesse caso o
-            total é calculado com a quantidade. Ao editar, alterar o valor por
-            cota ou a quantidade recalcula o total, a menos que você altere o
-            total manualmente.
+            Informe o total bruto (o que a API devolve) ou apenas o valor por
+            cota — nesse caso o total é calculado com a quantidade. Ao editar,
+            alterar o valor por cota ou a quantidade recalcula o total, a menos
+            que você altere o total manualmente. Os impostos retidos são
+            descontados do total nos resumos, que mostram o valor líquido.
           </p>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
