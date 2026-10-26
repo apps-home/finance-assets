@@ -81,6 +81,12 @@ export interface DividendsMonthSummary {
   byCategoryType: TotalsByCategoryType
 }
 
+export interface DividendsYearSummary {
+  year: number
+  total: number
+  byCategoryType: TotalsByCategoryType
+}
+
 export interface DividendsByAssetSummary {
   assetId: string
   name: string
@@ -102,6 +108,8 @@ export interface DividendsSummary {
   monthlyAverage: number
   byMonth: DividendsMonthSummary[]
   last12Months: DividendsMonthSummary[]
+  /** Total por ano de todo o histórico, do mais antigo ao mais recente */
+  byYear: DividendsYearSummary[]
   byCategoryType: Array<{ type: CategoryType; total: number }>
   byCategory: Array<{
     categoryId: string

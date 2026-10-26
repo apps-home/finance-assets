@@ -1,6 +1,7 @@
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
 import { omitUndefined } from '@/core/utils/omit-undefined'
+import type { MarketAsset } from '@/modules/assets/market-asset/domain/market-asset.entity'
 
 export interface WishlistProps {
   id: string
@@ -9,6 +10,8 @@ export interface WishlistProps {
   name: string
   ticker: string
   targetPrice: number | null
+  /** Ativo do catálogo de onde vem a cotação */
+  marketAssetId: string | null
   currentClosePrice: number | null
   lastMonthClosePrice: number | null
   notes: string | null
@@ -28,6 +31,7 @@ export class Wishlist implements WishlistProps {
       WishlistProps,
       | 'id'
       | 'targetPrice'
+      | 'marketAssetId'
       | 'currentClosePrice'
       | 'lastMonthClosePrice'
       | 'notes'
@@ -50,6 +54,7 @@ export class Wishlist implements WishlistProps {
       name: props.name.trim(),
       ticker: props.ticker.trim().toUpperCase(),
       targetPrice: props.targetPrice ?? null,
+      marketAssetId: props.marketAssetId ?? null,
       currentClosePrice: props.currentClosePrice ?? null,
       lastMonthClosePrice: props.lastMonthClosePrice ?? null,
       notes: props.notes ?? null,
@@ -62,7 +67,14 @@ export class Wishlist implements WishlistProps {
     props: Partial<
       Omit<
         WishlistProps,
-        'id' | 'userId' | 'categoryId' | 'createdAt' | 'updatedAt'
+        | 'id'
+        | 'userId'
+        | 'categoryId'
+        | 'marketAssetId'
+        | 'currentClosePrice'
+        | 'lastMonthClosePrice'
+        | 'createdAt'
+        | 'updatedAt'
       >
     >
   ) {
@@ -82,6 +94,21 @@ export class Wishlist implements WishlistProps {
         ticker: props.ticker.trim().toUpperCase()
       }),
       updatedAt: new Date()
+    }
+  }
+
+  /** Aponta o item para o catálogo de mercado e assume a cotação dele */
+  linkMarketAsset(
+    marketAsset: Pick<
+      MarketAsset,
+      'id' | 'currentClosePrice' | 'lastMonthClosePrice'
+    > | null
+  ) {
+    this._props = {
+      ...this._props,
+      marketAssetId: marketAsset?.id ?? null,
+      currentClosePrice: marketAsset?.currentClosePrice ?? null,
+      lastMonthClosePrice: marketAsset?.lastMonthClosePrice ?? null
     }
   }
 
@@ -107,6 +134,10 @@ export class Wishlist implements WishlistProps {
 
   get targetPrice(): number | null {
     return this._props.targetPrice
+  }
+
+  get marketAssetId(): string | null {
+    return this._props.marketAssetId
   }
 
   get currentClosePrice(): number | null {

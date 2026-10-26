@@ -1,3 +1,7 @@
+import type {
+  PriceHistory,
+  PriceHistoryRange
+} from '@/features/assets/api/types'
 import { apiClient } from '@/infrastructure/services/api-client'
 
 import type {
@@ -60,6 +64,20 @@ export async function updateWishlist(
 export async function deleteWishlist(id: string): Promise<{ message: string }> {
   const response = await apiClient.delete<{ message: string }>(
     `${BASE_URL}/${id}`
+  )
+  return response.data
+}
+
+/**
+ * Histórico de cotação do item no período (fonte externa, com cache no servidor)
+ */
+export async function getWishlistPriceHistory(
+  id: string,
+  range: PriceHistoryRange
+): Promise<PriceHistory> {
+  const response = await apiClient.get<PriceHistory>(
+    `${BASE_URL}/${id}/history`,
+    { params: { range } }
   )
   return response.data
 }

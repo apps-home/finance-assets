@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -13,14 +13,21 @@ import {
 
 import type { CategoryType } from '@/features/categories/api/types'
 import { CATEGORY_TYPE_LABELS } from '@/features/categories/utils'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { useMediaQuery } from '@/shared/hooks/use-media-query'
 import { formatCurrency } from '@/shared/utils/format-currency'
 
-import type { DividendsMonthSummary } from '../../api/types'
-import { buildChartData, CATEGORY_TYPE_CHART_COLORS } from '../../utils'
+import type { DividendsSummary } from '../../api/types'
+import {
+  buildChartData,
+  buildYearChartData,
+  CATEGORY_TYPE_CHART_COLORS
+} from '../../utils'
+
+type ChartView = 'year' | 'last12' | 'all'
 
 interface DividendsChartProps {
-  months: DividendsMonthSummary[]
+  summary: DividendsSummary
 }
 
 interface CustomTooltipProps {
@@ -75,12 +82,35 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   )
 }
 
-export function DividendsChart({ months }: DividendsChartProps) {
+export function DividendsChart({ summary }: DividendsChartProps) {
   const isMobile = !useMediaQuery('(min-width: 640px)')
+  const [view, setView] = useState<ChartView>('year')
 
-  const { data, presentTypes } = useMemo(() => buildChartData(months), [months])
+  const { data, presentTypes, total, title, emptyMessage } = useMemo(() => {
+    if (view === 'all') {
+      return {
+        ...buildYearChartData(summary.byYear),
+        total: summary.byYear.reduce((sum, item) => sum + item.total, 0),
+        title: 'Histórico de proventos por ano',
+        emptyMessage: 'Nenhum provento recebido até hoje.'
+      }
+    }
 
-  const total = months.reduce((sum, month) => sum + month.total, 0)
+    const months = view === 'year' ? summary.byMonth : summary.last12Months
+
+    return {
+      ...buildChartData(months),
+      total: months.reduce((sum, month) => sum + month.total, 0),
+      title:
+        view === 'year'
+          ? `Proventos em ${summary.year}`
+          : 'Proventos nos últimos 12 meses',
+      emptyMessage:
+        view === 'year'
+          ? `Nenhum provento recebido em ${summary.year}.`
+          : 'Nenhum provento recebido nos últimos 12 meses.'
+    }
+  }, [summary, view])
 
   return (
     <div
@@ -88,17 +118,27 @@ export function DividendsChart({ months }: DividendsChartProps) {
       className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-6"
     >
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-semibold text-xl">
-          Proventos nos últimos 12 meses
-        </h3>
+        <h3 className="font-semibold text-xl">{title}</h3>
         <span className="font-semibold text-muted-foreground text-sm">
           Total: {formatCurrency(total)}
         </span>
       </div>
 
+      <Tabs
+        value={view}
+        onValueChange={(value) => setView(value as ChartView)}
+        className="mb-4"
+      >
+        <TabsList variant="line">
+          <TabsTrigger value="year">{summary.year}</TabsTrigger>
+          <TabsTrigger value="last12">12 meses</TabsTrigger>
+          <TabsTrigger value="all">Todos os anos</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {presentTypes.length === 0 ? (
         <div className="flex h-72 items-center justify-center text-muted-foreground text-xs">
-          Nenhum provento recebido nos últimos 12 meses.
+          {emptyMessage}
         </div>
       ) : (
         <>

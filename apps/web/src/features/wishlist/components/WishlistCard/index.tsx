@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  BriefcaseBusiness,
   CheckCircle2,
   FileText,
   Pencil,
@@ -37,6 +38,8 @@ interface WishlistCardProps {
   item: WishlistWithCategory
   onEdit: (item: WishlistWithCategory) => void
   onDelete: (item: WishlistWithCategory) => void
+  onViewDetails: (item: WishlistWithCategory) => void
+  onAddToPortfolio: (item: WishlistWithCategory) => void
   className?: string
 }
 
@@ -44,6 +47,8 @@ export function WishlistCard({
   item,
   onEdit,
   onDelete,
+  onViewDetails,
+  onAddToPortfolio,
   className
 }: WishlistCardProps) {
   const { wishlist, category } = item
@@ -61,8 +66,18 @@ export function WishlistCard({
   return (
     <Card
       data-slot="wishlist-card"
+      tabIndex={0}
+      onClick={() => onViewDetails(item)}
+      onKeyDown={(e) => {
+        // Só reage ao teclado quando o foco está no próprio card (não nos botões)
+        if (e.target !== e.currentTarget) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onViewDetails(item)
+        }
+      }}
       className={cn(
-        'flex flex-col border-border transition-shadow hover:shadow-md',
+        'flex cursor-pointer flex-col border-border transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         className
       )}
     >
@@ -102,7 +117,26 @@ export function WishlistCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div
+          className="flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  aria-label="Adicionar à carteira"
+                  onClick={() => onAddToPortfolio(item)}
+                >
+                  <BriefcaseBusiness className="size-3.5 text-primary" />
+                </Button>
+              }
+            />
+            <TooltipContent>Adicionar à carteira</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger
               render={

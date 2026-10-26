@@ -1,7 +1,4 @@
-import {
-  CategorySummary,
-  CategoryType
-} from '@/modules/assets/categories/domain/category.entity'
+import { CategorySummary } from '@/modules/assets/categories/domain/category.entity'
 
 import { FindAllWishlistParams } from './dto/find-all-wishlist-params.dto'
 import { Wishlist } from './wishlist.entity'
@@ -9,11 +6,6 @@ import { Wishlist } from './wishlist.entity'
 export interface WishlistWithCategory {
   wishlist: Wishlist
   category: CategorySummary
-}
-
-export interface WishlistWithCategoryType {
-  wishlist: Wishlist
-  categoryType: CategoryType
 }
 
 export interface WishlistWithUserDetails extends WishlistWithCategory {
@@ -34,6 +26,5 @@ export abstract class WishlistRepository {
     ticker: string
   ): Promise<Wishlist | null>
   abstract delete(id: string): Promise<void>
-  abstract findAllWithTicker(): Promise<WishlistWithCategoryType[]>
   abstract findAllWithUserDetails(): Promise<WishlistWithUserDetails[]>
 }

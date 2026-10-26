@@ -2,7 +2,6 @@ import type { Wishlist } from '@/modules/assets/wishlist/domain/wishlist.entity'
 import type {
   WishlistRepository,
   WishlistWithCategory,
-  WishlistWithCategoryType,
   WishlistWithUserDetails
 } from '@/modules/assets/wishlist/domain/wishlist.repository'
 
@@ -47,10 +46,6 @@ export class InMemoryWishlistRepository implements WishlistRepository {
 
   async delete(id: string): Promise<void> {
     this.items = this.items.filter((item) => item.id !== id)
-  }
-
-  async findAllWithTicker(): Promise<WishlistWithCategoryType[]> {
-    return []
   }
 
   async findAllWithUserDetails(): Promise<WishlistWithUserDetails[]> {

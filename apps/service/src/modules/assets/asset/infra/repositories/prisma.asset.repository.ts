@@ -7,11 +7,10 @@ import { Asset } from '../../domain/asset.entity'
 import {
   AssetRepository,
   AssetWithCategory,
-  AssetWithCategoryType,
   AssetWithUserDetails
 } from '../../domain/asset.repository'
 import { FindAssetsParams } from '../../domain/dto/find-assets-params.dto'
-import { PrismaAssetMapper } from './prisma.asset.mapper'
+import { PrismaAssetMapper, WITH_MARKET_ASSET } from './prisma.asset.mapper'
 
 @Injectable()
 export class PrismaAssetRepository implements AssetRepository {
@@ -36,7 +35,7 @@ export class PrismaAssetRepository implements AssetRepository {
           ]
         })
       },
-      include: { category: true },
+      include: { category: true, ...WITH_MARKET_ASSET },
       orderBy: { name: 'asc' }
     })
 
@@ -53,7 +52,8 @@ export class PrismaAssetRepository implements AssetRepository {
 
   async findById(id: string, userId: string): Promise<Asset | null> {
     const asset = await this.prisma.asset.findFirst({
-      where: { id, category: { userId } }
+      where: { id, category: { userId } },
+      include: WITH_MARKET_ASSET
     })
 
     if (!asset) return null
@@ -63,7 +63,8 @@ export class PrismaAssetRepository implements AssetRepository {
 
   async findByIdForSystem(id: string): Promise<Asset | null> {
     const asset = await this.prisma.asset.findUnique({
-      where: { id }
+      where: { id },
+      include: WITH_MARKET_ASSET
     })
 
     if (!asset) return null
@@ -72,23 +73,17 @@ export class PrismaAssetRepository implements AssetRepository {
   }
 
   async save(asset: Asset): Promise<void> {
-    const data = PrismaAssetMapper.toPrisma(asset)
+    const {
+      id: _id,
+      categoryId: _categoryId,
+      createdAt: _createdAt,
+      ...update
+    } = PrismaAssetMapper.toPrisma(asset)
 
     await this.prisma.asset.upsert({
       where: { id: asset.id },
-      create: data,
-      update: {
-        name: asset.name,
-        ticker: asset.ticker,
-        quantity: asset.quantity,
-        averagePrice: asset.averagePrice,
-        broker: asset.broker,
-        isActive: asset.isActive,
-        currentClosePrice: asset.currentClosePrice,
-        lastMonthClosePrice: asset.lastMonthClosePrice,
-        dividendsImportedAt: asset.dividendsImportedAt,
-        updatedAt: asset.updatedAt
-      }
+      create: PrismaAssetMapper.toPrisma(asset),
+      update
     })
   }
 
@@ -107,22 +102,11 @@ export class PrismaAssetRepository implements AssetRepository {
     })
   }
 
-  async findAllWithTicker(): Promise<AssetWithCategoryType[]> {
-    const assets = await this.prisma.asset.findMany({
-      where: { isActive: true },
-      include: { category: true }
-    })
-
-    return assets.map((record) => ({
-      asset: PrismaAssetMapper.toDomain(record),
-      categoryType: record.category.type as CategoryType
-    }))
-  }
-
   async findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]> {
     const assets = await this.prisma.asset.findMany({
       where: { isActive: true },
       include: {
+        ...WITH_MARKET_ASSET,
         category: {
           include: {
             user: true

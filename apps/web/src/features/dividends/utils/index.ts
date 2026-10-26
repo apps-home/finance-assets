@@ -4,6 +4,7 @@ import { MONTH_NAMES } from '@/shared/utils/month-names'
 import {
   DividendSource,
   type DividendsMonthSummary,
+  type DividendsYearSummary,
   DividendType
 } from '../api/types'
 
@@ -51,19 +52,40 @@ export interface DividendsChartPoint {
   [categoryType: string]: number | string
 }
 
-/** Série mensal achatada para o BarChart empilhado, e as classes com valor */
-export function buildChartData(months: DividendsMonthSummary[]) {
+interface ChartSource {
+  label: string
+  total: number
+  byCategoryType: DividendsMonthSummary['byCategoryType']
+}
+
+/** Série achatada para o BarChart empilhado, e as classes com valor */
+function buildStackedData(sources: ChartSource[]) {
   const presentTypes = CATEGORY_TYPE_CHART_ORDER.filter((type) =>
-    months.some((month) => (month.byCategoryType[type] ?? 0) > 0)
+    sources.some((source) => (source.byCategoryType[type] ?? 0) > 0)
   )
 
-  const data: DividendsChartPoint[] = months.map((month) => ({
-    label: formatMonthLabel(month.year, month.month),
-    total: month.total,
+  const data: DividendsChartPoint[] = sources.map((source) => ({
+    label: source.label,
+    total: source.total,
     ...Object.fromEntries(
-      presentTypes.map((type) => [type, month.byCategoryType[type] ?? 0])
+      presentTypes.map((type) => [type, source.byCategoryType[type] ?? 0])
     )
   }))
 
   return { data, presentTypes }
+}
+
+export function buildChartData(months: DividendsMonthSummary[]) {
+  return buildStackedData(
+    months.map((month) => ({
+      ...month,
+      label: formatMonthLabel(month.year, month.month)
+    }))
+  )
+}
+
+export function buildYearChartData(years: DividendsYearSummary[]) {
+  return buildStackedData(
+    years.map((item) => ({ ...item, label: String(item.year) }))
+  )
 }

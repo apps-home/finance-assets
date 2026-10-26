@@ -1,5 +1,7 @@
+import { FakeEventPublisher } from '@test/events/fake-event-publisher'
 import { makeAsset } from '@test/factories/make-asset'
 import { makeCategory } from '@test/factories/make-category'
+import { makeMarketAssetUseCases } from '@test/market-asset/make-market-asset-use-cases'
 import { InMemoryAssetRepository } from '@test/repositories/in-memory-asset.repository'
 import { InMemoryCategoryRepository } from '@test/repositories/in-memory-category.repository'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -43,7 +45,12 @@ describe('Asset use cases ownership', () => {
   })
 
   it('should update an asset that belongs to the user', async () => {
-    const sut = new UpdateAssetUseCase(assetRepository)
+    const sut = new UpdateAssetUseCase(
+      assetRepository,
+      categoryRepository,
+      makeMarketAssetUseCases().resolve,
+      new FakeEventPublisher()
+    )
 
     const result = await sut.execute('user-1', assetId, { name: 'Novo nome' })
 
@@ -52,7 +59,12 @@ describe('Asset use cases ownership', () => {
   })
 
   it('should not update an asset that belongs to another user', async () => {
-    const sut = new UpdateAssetUseCase(assetRepository)
+    const sut = new UpdateAssetUseCase(
+      assetRepository,
+      categoryRepository,
+      makeMarketAssetUseCases().resolve,
+      new FakeEventPublisher()
+    )
 
     const result = await sut.execute('user-2', assetId, { name: 'Invasor' })
 

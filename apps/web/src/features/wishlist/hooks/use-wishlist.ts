@@ -1,11 +1,13 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
+import type { PriceHistoryRange } from '@/features/assets/api/types'
 import { queryClient } from '@/shared/providers/query-client'
 
 import {
   createWishlist,
   deleteWishlist,
+  getWishlistPriceHistory,
   listWishlist,
   updateWishlist
 } from '../api'
@@ -21,6 +23,17 @@ export function useWishlist(params?: WishlistSearchParams) {
   return useQuery({
     queryKey: [WISHLIST_QUERY_KEY, params],
     queryFn: () => listWishlist(params),
+    placeholderData: (prev) => prev
+  })
+}
+
+// Fonte externa com cache no servidor: não refaz a consulta a cada abertura
+export function useWishlistPriceHistory(id: string, range: PriceHistoryRange) {
+  return useQuery({
+    queryKey: [WISHLIST_QUERY_KEY, 'history', id, range],
+    queryFn: () => getWishlistPriceHistory(id, range),
+    staleTime: 15 * 60 * 1000,
+    retry: false,
     placeholderData: (prev) => prev
   })
 }

@@ -60,8 +60,9 @@ describe('Asset price history (E2E)', () => {
       averagePrice: 30,
       broker: null,
       isActive: true,
+      marketAssetId: null,
       currentClosePrice: 40,
-      lastMonthClosePrice: 38,
+      marketAsset: null,
       dividendsImportedAt: null,
       createdAt: new Date(),
       updatedAt: new Date()

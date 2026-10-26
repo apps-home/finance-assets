@@ -18,18 +18,11 @@ export class GetDividendsSummaryUseCase {
     userId: string,
     year: number = new Date().getUTCFullYear()
   ): Promise<GetDividendsSummaryResponse> {
-    // Janela mínima: do início do ano consultado ou dos últimos 12 meses
-    // (o que for mais antigo), para alimentar o gráfico e o Yield on Cost.
+    // Histórico completo: alimenta o gráfico por ano, além do ano consultado
+    // e dos últimos 12 meses.
+    const items = await this.dividendRepository.list({ userId })
+
     const now = new Date()
-    const from = new Date(
-      Math.min(
-        Date.UTC(year, 0, 1),
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1)
-      )
-    )
-
-    const items = await this.dividendRepository.list({ userId, from })
-
     return right(buildDividendsSummary(items, year, now))
   }
 }

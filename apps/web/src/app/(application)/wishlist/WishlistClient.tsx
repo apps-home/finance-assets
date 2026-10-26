@@ -3,6 +3,9 @@
 import { Bookmark, FilterX, PlusIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
+import type { CreateAssetDTO } from '@/features/assets/api/types'
+import { AssetFormDialog } from '@/features/assets/components/AssetFormDialog'
+import { useCreateAsset } from '@/features/assets/hooks/use-assets'
 import type { CategoryType } from '@/features/categories/api/types'
 import { useCategories } from '@/features/categories/hooks/use-category'
 import { CATEGORY_TYPE_OPTIONS } from '@/features/categories/utils'
@@ -13,6 +16,7 @@ import type {
   WishlistWithCategory
 } from '@/features/wishlist/api/types'
 import { WishlistCard } from '@/features/wishlist/components/WishlistCard'
+import { WishlistDetailSheet } from '@/features/wishlist/components/WishlistDetailSheet'
 import { WishlistForm } from '@/features/wishlist/components/WishlistForm'
 import { WishlistSummaryCards } from '@/features/wishlist/components/WishlistSummaryCards'
 import { WishlistTable } from '@/features/wishlist/components/WishlistTable'
@@ -37,6 +41,11 @@ export default function WishlistClient() {
   const [editingItem, setEditingItem] = useState<WishlistWithCategory | null>(
     null
   )
+  const [viewingItem, setViewingItem] = useState<WishlistWithCategory | null>(
+    null
+  )
+  const [addingToPortfolio, setAddingToPortfolio] =
+    useState<WishlistWithCategory | null>(null)
   const [deletingItem, setDeletingItem] = useState<WishlistWithCategory | null>(
     null
   )
@@ -73,6 +82,26 @@ export default function WishlistClient() {
   const { mutateAsync: deleteWishlist, isPending: isDeleting } =
     useDeleteWishlistItem()
 
+  const { mutateAsync: createAsset, isPending: isCreatingAsset } =
+    useCreateAsset()
+
+  // Estável entre renders: o diálogo reinicia o formulário quando isso muda
+  const portfolioDefaults = useMemo(
+    () =>
+      addingToPortfolio
+        ? {
+            name: addingToPortfolio.wishlist.name,
+            ticker: addingToPortfolio.wishlist.ticker,
+            categoryId: addingToPortfolio.wishlist.categoryId,
+            quantity: null,
+            averagePrice: null,
+            broker: '',
+            isActive: true
+          }
+        : undefined,
+    [addingToPortfolio]
+  )
+
   const { data: categories = [] } = useCategories()
 
   const handleOpenCreate = () => {
@@ -106,6 +135,12 @@ export default function WishlistClient() {
       await createWishlist(data)
       setFormOpen(false)
     }
+  }
+
+  // A cotação vem do catálogo compartilhado: o ticker da wishlist é reaproveitado
+  const handleAddToPortfolio = async (dto: CreateAssetDTO) => {
+    await createAsset(dto)
+    setAddingToPortfolio(null)
   }
 
   if (isLoading) {
@@ -236,6 +271,8 @@ export default function WishlistClient() {
             items={filteredItems}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onViewDetails={setViewingItem}
+            onAddToPortfolio={setAddingToPortfolio}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -245,11 +282,36 @@ export default function WishlistClient() {
                 item={item}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onViewDetails={setViewingItem}
+                onAddToPortfolio={setAddingToPortfolio}
               />
             ))}
           </div>
         )}
       </div>
+
+      <WishlistDetailSheet
+        item={viewingItem}
+        open={!!viewingItem}
+        onOpenChange={(open) => {
+          if (!open) setViewingItem(null)
+        }}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onAddToPortfolio={setAddingToPortfolio}
+      />
+
+      <AssetFormDialog
+        mode="create"
+        open={!!addingToPortfolio}
+        onOpenChange={(open) => {
+          if (!open) setAddingToPortfolio(null)
+        }}
+        onSubmit={handleAddToPortfolio}
+        isPending={isCreatingAsset}
+        categories={categories}
+        defaultValues={portfolioDefaults}
+      />
 
       <WishlistForm
         open={formOpen}

@@ -29,6 +29,7 @@ export class WishlistMapper {
       name: wishlist.name,
       ticker: wishlist.ticker,
       targetPrice: wishlist.targetPrice,
+      marketAssetId: wishlist.marketAssetId,
       currentClosePrice: wishlist.currentClosePrice,
       lastMonthClosePrice: wishlist.lastMonthClosePrice,
       notes: wishlist.notes,

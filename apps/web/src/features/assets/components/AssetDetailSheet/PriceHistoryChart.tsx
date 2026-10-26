@@ -1,5 +1,6 @@
 'use client'
 
+import type { UseQueryResult } from '@tanstack/react-query'
 import { LineChart as LineChartIcon } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import {
@@ -12,8 +13,10 @@ import {
   YAxis
 } from 'recharts'
 
-import type { PriceHistoryRange } from '@/features/assets/api/types'
-import { useAssetPriceHistory } from '@/features/assets/hooks/use-assets'
+import type {
+  PriceHistory,
+  PriceHistoryRange
+} from '@/features/assets/api/types'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { cn } from '@/shared/lib/utils'
@@ -33,8 +36,13 @@ const RANGES: Array<{ value: PriceHistoryRange; label: string }> = [
 ]
 
 interface PriceHistoryChartProps {
-  assetId: string
+  id: string
   currency: string
+  /** Hook de consulta do histórico (ativo ou wishlist) */
+  useHistory: (
+    id: string,
+    range: PriceHistoryRange
+  ) => UseQueryResult<PriceHistory>
 }
 
 interface TooltipProps {
@@ -86,15 +94,13 @@ function PriceTooltip({ active, payload, currency, intraday }: TooltipProps) {
 }
 
 export function PriceHistoryChart({
-  assetId,
-  currency
+  id,
+  currency,
+  useHistory
 }: PriceHistoryChartProps) {
   const [range, setRange] = useState<PriceHistoryRange>('1m')
   const gradientId = useId()
-  const { data, isLoading, isError, isFetching } = useAssetPriceHistory(
-    assetId,
-    range
-  )
+  const { data, isLoading, isError, isFetching } = useHistory(id, range)
 
   const prices = useMemo(() => data?.points.map((p) => p.close) ?? [], [data])
   const isPositive = (data?.change ?? 0) >= 0

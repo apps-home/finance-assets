@@ -1,17 +1,30 @@
 import { Injectable } from '@nestjs/common'
 
 import { PayloadError } from '@/core/domain/errors/payload-error'
+import { AssetEvent, AssetEventPayload } from '@/core/domain/events/asset.event'
+import { DomainEventPublisher } from '@/core/domain/events/domain-event-publisher.interface'
 import { Either, left, right } from '@/core/utils/Either'
+import { CategoryNotFoundError } from '@/modules/assets/categories/application/errors/category-not-found.error'
+import { CategoryRepository } from '@/modules/assets/categories/domain/category.repository'
+import { ResolveMarketAssetUseCase } from '@/modules/assets/market-asset/application/use-cases/resolve-market-asset'
 
 import { AssetRepository } from '../../domain/asset.repository'
 import { UpdateAssetPayload } from '../../domain/dto/update-asset.dto'
 import { AssetNotFoundError } from '../errors/asset-not-found.error'
 
-type UpdateAssetResponse = Either<AssetNotFoundError | PayloadError, void>
+type UpdateAssetResponse = Either<
+  AssetNotFoundError | CategoryNotFoundError | PayloadError,
+  void
+>
 
 @Injectable()
 export class UpdateAssetUseCase {
-  constructor(private assetRepository: AssetRepository) {}
+  constructor(
+    private assetRepository: AssetRepository,
+    private categoryRepository: CategoryRepository,
+    private resolveMarketAsset: ResolveMarketAssetUseCase,
+    private eventPublisher: DomainEventPublisher
+  ) {}
 
   async execute(
     userId: string,
@@ -23,6 +36,8 @@ export class UpdateAssetUseCase {
     if (!existingAsset) {
       return left(new AssetNotFoundError())
     }
+
+    const previousTicker = existingAsset.ticker
 
     try {
       if (
@@ -43,7 +58,39 @@ export class UpdateAssetUseCase {
       throw error
     }
 
+    // Outro ticker aponta para outro item do catálogo
+    let marketAssetToRefresh: string | null = null
+
+    if (existingAsset.ticker !== previousTicker) {
+      const category = await this.categoryRepository.findById(
+        existingAsset.categoryId,
+        userId
+      )
+
+      if (!category) {
+        return left(new CategoryNotFoundError())
+      }
+
+      const { value: marketAsset } = await this.resolveMarketAsset.execute({
+        ticker: existingAsset.ticker,
+        type: category.type,
+        name: existingAsset.name
+      })
+      existingAsset.linkMarketAsset(marketAsset)
+
+      if (marketAsset && !marketAsset.hasFreshQuote()) {
+        marketAssetToRefresh = marketAsset.id
+      }
+    }
+
     await this.assetRepository.save(existingAsset)
+
+    if (marketAssetToRefresh) {
+      this.eventPublisher.publish<AssetEventPayload>(
+        AssetEvent.CREATED,
+        new AssetEventPayload(existingAsset.id, marketAssetToRefresh)
+      )
+    }
 
     return right(void 0)
   }

@@ -8,10 +8,12 @@ import { Wishlist } from '../../domain/wishlist.entity'
 import {
   WishlistRepository,
   WishlistWithCategory,
-  WishlistWithCategoryType,
   WishlistWithUserDetails
 } from '../../domain/wishlist.repository'
-import { PrismaWishlistMapper } from './prisma.wishlist.mapper'
+import {
+  PrismaWishlistMapper,
+  WITH_MARKET_ASSET
+} from './prisma.wishlist.mapper'
 
 @Injectable()
 export class PrismaWishlistRepository implements WishlistRepository {
@@ -34,7 +36,8 @@ export class PrismaWishlistRepository implements WishlistRepository {
         })
       },
       include: {
-        category: true
+        category: true,
+        ...WITH_MARKET_ASSET
       },
       orderBy: { name: 'asc' }
     })
@@ -52,7 +55,8 @@ export class PrismaWishlistRepository implements WishlistRepository {
 
   async findById(id: string, userId: string): Promise<Wishlist | null> {
     const record = await this.prisma.assetWishlists.findFirst({
-      where: { id, userId }
+      where: { id, userId },
+      include: WITH_MARKET_ASSET
     })
 
     if (!record) return null
@@ -62,7 +66,8 @@ export class PrismaWishlistRepository implements WishlistRepository {
 
   async findByIdForSystem(id: string): Promise<Wishlist | null> {
     const record = await this.prisma.assetWishlists.findUnique({
-      where: { id }
+      where: { id },
+      include: WITH_MARKET_ASSET
     })
 
     if (!record) return null
@@ -80,7 +85,8 @@ export class PrismaWishlistRepository implements WishlistRepository {
           userId,
           ticker
         }
-      }
+      },
+      include: WITH_MARKET_ASSET
     })
 
     if (!record) return null
@@ -98,8 +104,7 @@ export class PrismaWishlistRepository implements WishlistRepository {
         name: wishlist.name,
         ticker: wishlist.ticker,
         targetPrice: wishlist.targetPrice,
-        currentClosePrice: wishlist.currentClosePrice,
-        lastMonthClosePrice: wishlist.lastMonthClosePrice,
+        marketAssetId: wishlist.marketAssetId,
         notes: wishlist.notes,
         updatedAt: wishlist.updatedAt
       }
@@ -112,22 +117,12 @@ export class PrismaWishlistRepository implements WishlistRepository {
     })
   }
 
-  async findAllWithTicker(): Promise<WishlistWithCategoryType[]> {
-    const records = await this.prisma.assetWishlists.findMany({
-      include: { category: true }
-    })
-
-    return records.map((record) => ({
-      wishlist: PrismaWishlistMapper.toDomain(record),
-      categoryType: record.category.type as CategoryType
-    }))
-  }
-
   async findAllWithUserDetails(): Promise<WishlistWithUserDetails[]> {
     const records = await this.prisma.assetWishlists.findMany({
       include: {
         category: true,
-        user: true
+        user: true,
+        ...WITH_MARKET_ASSET
       }
     })
 

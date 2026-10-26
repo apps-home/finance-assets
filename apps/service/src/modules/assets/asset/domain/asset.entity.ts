@@ -1,6 +1,7 @@
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { Optional } from '@/core/utils/Optional'
 import { omitUndefined } from '@/core/utils/omit-undefined'
+import type { MarketAsset } from '@/modules/assets/market-asset/domain/market-asset.entity'
 
 export interface AssetProps {
   id: string
@@ -11,6 +12,9 @@ export interface AssetProps {
   averagePrice: number | null
   broker: string | null
   isActive: boolean
+  /** Ativo do catálogo de onde vem a cotação; null para preço manual */
+  marketAssetId: string | null
+  /** Cotação do catálogo, ou o preço manual quando não há `marketAssetId` */
   currentClosePrice: number | null
   lastMonthClosePrice: number | null
   dividendsImportedAt: Date | null
@@ -34,6 +38,7 @@ export class Asset implements AssetProps {
       | 'averagePrice'
       | 'broker'
       | 'isActive'
+      | 'marketAssetId'
       | 'currentClosePrice'
       | 'lastMonthClosePrice'
       | 'dividendsImportedAt'
@@ -54,6 +59,7 @@ export class Asset implements AssetProps {
       averagePrice: props.averagePrice ?? null,
       broker: props.broker ?? null,
       isActive: props.isActive ?? true,
+      marketAssetId: props.marketAssetId ?? null,
       currentClosePrice: props.currentClosePrice ?? null,
       lastMonthClosePrice: props.lastMonthClosePrice ?? null,
       dividendsImportedAt: props.dividendsImportedAt ?? null,
@@ -66,7 +72,13 @@ export class Asset implements AssetProps {
     props: Partial<
       Omit<
         AssetProps,
-        'id' | 'categoryId' | 'dividendsImportedAt' | 'createdAt' | 'updatedAt'
+        | 'id'
+        | 'categoryId'
+        | 'marketAssetId'
+        | 'lastMonthClosePrice'
+        | 'dividendsImportedAt'
+        | 'createdAt'
+        | 'updatedAt'
       >
     >
   ) {
@@ -74,14 +86,41 @@ export class Asset implements AssetProps {
       throw new PayloadError('Name must be at least 2 characters long')
     }
 
+    // Com cotação de mercado o preço vem do catálogo, não de edição manual
+    const { currentClosePrice, ...rest } = props
+
     this._props = {
       ...this._props,
-      ...omitUndefined(props),
+      ...omitUndefined(rest),
+      ...(!this._props.marketAssetId &&
+        currentClosePrice !== undefined && { currentClosePrice }),
       ...(props.name !== undefined && { name: props.name.trim() }),
       // Outro ticker tem outro histórico de proventos
       ...(props.ticker !== undefined &&
         props.ticker !== this._props.ticker && { dividendsImportedAt: null }),
       updatedAt: new Date()
+    }
+  }
+
+  /**
+   * Aponta o ativo para o catálogo de mercado (e assume a cotação dele), ou
+   * desfaz o vínculo e volta a usar só o preço manual.
+   */
+  linkMarketAsset(
+    marketAsset: Pick<
+      MarketAsset,
+      'id' | 'currentClosePrice' | 'lastMonthClosePrice'
+    > | null
+  ) {
+    this._props = {
+      ...this._props,
+      marketAssetId: marketAsset?.id ?? null,
+      ...(marketAsset
+        ? {
+            currentClosePrice: marketAsset.currentClosePrice,
+            lastMonthClosePrice: marketAsset.lastMonthClosePrice
+          }
+        : { lastMonthClosePrice: null })
     }
   }
 
@@ -119,6 +158,10 @@ export class Asset implements AssetProps {
 
   get isActive(): boolean {
     return this._props.isActive
+  }
+
+  get marketAssetId(): string | null {
+    return this._props.marketAssetId
   }
 
   get currentClosePrice(): number | null {

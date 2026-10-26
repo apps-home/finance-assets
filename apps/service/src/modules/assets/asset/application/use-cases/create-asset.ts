@@ -10,6 +10,7 @@ import { CreateAssetPayload } from '@/modules/assets/asset/domain/dto/create-ass
 import { CategoryNotFoundError } from '@/modules/assets/categories/application/errors/category-not-found.error'
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 import { CategoryRepository } from '@/modules/assets/categories/domain/category.repository'
+import { ResolveMarketAssetUseCase } from '@/modules/assets/market-asset/application/use-cases/resolve-market-asset'
 
 type CreateAssetResponse = Either<CategoryNotFoundError | PayloadError, void>
 
@@ -18,6 +19,7 @@ export class CreateAssetUseCase {
   constructor(
     private assetRepository: AssetRepository,
     private categoryRepository: CategoryRepository,
+    private resolveMarketAsset: ResolveMarketAssetUseCase,
     private eventPublisher: DomainEventPublisher
   ) {}
 
@@ -55,12 +57,20 @@ export class CreateAssetUseCase {
 
       const asset = AssetMapper.toDomain(data)
 
+      // Reaproveita o ticker do catálogo (e a cotação, se recente)
+      const { value: marketAsset } = await this.resolveMarketAsset.execute({
+        ticker: asset.ticker,
+        type: category.type,
+        name: asset.name
+      })
+      asset.linkMarketAsset(marketAsset)
+
       await this.assetRepository.save(asset)
 
-      if (!isFixedIncome && asset.ticker) {
+      if (marketAsset && !marketAsset.hasFreshQuote()) {
         this.eventPublisher.publish<AssetEventPayload>(
           AssetEvent.CREATED,
-          new AssetEventPayload(asset.id, asset.ticker, category.type)
+          new AssetEventPayload(asset.id, marketAsset.id)
         )
       }
 

@@ -47,6 +47,8 @@ interface AssetFormDialogProps {
   categories: Category[]
   initialCategoryId?: string
   defaultValues?: AssetFormDefaults
+  /** Com `defaultValues` o padrão é editar; `create` só pré-preenche um novo ativo */
+  mode?: 'create' | 'edit'
 }
 
 export function AssetFormDialog({
@@ -56,7 +58,8 @@ export function AssetFormDialog({
   isPending,
   categories,
   initialCategoryId,
-  defaultValues
+  defaultValues,
+  mode
 }: AssetFormDialogProps) {
   const [name, setName] = useState('')
   const [ticker, setTicker] = useState('')
@@ -67,7 +70,7 @@ export function AssetFormDialog({
   const [broker, setBroker] = useState('')
   const [isActive, setIsActive] = useState(true)
 
-  const isEditing = !!defaultValues
+  const isEditing = mode ? mode === 'edit' : !!defaultValues
 
   useEffect(() => {
     if (open && defaultValues) {
@@ -172,7 +175,7 @@ export function AssetFormDialog({
               onValueChange={(val) => {
                 if (val) setCategoryId(val)
               }}
-              disabled={isPending || (isEditing && !!defaultValues.categoryId)}
+              disabled={isPending || (isEditing && !!defaultValues?.categoryId)}
             >
               <SelectTrigger id="asset-category">
                 <SelectValue placeholder="Selecione a categoria">

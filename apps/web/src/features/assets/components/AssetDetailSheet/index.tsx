@@ -20,6 +20,7 @@ import {
 import { useRef } from 'react'
 
 import type { AssetWithCategory } from '@/features/assets/api/types'
+import { useAssetPriceHistory } from '@/features/assets/hooks/use-assets'
 import { calcAssetMetrics } from '@/features/assets/utils/asset-metrics'
 import { CategoryType } from '@/features/categories/api/types'
 import {
@@ -103,7 +104,7 @@ export function AssetDetailSheet({
         initialFocus={popupRef}
         data-slot="asset-detail-sheet"
         side="right"
-        className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
+        className="flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-xl"
       >
         <SheetHeader className="space-y-3 border-border border-b bg-muted/20 p-5">
           <div className="flex items-center justify-between gap-2">
@@ -183,7 +184,11 @@ export function AssetDetailSheet({
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
           {asset.ticker && PRICE_HISTORY_TYPES.includes(catType) && (
             <>
-              <PriceHistoryChart assetId={asset.id} currency={currency} />
+              <PriceHistoryChart
+                id={asset.id}
+                currency={currency}
+                useHistory={useAssetPriceHistory}
+              />
 
               <Separator />
             </>

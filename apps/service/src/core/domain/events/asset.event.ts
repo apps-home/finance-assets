@@ -1,5 +1,3 @@
-import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
-
 export enum AssetEvent {
   CREATED = 'asset.created',
   UPDATED = 'asset.updated',
@@ -9,7 +7,7 @@ export enum AssetEvent {
 export class AssetEventPayload {
   constructor(
     public readonly assetId: string,
-    public readonly ticker: string,
-    public readonly categoryType: CategoryType
+    /** Ativo do catálogo cuja cotação deve ser buscada */
+    public readonly marketAssetId: string
   ) {}
 }

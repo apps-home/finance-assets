@@ -1,5 +1,7 @@
 import { makeCategory } from '@test/factories/make-category'
 import { makeWishlist } from '@test/factories/make-wishlist'
+import { makeMarketAssetUseCases } from '@test/market-asset/make-market-asset-use-cases'
+import { InMemoryCategoryRepository } from '@test/repositories/in-memory-category.repository'
 import { InMemoryWishlistRepository } from '@test/repositories/in-memory-wishlist.repository'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -39,7 +41,11 @@ describe('Wishlist use cases ownership', () => {
   })
 
   it('should not update an item that belongs to another user', async () => {
-    const sut = new UpdateWishlistUseCase(wishlistRepository)
+    const sut = new UpdateWishlistUseCase(
+      wishlistRepository,
+      new InMemoryCategoryRepository(),
+      makeMarketAssetUseCases().resolveWithQuote
+    )
 
     const result = await sut.execute('user-2', itemId, { name: 'Invasor' })
 

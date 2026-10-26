@@ -62,6 +62,7 @@ export class AssetMapper {
       averagePrice: asset.averagePrice,
       broker: asset.broker,
       isActive: asset.isActive,
+      marketAssetId: asset.marketAssetId,
       currentClosePrice: asset.currentClosePrice ?? currentClosePrice,
       lastMonthClosePrice: asset.lastMonthClosePrice,
       dividendsImportedAt: asset.dividendsImportedAt,

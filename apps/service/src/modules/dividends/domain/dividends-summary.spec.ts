@@ -127,6 +127,25 @@ describe('buildDividendsSummary', () => {
     expect(summary.last12Months[1].total).toBe(70)
   })
 
+  it('should total every year of the history, oldest first', () => {
+    const history = buildDividendsSummary(
+      [...items, item('itsa4', categories.br, '2023-05-10', 30)],
+      2026,
+      NOW
+    )
+
+    expect(history.byYear.map(({ year, total }) => ({ year, total }))).toEqual([
+      { year: 2023, total: 30 },
+      { year: 2025, total: 70 },
+      { year: 2026, total: 240 }
+    ])
+    expect(history.byYear[2].byCategoryType).toEqual({
+      [CategoryType.VARIABLE_BR]: 150,
+      [CategoryType.FII]: 40,
+      [CategoryType.VARIABLE_US]: 50
+    })
+  })
+
   it('should exclude future payments from every total', () => {
     const november = summary.last12Months.find((m) => m.month === 11)
 

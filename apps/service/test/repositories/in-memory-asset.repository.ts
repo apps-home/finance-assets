@@ -2,7 +2,6 @@ import type { Asset } from '@/modules/assets/asset/domain/asset.entity'
 import type {
   AssetRepository,
   AssetWithCategory,
-  AssetWithCategoryType,
   AssetWithUserDetails
 } from '@/modules/assets/asset/domain/asset.repository'
 import type { FindAssetsParams } from '@/modules/assets/asset/domain/dto/find-assets-params.dto'
@@ -77,10 +76,6 @@ export class InMemoryAssetRepository implements AssetRepository {
         asset.markDividendsImported(at)
       }
     }
-  }
-
-  async findAllWithTicker(): Promise<AssetWithCategoryType[]> {
-    return []
   }
 
   async findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]> {

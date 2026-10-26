@@ -49,8 +49,9 @@ describe('Dividends (E2E)', () => {
       averagePrice: 10,
       broker: null,
       isActive: true,
+      marketAssetId: null,
       currentClosePrice: 10,
-      lastMonthClosePrice: 10,
+      marketAsset: null,
       createdAt: new Date(),
       updatedAt: new Date()
     }

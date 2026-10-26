@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  BriefcaseBusiness,
   CheckCircle2,
   FileText,
   Pencil,
@@ -44,6 +45,8 @@ interface WishlistTableProps {
   items: WishlistWithCategory[]
   onEdit: (item: WishlistWithCategory) => void
   onDelete: (item: WishlistWithCategory) => void
+  onViewDetails: (item: WishlistWithCategory) => void
+  onAddToPortfolio: (item: WishlistWithCategory) => void
   className?: string
 }
 
@@ -51,6 +54,8 @@ export function WishlistTable({
   items,
   onEdit,
   onDelete,
+  onViewDetails,
+  onAddToPortfolio,
   className
 }: WishlistTableProps) {
   if (items.length === 0) {
@@ -82,7 +87,7 @@ export function WishlistTable({
               Status do Alvo
             </TableHead>
             <TableHead className="font-semibold text-xs">Anotações</TableHead>
-            <TableHead className="w-20 text-right font-semibold text-xs">
+            <TableHead className="w-28 text-right font-semibold text-xs">
               Ações
             </TableHead>
           </TableRow>
@@ -102,7 +107,20 @@ export function WishlistTable({
               getTargetPriceInfo(currentPrice, targetPrice)
 
             return (
-              <TableRow key={wishlist.id} className="transition-colors">
+              <TableRow
+                key={wishlist.id}
+                tabIndex={0}
+                onClick={() => onViewDetails(item)}
+                onKeyDown={(e) => {
+                  // Só reage ao teclado quando o foco está na própria linha (não nos botões)
+                  if (e.target !== e.currentTarget) return
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onViewDetails(item)
+                  }
+                }}
+                className="cursor-pointer transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none"
+              >
                 <TableCell className="sticky left-0 z-10 bg-card">
                   <div className="flex items-center gap-2.5">
                     <Badge
@@ -126,9 +144,6 @@ export function WishlistTable({
 
                 <TableCell>
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-foreground text-xs">
-                      {category?.name || '—'}
-                    </span>
                     <Badge
                       variant="secondary"
                       className={cn(
@@ -240,8 +255,27 @@ export function WishlistTable({
                   )}
                 </TableCell>
 
-                <TableCell className="text-right">
+                <TableCell
+                  className="text-right"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <div className="flex items-center justify-end gap-1">
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7"
+                            aria-label="Adicionar à carteira"
+                            onClick={() => onAddToPortfolio(item)}
+                          >
+                            <BriefcaseBusiness className="size-3.5 text-primary" />
+                          </Button>
+                        }
+                      />
+                      <TooltipContent>Adicionar à carteira</TooltipContent>
+                    </Tooltip>
                     <Tooltip>
                       <TooltipTrigger
                         render={

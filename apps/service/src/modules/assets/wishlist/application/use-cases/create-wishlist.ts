@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 
 import { PayloadError } from '@/core/domain/errors/payload-error'
-import { MarketDataGateway } from '@/core/http/external/market-data/market-data.gateway'
 import { Either, left, right } from '@/core/utils/Either'
 import { CategoryNotFoundError } from '@/modules/assets/categories/application/errors/category-not-found.error'
 import { CategoryRepository } from '@/modules/assets/categories/domain/category.repository'
+import { ResolveMarketAssetWithQuoteUseCase } from '@/modules/assets/market-asset/application/use-cases/resolve-market-asset-with-quote'
 
 import { CreateWishlistPayload } from '../../domain/dto/create-wishlist.dto'
 import { WishlistMapper } from '../../domain/wishlist.mapper'
@@ -14,12 +14,10 @@ type CreateWishlistResponse = Either<CategoryNotFoundError | PayloadError, void>
 
 @Injectable()
 export class CreateWishlistUseCase {
-  private readonly logger = new Logger(CreateWishlistUseCase.name)
-
   constructor(
     private readonly wishlistRepository: WishlistRepository,
     private readonly categoryRepository: CategoryRepository,
-    private readonly marketDataGateway: MarketDataGateway
+    private readonly resolveMarketAsset: ResolveMarketAssetWithQuoteUseCase
   ) {}
 
   async execute(data: CreateWishlistPayload): Promise<CreateWishlistResponse> {
@@ -44,29 +42,13 @@ export class CreateWishlistUseCase {
 
       const wishlist = WishlistMapper.toDomain(data)
 
-      // Fetch initial market quote if ticker is provided
-      if (wishlist.ticker) {
-        try {
-          const provider = this.marketDataGateway.getProvider(category.type)
-
-          if (provider) {
-            const quote = await provider.fetchQuote(wishlist.ticker)
-
-            if (quote) {
-              wishlist.update({
-                currentClosePrice: quote.currentPrice,
-                lastMonthClosePrice: quote.lastMonthPrice
-              })
-            }
-          }
-        } catch (quoteError) {
-          this.logger.warn(
-            `Failed to fetch initial quote for wishlist ticker "${wishlist.ticker}": ${
-              quoteError instanceof Error ? quoteError.message : quoteError
-            }`
-          )
-        }
-      }
+      // Reaproveita o ticker do catálogo; busca a cotação só se não for recente
+      const { value: marketAsset } = await this.resolveMarketAsset.execute({
+        ticker: wishlist.ticker,
+        type: category.type,
+        name: wishlist.name
+      })
+      wishlist.linkMarketAsset(marketAsset)
 
       await this.wishlistRepository.save(wishlist)
 

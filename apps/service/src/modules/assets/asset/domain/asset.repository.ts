@@ -1,15 +1,7 @@
-import {
-  CategorySummary,
-  CategoryType
-} from '@/modules/assets/categories/domain/category.entity'
+import { CategorySummary } from '@/modules/assets/categories/domain/category.entity'
 
 import { Asset } from './asset.entity'
 import { FindAssetsParams } from './dto/find-assets-params.dto'
-
-export interface AssetWithCategoryType {
-  asset: Asset
-  categoryType: CategoryType
-}
 
 export interface AssetWithCategory {
   asset: Asset
@@ -31,6 +23,5 @@ export abstract class AssetRepository {
   abstract findByIdForSystem(id: string): Promise<Asset | null>
   abstract delete(id: string): Promise<void>
   abstract markDividendsImported(assetIds: string[], at: Date): Promise<void>
-  abstract findAllWithTicker(): Promise<AssetWithCategoryType[]>
   abstract findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]>
 }

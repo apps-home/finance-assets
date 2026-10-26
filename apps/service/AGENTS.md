@@ -40,8 +40,9 @@ O schema é dividido em dois namespaces PostgreSQL: `better-auth` (autenticaçã
 | Tabela | Descrição |
 |---|---|
 | `asset_categories` | Classe de ativos do usuário. Campos: `id`, `userId`, `name`, `type` (enum `CategoryType`), `targetPercentage` (meta de alocação, 0–100), `currency` (padrão `BRL`), `createdAt`, `updatedAt`. |
-| `assets` | Ativo individual dentro de uma categoria. Campos: `id`, `categoryId`, `name`, `ticker`, `quantity`, `averagePrice`, `broker`, `isActive`, `currentClosePrice`, `lastMonthClosePrice`, `createdAt`, `updatedAt`. |
-| `asset_wishlists` | Ativos monitorados / lista de desejos do usuário. Campos: `id`, `userId`, `categoryId`, `name`, `ticker`, `targetPrice`, `currentClosePrice`, `lastMonthClosePrice`, `notes`, `createdAt`, `updatedAt`. Único por `(userId, ticker)`. |
+| `market_assets` | **Catálogo compartilhado** de ativos com cotação de mercado, sem dono. Um registro por `(ticker, type)`, com `currentClosePrice`, `lastMonthClosePrice` e `priceUpdatedAt`. A cotação é buscada uma vez e reaproveitada por todos os usuários. |
+| `assets` | Ativo individual dentro de uma categoria. Campos: `id`, `categoryId`, `name`, `ticker`, `quantity`, `averagePrice`, `broker`, `isActive`, `marketAssetId`, `currentClosePrice` (só preço manual, sem `marketAssetId`), `dividendsImportedAt`, `createdAt`, `updatedAt`. |
+| `asset_wishlists` | Ativos monitorados / lista de desejos do usuário. Campos: `id`, `userId`, `categoryId`, `name`, `ticker`, `targetPrice`, `marketAssetId`, `notes`, `createdAt`, `updatedAt`. Único por `(userId, ticker)`. |
 | `asset_records` | Registro histórico mensal do valor consolidado de uma categoria. Campos: `id`, `categoryId`, `month`, `year`, `amount`, `exchangeRate`, `dividendAmount`, `contributionAmount` (aporte líquido do mês em R$), `createdAt`, `updatedAt`. Único por `(categoryId, month, year)`. |
 | `benchmark_returns` | Cache global (sem usuário) do retorno mensal dos benchmarks. Campos: `benchmark` (`CDI`|`IBOV`|`SP500_BRL`), `year`, `month`, `returnPct` (em %). Único por `(benchmark, year, month)`. |
 | `asset_category_competences` | Registra em quais **anos** uma categoria possui registros, otimizando queries de filtro temporal. Campos: `id`, `categoryId`, `year`. Único por `(categoryId, year)`. |
@@ -78,7 +79,8 @@ Focado na evolução do patrimônio ao longo dos anos.
 Focado no desempenho individual dos ativos.
 
 - **`Asset`**: Representa o ativo específico (ex: `WEGE3`, `BTC`). Armazena o preço médio de compra e a quantidade.
-- **Preços Dinâmicos**: Campos `currentClosePrice` (atualizado via Cron Job) e `lastMonthClosePrice` (referência do fechamento do mês anterior) para cálculo de rentabilidade **MTD (Month-to-Date)**.
+- **Preços Dinâmicos**: `currentClosePrice` e `lastMonthClosePrice` (fechamento do mês anterior, base da rentabilidade **MTD**) vêm do catálogo `MarketAsset`, atualizado via Cron Job.
+- **`MarketAsset` (catálogo)**: um registro por ticker + tipo, compartilhado entre usuários. Ativos e itens da wishlist apontam para ele (`marketAssetId`) e as entidades `Asset`/`Wishlist` expõem a cotação dele, como se fosse delas. Renda fixa e ativos sem ticker não entram no catálogo: usam o preço manual de `assets.currentClosePrice`.
 
 ---
 
@@ -90,6 +92,7 @@ modules/
 │   ├── asset/          # Ativo individual (CRUD, atualização de preço, notificações de variação)
 │   ├── categories/     # Categorias de ativos (tipo, moeda, meta de alocação, anos)
 │   ├── competences/    # Competências anuais por categoria (somente leitura de anos + exclusão)
+│   ├── market-asset/   # Catálogo compartilhado de cotações (resolve ticker, atualiza preço, cron e fila)
 │   └── wishlist/       # Lista de desejos / ativos monitorados
 ├── budgets/            # Registros mensais (AssetRecord)
 ├── dividends/          # Proventos por ativo (CRUD, resumos, próximos pagamentos, sync Yahoo/Polygon)
@@ -222,7 +225,8 @@ Observações:
 - **Ordenação por variação do mês** (`sort=monthChange`): `GET /assets` e `GET /wishlist` ordenam por `(currentClosePrice - lastMonthClosePrice) / lastMonthClosePrice`. `order=asc` traz a maior queda primeiro. Itens sem comparação (preço ausente ou `lastMonthClosePrice = 0`) ficam sempre no fim. A ordenação é feita em memória, no use case, sobre o resultado já filtrado (não há paginação).
 - **Histórico de cotação** (`GET /assets/:id/history?range=5d|1m|ytd|1y|3y|5y`, padrão `1m`): série de fechamento do ativo do usuário, com `points`, `change`, `changePercent` e `currency` da categoria. Fonte: Yahoo Finance (`PriceHistoryGateway`, sem chave; BR/FII com `.SA`, US com `.` trocado por `-`), com cache em memória de 15 min por ticker + período. `3y` pede `5y` e corta no servidor. Cripto e renda fixa não têm histórico (404 `PriceHistoryUnavailableError`, assim como falha do Yahoo ou ativo sem ticker). A web mostra o gráfico no `AssetDetailSheet`.
 - **Filtros no servidor:** `search` busca em nome/ticker (e corretora em assets, notas em wishlist), sem diferenciar maiúsculas. `targetStatus` é aplicado em memória, pois compara duas colunas.
-- **Wishlist:** ao criar, busca a cotação inicial de forma síncrona (falha de cotação não impede a criação). O ticker é único por usuário.
+- **Wishlist:** ao criar (ou trocar o ticker), aponta para o catálogo e só busca a cotação, de forma síncrona, se o catálogo não tiver uma recente (falha de cotação não impede a criação). O ticker é único por usuário.
+- **Catálogo de mercado:** ao criar um ativo ou item da wishlist, `ResolveMarketAssetUseCase` reaproveita o `MarketAsset` do mesmo ticker + tipo ou cria um. Uma cotação com menos de 12h (`QUOTE_FRESHNESS_MS`) é reaproveitada sem chamada externa. Com cotação de mercado, o preço enviado no `PATCH /assets/:id` é ignorado.
 - **Users:** o usuário só acessa o próprio registro. O `:id` precisa ser o `userId` da sessão; qualquer outro id responde 404 (`UserNotFoundError`), mesmo que exista. Não há listagem nem busca por e-mail de usuários.
 - **Budgets (câmbio):** o `amount` é guardado **já convertido** para R$ (`valor original × cotação`) e `exchangeRate` guarda a cotação usada. A conversão acontece só em `Budget.changeAmount(originalAmount, exchangeRate)`, que o `POST` e o `PATCH` usam; `originalAmount` devolve o valor na moeda da categoria (`amount ÷ exchangeRate`). Quem reenvia um valor deve mandar o original, nunca o já convertido. `categoryId`, `month` e `year` não mudam por `PATCH` (são a identidade do registro).
 
@@ -263,33 +267,37 @@ infra/
 ### Fluxo de Atualização de Preços (Cron + Queue)
 
 ```
-[Cron Job] adapters/schedules/update-asset-prices.cron.ts
+[Cron Job] market-asset/adapters/schedules/update-market-prices.cron.ts
       │  (todo dia às 19:00, America/Sao_Paulo)
       ▼
+[MarketAssetRepository.findAllInUse] (catálogo usado por algum ativo ativo ou item da wishlist)
+      │
+      ▼ (um job por MarketAsset, ou seja, por ticker + tipo, independente de quantos usuários o usam)
 [JobPublisher] → BullMQ Queue ("asset-processing", job "update-price")
       │
-      ▼ (um job por ticker + tipo de categoria; ativos e itens da wishlist de todos os usuários são deduplicados)
-[Consumer] adapters/jobs/update-processing.consumer.ts (UpdateAssetPriceProcessor)
-      │  (UpdateAssetPriceUseCase, roteamento por CategoryType via MarketDataGateway)
-      ├──► VARIABLE_BR  → Brapi API
-      ├──► CRYPTO       → CoinGecko API
-      ├──► VARIABLE_US  → Polygon (fallback: Alpha Vantage)
-      └──► FIXED        → (ignorado)
+      ▼
+[Consumer] market-asset/adapters/jobs/update-price.consumer.ts
+      │  (RefreshMarketAssetQuoteUseCase com force, roteamento por tipo via MarketDataGateway)
+      ├──► VARIABLE_BR / FII → Brapi API
+      ├──► CRYPTO            → CoinGecko API
+      └──► VARIABLE_US       → Polygon (fallback: Alpha Vantage)
 ```
+
+Uma linha do catálogo é gravada por ticker; todos os ativos e itens da wishlist que apontam para ela passam a ler o preço novo.
 
 ### Fluxo de Evento ao Criar Ativo
 
 ```
-[Use Case] CreateAsset
-      │  (emite asset.created via DomainEventPublisher)
+[Use Case] CreateAsset / UpdateAsset (troca de ticker)
+      │  (resolve o MarketAsset; só emite asset.created se a cotação dele não for recente)
       ▼
-[Listener] adapters/events/asset-created.listener.ts
-      │  (enfileira job de busca de preço inicial)
+[Listener] market-asset/adapters/events/market-quote-requested.listener.ts
+      │
       ▼
-[Consumer] update-processing.consumer.ts
+RefreshMarketAssetQuoteUseCase (busca a cotação uma vez para o catálogo)
 ```
 
-A wishlist não usa evento: `CreateWishlistUseCase` consulta a cotação inicial diretamente pelo `MarketDataGateway`.
+A wishlist não usa evento: `CreateWishlistUseCase` usa `ResolveMarketAssetWithQuoteUseCase`, que busca a cotação na hora se o catálogo não tiver uma recente.
 
 ### Notificações de Variação (n8n)
 

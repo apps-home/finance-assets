@@ -13,6 +13,12 @@ export interface DividendsMonthSummary {
   byCategoryType: TotalsByCategoryType
 }
 
+export interface DividendsYearSummary {
+  year: number
+  total: number
+  byCategoryType: TotalsByCategoryType
+}
+
 export interface DividendsByCategoryTypeSummary {
   type: CategoryType
   total: number
@@ -47,6 +53,8 @@ export interface DividendsSummary {
   monthlyAverage: number
   byMonth: DividendsMonthSummary[]
   last12Months: DividendsMonthSummary[]
+  /** Total recebido por ano, de todo o histórico (mais antigo primeiro) */
+  byYear: DividendsYearSummary[]
   byCategoryType: DividendsByCategoryTypeSummary[]
   byCategory: DividendsByCategorySummary[]
   byAsset: DividendsByAssetSummary[]
@@ -68,16 +76,17 @@ function emptyMonth(year: number, month: number): DividendsMonthSummary {
   return { year, month, total: 0, byCategoryType: {} }
 }
 
+function roundTotals(totals: TotalsByCategoryType): TotalsByCategoryType {
+  return Object.fromEntries(
+    Object.entries(totals).map(([type, value]) => [type, round2(value)])
+  )
+}
+
 function roundMonth(month: DividendsMonthSummary): DividendsMonthSummary {
   return {
     ...month,
     total: round2(month.total),
-    byCategoryType: Object.fromEntries(
-      Object.entries(month.byCategoryType).map(([type, value]) => [
-        type,
-        round2(value)
-      ])
-    )
+    byCategoryType: roundTotals(month.byCategoryType)
   }
 }
 
@@ -117,6 +126,7 @@ export function buildDividendsSummary(
   })
   const last12Start = Date.UTC(nowYear, nowMonth - 11, 1)
 
+  const byYear = new Map<number, DividendsYearSummary>()
   const byCategoryType: TotalsByCategoryType = {}
   const byCategory = new Map<string, DividendsByCategorySummary>()
   const byAsset = new Map<string, DividendsByAssetSummary>()
@@ -147,6 +157,15 @@ export function buildDividendsSummary(
         addTo(slot.byCategoryType, category.type, amountInBRL)
       }
     }
+
+    const yearSlot = byYear.get(paymentYear) ?? {
+      year: paymentYear,
+      total: 0,
+      byCategoryType: {}
+    }
+    yearSlot.total += amountInBRL
+    addTo(yearSlot.byCategoryType, category.type, amountInBRL)
+    byYear.set(paymentYear, yearSlot)
 
     let assetSummary = byAsset.get(asset.id)
 
@@ -209,6 +228,13 @@ export function buildDividendsSummary(
     monthlyAverage: round2(totalYear / monthsElapsed),
     byMonth: byMonth.map(roundMonth),
     last12Months: last12Months.map(roundMonth),
+    byYear: [...byYear.values()]
+      .map((item) => ({
+        ...item,
+        total: round2(item.total),
+        byCategoryType: roundTotals(item.byCategoryType)
+      }))
+      .sort((a, b) => a.year - b.year),
     byCategoryType: Object.entries(byCategoryType)
       .map(([type, total]) => ({
         type: type as CategoryType,

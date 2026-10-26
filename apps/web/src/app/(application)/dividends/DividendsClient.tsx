@@ -220,7 +220,7 @@ export default function DividendsClient() {
           <>
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
               <div className="xl:col-span-2">
-                <DividendsChart months={summary.last12Months} />
+                <DividendsChart summary={summary} />
               </div>
               <UpcomingDividends items={upcoming} />
             </div>

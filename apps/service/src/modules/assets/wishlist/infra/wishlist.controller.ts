@@ -13,10 +13,12 @@ import {
 import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
 import { toHttpException } from '@/infra/http/to-http-exception'
 
+import { AssetPriceHistoryParamsDTO } from '../../asset/infra/asset.dto'
 import { CreateWishlistUseCase } from '../application/use-cases/create-wishlist'
 import { DeleteWishlistUseCase } from '../application/use-cases/delete-wishlist'
 import { FindAllWishlistUseCase } from '../application/use-cases/find-all-wishlist'
 import { FindWishlistByIdUseCase } from '../application/use-cases/find-wishlist-by-id'
+import { GetWishlistPriceHistoryUseCase } from '../application/use-cases/get-wishlist-price-history'
 import { UpdateWishlistUseCase } from '../application/use-cases/update-wishlist'
 import {
   CreateWishlistDTO,
@@ -31,7 +33,8 @@ export class WishlistController {
     private readonly findAllWishlistUseCase: FindAllWishlistUseCase,
     private readonly findWishlistByIdUseCase: FindWishlistByIdUseCase,
     private readonly updateWishlistUseCase: UpdateWishlistUseCase,
-    private readonly deleteWishlistUseCase: DeleteWishlistUseCase
+    private readonly deleteWishlistUseCase: DeleteWishlistUseCase,
+    private readonly getWishlistPriceHistoryUseCase: GetWishlistPriceHistoryUseCase
   ) {}
 
   @Post()
@@ -60,6 +63,25 @@ export class WishlistController {
       ...params,
       userId
     })
+
+    if (result.isLeft()) {
+      throw toHttpException(result.value)
+    }
+
+    return result.value
+  }
+
+  @Get(':id/history')
+  async history(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Query() { range }: AssetPriceHistoryParamsDTO,
+    @CurrentUserId() userId: string
+  ) {
+    const result = await this.getWishlistPriceHistoryUseCase.execute(
+      userId,
+      id,
+      range
+    )
 
     if (result.isLeft()) {
       throw toHttpException(result.value)
