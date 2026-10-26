@@ -32,12 +32,28 @@ export function AssetDividends({ asset, currency }: AssetDividendsProps) {
         new Date(a.dividend.paymentDate).getTime()
     )
 
-  const last12Months = received
-    .filter(({ dividend }) => new Date(dividend.paymentDate) >= yearAgo)
-    .reduce((sum, { dividend }) => sum + dividend.amount, 0)
+  const lastYear = received.filter(
+    ({ dividend }) => new Date(dividend.paymentDate) >= yearAgo
+  )
+  const last12Months = lastYear.reduce(
+    (sum, { dividend }) => sum + dividend.amount - (dividend.taxAmount ?? 0),
+    0
+  )
 
-  const invested = asset.investedValue ?? 0
-  const yieldOnCost = invested > 0 ? (last12Months / invested) * 100 : null
+  // Mesmo critério do servidor: líquido por cota (quantidade da época) ÷ preço médio
+  const perShare = lastYear.reduce((sum, { dividend }) => {
+    const net = dividend.amount - (dividend.taxAmount ?? 0)
+
+    if (dividend.quantity) return sum + net / dividend.quantity
+    if (dividend.rateAmount && dividend.amount > 0)
+      return sum + dividend.rateAmount * (net / dividend.amount)
+
+    return sum
+  }, 0)
+
+  const averagePrice = asset.averagePrice ?? 0
+  const yieldOnCost =
+    averagePrice > 0 && perShare > 0 ? (perShare / averagePrice) * 100 : null
 
   return (
     <Section title="Proventos" icon={<HandCoins className="size-3.5" />}>

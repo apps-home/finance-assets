@@ -9,6 +9,7 @@ import { CategoryRepository } from '@/modules/assets/categories/domain/category.
 
 import { Dividend } from '../../domain/dividend.entity'
 import { DividendRepository } from '../../domain/dividend.repository'
+import { defaultTaxAmount } from '../../domain/dividend-tax'
 import { CreateDividendPayload } from '../../domain/dto/create-dividend.dto'
 
 type CreateDividendResponse = Either<
@@ -72,7 +73,8 @@ export class CreateDividendUseCase {
         assetId: asset.id,
         type: data.type,
         amount,
-        taxAmount: data.taxAmount,
+        // Sem imposto informado vale o padrão da categoria; 0 explícito desliga
+        taxAmount: data.taxAmount ?? defaultTaxAmount(category.type, amount),
         rateAmount: data.rateAmount,
         quantity,
         exchangeRate: category.currency === 'BRL' ? null : data.exchangeRate,

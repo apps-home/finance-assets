@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { AssetNotFoundError } from '@/modules/assets/asset/application/errors/asset-not-found.error'
+import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 
 import { CreateDividendUseCase } from './create-dividend'
 
@@ -27,8 +28,12 @@ describe('CreateDividendUseCase', () => {
     )
   })
 
-  async function seed(currency = 'BRL', quantity = 100) {
-    const category = makeCategory({ userId: 'user-1', currency })
+  async function seed(
+    currency = 'BRL',
+    quantity = 100,
+    type = CategoryType.FIXED
+  ) {
+    const category = makeCategory({ userId: 'user-1', currency, type })
     const asset = makeAsset({ categoryId: category.id, quantity })
 
     await categoryRepository.save(category)
@@ -68,6 +73,48 @@ describe('CreateDividendUseCase', () => {
     expect(dividendRepository.items[0].amount).toBe(10)
     expect(dividendRepository.items[0].taxAmount).toBe(3)
     expect(dividendRepository.items[0].amountInBRL).toBe(35)
+  })
+
+  it('should withhold 30% by default on US stock dividends', async () => {
+    const asset = await seed('USD', 100, CategoryType.VARIABLE_US)
+
+    await sut.execute({
+      userId: 'user-1',
+      assetId: asset.id,
+      amount: 1.19,
+      exchangeRate: 5,
+      paymentDate: new Date('2026-03-10')
+    })
+
+    expect(dividendRepository.items[0].taxAmount).toBe(0.36)
+  })
+
+  it('should let an explicit tax, even zero, override the US default', async () => {
+    const asset = await seed('USD', 100, CategoryType.VARIABLE_US)
+
+    await sut.execute({
+      userId: 'user-1',
+      assetId: asset.id,
+      amount: 10,
+      taxAmount: 0,
+      exchangeRate: 5,
+      paymentDate: new Date('2026-03-10')
+    })
+
+    expect(dividendRepository.items[0].taxAmount).toBe(0)
+  })
+
+  it('should not assume a tax outside US stocks', async () => {
+    const asset = await seed('BRL', 100, CategoryType.FII)
+
+    await sut.execute({
+      userId: 'user-1',
+      assetId: asset.id,
+      amount: 10,
+      paymentDate: new Date('2026-03-10')
+    })
+
+    expect(dividendRepository.items[0].taxAmount).toBeNull()
   })
 
   it('should reject a tax equal to or above the amount', async () => {

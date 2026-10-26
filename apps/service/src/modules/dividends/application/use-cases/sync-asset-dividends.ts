@@ -13,6 +13,7 @@ import {
   toCalendarDate
 } from '../../domain/dividend.entity'
 import { DividendRepository } from '../../domain/dividend.repository'
+import { defaultTaxAmount } from '../../domain/dividend-tax'
 
 export interface SyncDividendTarget {
   assetId: string
@@ -125,6 +126,8 @@ export class SyncAssetDividendsUseCase {
 
         if (amount <= 0) continue
 
+        const taxAmount = defaultTaxAmount(categoryType, amount)
+
         const existing = await this.dividendRepository.findByNaturalKey(
           asset.id,
           type,
@@ -139,6 +142,7 @@ export class SyncAssetDividendsUseCase {
               type,
               source: DividendSource.SYNC,
               amount,
+              taxAmount,
               rateAmount: item.rateAmount,
               quantity: asset.quantity,
               exchangeRate,
@@ -161,6 +165,7 @@ export class SyncAssetDividendsUseCase {
 
         existing.update({
           amount,
+          taxAmount,
           rateAmount: item.rateAmount,
           quantity: asset.quantity,
           exchangeRate,

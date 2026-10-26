@@ -40,10 +40,24 @@ export class UpdateDividendUseCase {
         }
       }
 
+      // O imposto é proporcional ao bruto: se o total mudou e a taxa não foi
+      // informada, mantém a mesma proporção
+      let taxAmount = data.taxAmount
+      if (
+        taxAmount === undefined &&
+        amount !== undefined &&
+        dividend.taxAmount &&
+        amount !== dividend.amount
+      ) {
+        taxAmount =
+          Math.round((dividend.taxAmount / dividend.amount) * amount * 100) /
+          100
+      }
+
       dividend.update({
         type: data.type,
         amount,
-        taxAmount: data.taxAmount,
+        taxAmount,
         rateAmount: data.rateAmount,
         quantity: data.quantity,
         exchangeRate: data.exchangeRate,

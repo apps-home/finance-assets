@@ -32,7 +32,7 @@ concurrency:
 jobs:
   # JOB 1: Cria e publica a imagem Docker no GHCR
   build-push:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'deploy:'))
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'deploy'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
@@ -71,7 +71,7 @@ jobs:
   # JOB 2: Acessa a Oracle VM via SSH e atualiza o container
   deploy-oracle:
     needs: build-push
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'deploy:'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'deploy'))
     runs-on: ubuntu-latest
     steps:
       - name: Executar Deploy via SSH

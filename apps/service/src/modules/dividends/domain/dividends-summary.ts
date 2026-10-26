@@ -1,5 +1,6 @@
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 
+import type { Dividend } from './dividend.entity'
 import { DividendWithAsset } from './dividend.repository'
 
 export type TotalsByCategoryType = Partial<Record<CategoryType, number>>
@@ -34,7 +35,7 @@ export interface DividendsByAssetSummary {
   totalYear: number
   /** Recebido nos últimos 12 meses, na moeda do ativo */
   last12Months: number
-  /** Dividendos dos últimos 12 meses ÷ (quantidade × preço médio) × 100 */
+  /** Proventos líquidos por cota dos últimos 12 meses ÷ preço médio × 100 */
   yieldOnCost: number | null
 }
 
@@ -81,6 +82,23 @@ function roundMonth(month: DividendsMonthSummary): DividendsMonthSummary {
 }
 
 /**
+ * Provento líquido por cota, usando a quantidade da própria linha (a posição
+ * da época). Sem quantidade, recorre ao valor por cota; sem nenhum dos dois
+ * não há como calcular.
+ */
+function netPerShare(dividend: Dividend): number | null {
+  if (dividend.quantity && dividend.quantity > 0) {
+    return dividend.netAmount / dividend.quantity
+  }
+
+  if (dividend.rateAmount && dividend.amount > 0) {
+    return dividend.rateAmount * (dividend.netAmount / dividend.amount)
+  }
+
+  return null
+}
+
+/**
  * Consolida os proventos já recebidos (`paymentDate <= now`). Proventos
  * futuros não entram: aparecem apenas em "próximos pagamentos".
  */
@@ -102,6 +120,7 @@ export function buildDividendsSummary(
   const byCategoryType: TotalsByCategoryType = {}
   const byCategory = new Map<string, DividendsByCategorySummary>()
   const byAsset = new Map<string, DividendsByAssetSummary>()
+  const perShare12m = new Map<string, number>()
 
   let totalYear = 0
   let totalCurrentMonth = 0
@@ -147,6 +166,10 @@ export function buildDividendsSummary(
 
     if (inLast12Months) {
       assetSummary.last12Months += dividend.netAmount
+      perShare12m.set(
+        asset.id,
+        (perShare12m.get(asset.id) ?? 0) + (netPerShare(dividend) ?? 0)
+      )
     }
 
     if (paymentYear === year) {
@@ -170,12 +193,10 @@ export function buildDividendsSummary(
     }
   }
 
-  // Yield on Cost usa a posição atual do ativo como base de custo
-  const invested = new Map(
-    items.map(({ asset }) => [
-      asset.id,
-      (asset.quantity ?? 0) * (asset.averagePrice ?? 0)
-    ])
+  // Yield on Cost por cota: independe de aportes/vendas, pois cada linha já
+  // carrega a quantidade da época e o preço médio é o atual da posição
+  const averagePrice = new Map(
+    items.map(({ asset }) => [asset.id, asset.averagePrice ?? 0])
   )
 
   const monthsElapsed =
@@ -199,16 +220,15 @@ export function buildDividendsSummary(
       .sort((a, b) => b.total - a.total),
     byAsset: [...byAsset.values()]
       .map((item) => {
-        const cost = invested.get(item.assetId) ?? 0
+        const cost = averagePrice.get(item.assetId) ?? 0
+        const perShare = perShare12m.get(item.assetId) ?? 0
 
         return {
           ...item,
           totalYear: round2(item.totalYear),
           last12Months: round2(item.last12Months),
           yieldOnCost:
-            cost > 0 && item.last12Months > 0
-              ? round2((item.last12Months / cost) * 100)
-              : null
+            cost > 0 && perShare > 0 ? round2((perShare / cost) * 100) : null
         }
       })
       .sort((a, b) => b.totalYear - a.totalYear)

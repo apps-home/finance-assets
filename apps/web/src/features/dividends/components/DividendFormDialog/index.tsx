@@ -108,6 +108,11 @@ export function DividendFormDialog({
     ? editing.category.currency
     : getCategoryCurrency(selectedAsset?.category)
   const isForeign = currency !== 'BRL'
+  const categoryType = editing
+    ? editing.category.type
+    : selectedAsset?.category?.type
+  // O servidor retém 30% por padrão em ações US quando o campo fica vazio
+  const hasDefaultTax = !isEditing && categoryType === 'VARIABLE_US'
 
   const hasAmount = amount.trim() !== '' && parseValue(amount) > 0
   const hasRate = rateAmount.trim() !== '' && Number(rateAmount) > 0
@@ -284,7 +289,11 @@ export function DividendFormDialog({
               <Input
                 id="dividend-tax"
                 type="text"
-                placeholder="0,00 (opcional)"
+                placeholder={
+                  hasDefaultTax
+                    ? 'Padrão: 30% retido (0,00 para nenhum)'
+                    : '0,00 (opcional)'
+                }
                 value={taxAmount}
                 onChange={(e) =>
                   setTaxAmount(formatCurrencyInput(e.target.value))

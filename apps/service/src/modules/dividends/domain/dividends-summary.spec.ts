@@ -42,6 +42,7 @@ function item(
       userId: 'user-1',
       assetId,
       amount,
+      quantity: position.quantity > 0 ? position.quantity : null,
       exchangeRate,
       paymentDate: new Date(`${paymentDate}T00:00:00.000Z`)
     }),
@@ -144,6 +145,51 @@ describe('buildDividendsSummary', () => {
     expect(itsa?.yieldOnCost).toBe(22)
     expect(aapl?.last12Months).toBe(10)
     expect(aapl?.yieldOnCost).toBe(1)
+  })
+
+  it('should compute yield per share when the position grew over the year', () => {
+    // R$ 1,00 por cota: 12 cotas em jun e ago, 20 cotas a partir de set
+    const grown = [
+      item('mxrf11', categories.fii, '2026-06-10', 12, null, {
+        quantity: 20,
+        averagePrice: 10
+      }),
+      item('mxrf11', categories.fii, '2026-08-10', 12, null, {
+        quantity: 20,
+        averagePrice: 10
+      })
+    ]
+    // as linhas de set e out carregam a quantidade nova
+    for (const date of ['2026-09-10', '2026-10-10']) {
+      grown.push(
+        item('mxrf11', categories.fii, date, 20, null, {
+          quantity: 20,
+          averagePrice: 10
+        })
+      )
+    }
+    for (const { dividend } of grown.slice(0, 2)) {
+      dividend.update({ quantity: 12 })
+    }
+
+    const result = buildDividendsSummary(grown, 2026, NOW).byAsset[0]
+
+    // recebido: 12 + 12 + 20 + 20 = 64; por cota: 4 × R$ 1,00 sobre R$ 10
+    expect(result.last12Months).toBe(64)
+    expect(result.yieldOnCost).toBe(40)
+  })
+
+  it('should fall back to the rate per share when a row has no quantity', () => {
+    const noQuantity = item('mxrf11', categories.fii, '2026-10-10', 20, null, {
+      quantity: 20,
+      averagePrice: 10
+    })
+    noQuantity.dividend.update({ quantity: null, rateAmount: 1, taxAmount: 5 })
+
+    const result = buildDividendsSummary([noQuantity], 2026, NOW).byAsset[0]
+
+    // 1,00 por cota bruto, 25% retido → 0,75 sobre R$ 10
+    expect(result.yieldOnCost).toBe(7.5)
   })
 
   it('should return a null yield when the position has no cost basis', () => {

@@ -267,6 +267,38 @@ describe('SyncAssetDividendsUseCase', () => {
     })
   })
 
+  it('should apply the default 30% tax to synced US dividends only', async () => {
+    const us = await seed('USD')
+    await budgetRepository.save(
+      makeBudget({
+        categoryId: us.category.id,
+        month: 3,
+        year: 2026,
+        exchangeRate: 5
+      })
+    )
+    gateway.dividends = [
+      {
+        type: 'DIVIDEND',
+        rateAmount: 0.25,
+        comDate: null,
+        paymentDate: day('2026-03-10')
+      }
+    ]
+
+    await sut.execute(us.payload)
+
+    expect(dividendRepository.items[0].amount).toBe(25)
+    expect(dividendRepository.items[0].taxAmount).toBe(7.5)
+
+    dividendRepository.items.length = 0
+    const br = await seed('BRL')
+
+    await sut.execute(br.payload)
+
+    expect(dividendRepository.items[0].taxAmount).toBeNull()
+  })
+
   it('should use the exchange rate of the payment month for foreign assets', async () => {
     const { category, payload } = await seed('USD')
     await budgetRepository.save(
