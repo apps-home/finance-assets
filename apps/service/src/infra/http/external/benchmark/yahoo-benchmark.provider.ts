@@ -18,11 +18,22 @@ interface YahooChartResponse {
   }
 }
 
-const SYMBOLS = {
-  IBOV: '^BVSP',
-  SP500: '^GSPC',
-  USD_BRL: 'BRL=X'
-} as const
+type YahooBenchmark = Exclude<BenchmarkType, BenchmarkType.CDI>
+
+/**
+ * Todos são de retorno total: o Ibovespa já reinveste os proventos, o
+ * `^SP500TR` é o S&P 500 com dividendos e o ETF XFIX11 (IFIX) não distribui
+ * rendimentos. Os cotados em dólar (`inUsd`) são convertidos para reais pela
+ * variação do `BRL=X`.
+ */
+const SYMBOLS: Record<YahooBenchmark, { symbol: string; inUsd: boolean }> = {
+  [BenchmarkType.IBOV]: { symbol: '^BVSP', inUsd: false },
+  [BenchmarkType.IFIX]: { symbol: 'XFIX11.SA', inUsd: false },
+  [BenchmarkType.SP500_BRL]: { symbol: '^SP500TR', inUsd: true },
+  [BenchmarkType.BTC_BRL]: { symbol: 'BTC-USD', inUsd: true }
+}
+
+const USD_BRL = 'BRL=X'
 
 /**
  * Cada barra mensal é carimbada no início do mês no fuso da bolsa: o dólar
@@ -33,8 +44,8 @@ const SYMBOLS = {
 const MONTH_BAR_OFFSET_MS = 12 * 60 * 60 * 1000
 
 /**
- * Yahoo Finance (gratuito, sem chave) para Ibovespa, S&P 500 e dólar.
- * Os índices são de preço (sem dividendos reinvestidos).
+ * Yahoo Finance (gratuito, sem chave) para Ibovespa, IFIX, S&P 500, bitcoin e
+ * dólar.
  */
 @Injectable()
 export class YahooBenchmarkProvider {
@@ -44,18 +55,20 @@ export class YahooBenchmarkProvider {
   constructor(private readonly httpService: HttpService) {}
 
   async fetchMonthlyReturns(
-    benchmark: BenchmarkType.IBOV | BenchmarkType.SP500_BRL,
+    benchmark: YahooBenchmark,
     since: MonthKey
   ): Promise<BenchmarkMonthlyReturn[] | null> {
+    const { symbol, inUsd } = SYMBOLS[benchmark]
+
     try {
-      if (benchmark === BenchmarkType.IBOV) {
-        const closes = await this.fetchMonthlyCloses(SYMBOLS.IBOV, since)
+      if (!inUsd) {
+        const closes = await this.fetchMonthlyCloses(symbol, since)
         return this.toReturns(closes, since)
       }
 
-      const [sp500, usdBrl] = await Promise.all([
-        this.fetchMonthlyCloses(SYMBOLS.SP500, since),
-        this.fetchMonthlyCloses(SYMBOLS.USD_BRL, since)
+      const [inDollars, usdBrl] = await Promise.all([
+        this.fetchMonthlyCloses(symbol, since),
+        this.fetchMonthlyCloses(USD_BRL, since)
       ])
 
       // (1 + retorno em USD) × (1 + variação do dólar) − 1
@@ -63,7 +76,7 @@ export class YahooBenchmarkProvider {
         this.toReturns(usdBrl, since).map((r) => [monthIndex(r), r.returnPct])
       )
 
-      return this.toReturns(sp500, since).flatMap((r) => {
+      return this.toReturns(inDollars, since).flatMap((r) => {
         const fx = fxReturns.get(monthIndex(r))
 
         if (fx === undefined) {

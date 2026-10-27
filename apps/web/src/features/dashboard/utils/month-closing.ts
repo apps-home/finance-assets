@@ -1,6 +1,7 @@
 import type { AssetWithCategory } from '@/features/assets/api/types'
 import { type Category, CategoryType } from '@/features/categories/api/types'
 import type { DividendWithAsset } from '@/features/dividends/api/types'
+import type { CategoryContribution } from '@/features/transactions/api/types'
 
 import type { MonthData } from '../types/month-data'
 
@@ -28,8 +29,10 @@ export interface ClosingRowDefaults {
   dividend: number | null
   /** Proventos líquidos lançados no mês, em R$ */
   dividendSuggestion: number | null
-  /** Aporte em R$ */
+  /** Aporte em R$ (negativo = resgate) */
   contribution: number | null
+  /** Compras menos vendas registradas no mês, em R$ */
+  contributionSuggestion: number | null
 }
 
 interface BuildClosingDefaultsInput {
@@ -41,6 +44,8 @@ interface BuildClosingDefaultsInput {
   month: number
   assets: AssetWithCategory[]
   dividends: DividendWithAsset[]
+  /** Aporte de cada categoria pelas operações do mês */
+  contributions?: CategoryContribution[]
   now?: Date
 }
 
@@ -62,6 +67,12 @@ function readNumber(row: MonthData | undefined, key: string) {
   return typeof value === 'number' && value > 0 ? value : null
 }
 
+/** Aporte pode ser negativo (resgate) */
+function readSignedNumber(row: MonthData | undefined, key: string) {
+  const value = row?.[key]
+  return typeof value === 'number' && value !== 0 ? value : null
+}
+
 /** Valor registrado na moeda da categoria (o `amount` salvo já está em R$) */
 function originalAmount(row: MonthData | undefined, categoryName: string) {
   const amount = readNumber(row, categoryName)
@@ -78,6 +89,7 @@ export function buildClosingDefaults({
   month,
   assets,
   dividends,
+  contributions = [],
   now = new Date()
 }: BuildClosingDefaultsInput): ClosingRowDefaults[] {
   const row = data[month - 1]
@@ -122,6 +134,10 @@ export function buildClosingDefaults({
           )
         : null
 
+    const contributionSuggestion =
+      contributions.find((item) => item.categoryId === category.id)?.amount ??
+      null
+
     const previousAmount = originalAmount(previousRow, category.name)
 
     const [amount, amountSource]: [number | null, ClosingAmountSource] = isSaved
@@ -143,8 +159,9 @@ export function buildClosingDefaults({
         : dividendSuggestion,
       dividendSuggestion,
       contribution: isSaved
-        ? readNumber(row, `${category.name}_contribution`)
-        : null
+        ? readSignedNumber(row, `${category.name}_contribution`)
+        : contributionSuggestion,
+      contributionSuggestion
     }
   })
 }

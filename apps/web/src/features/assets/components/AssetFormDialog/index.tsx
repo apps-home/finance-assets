@@ -3,7 +3,11 @@
 import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import type { CreateAssetDTO } from '@/features/assets/api/types'
+import type {
+  CreateAssetDTO,
+  FixedIncomeIndexer
+} from '@/features/assets/api/types'
+import { INDEXER_OPTIONS } from '@/features/assets/utils/fixed-income'
 import { Category, CategoryType } from '@/features/categories/api/types'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
@@ -37,7 +41,17 @@ interface AssetFormDefaults {
   currentClosePrice?: number | null
   broker: string
   isActive: boolean
+  indexer?: FixedIncomeIndexer | null
+  indexerRate?: number | null
+  /** ISO ou AAAA-MM-DD */
+  investedAt?: string | null
+  maturityAt?: string | null
+  /** Quantidade e preço médio vêm das operações: ficam só leitura */
+  hasTransactions?: boolean
 }
+
+/** Valor do select de rendimento para saldo informado à mão */
+const MANUAL = 'MANUAL'
 
 interface AssetFormDialogProps {
   open: boolean
@@ -69,6 +83,12 @@ export function AssetFormDialog({
   const [currentClosePrice, setCurrentClosePrice] = useState('')
   const [broker, setBroker] = useState('')
   const [isActive, setIsActive] = useState(true)
+  const [indexer, setIndexer] = useState<FixedIncomeIndexer | typeof MANUAL>(
+    MANUAL
+  )
+  const [indexerRate, setIndexerRate] = useState('')
+  const [investedAt, setInvestedAt] = useState('')
+  const [maturityAt, setMaturityAt] = useState('')
 
   const isEditing = mode ? mode === 'edit' : !!defaultValues
 
@@ -98,6 +118,14 @@ export function AssetFormDialog({
       )
       setBroker(defaultValues.broker || '')
       setIsActive(defaultValues.isActive ?? true)
+      setIndexer(defaultValues.indexer ?? MANUAL)
+      setIndexerRate(
+        defaultValues.indexerRate != null
+          ? String(defaultValues.indexerRate).replace('.', ',')
+          : ''
+      )
+      setInvestedAt(defaultValues.investedAt?.slice(0, 10) ?? '')
+      setMaturityAt(defaultValues.maturityAt?.slice(0, 10) ?? '')
     } else if (open) {
       setName('')
       setTicker('')
@@ -109,6 +137,10 @@ export function AssetFormDialog({
       setCurrentClosePrice('')
       setBroker('')
       setIsActive(true)
+      setIndexer(MANUAL)
+      setIndexerRate('')
+      setInvestedAt('')
+      setMaturityAt('')
     }
   }, [open, defaultValues, initialCategoryId, categories])
 
@@ -117,6 +149,12 @@ export function AssetFormDialog({
   )
   const selectedCategoryLabel = selectedCategory?.name
   const isFixedIncome = selectedCategory?.type === CategoryType.FIXED
+  const isBrl = selectedCategory?.currency === 'BRL'
+  const hasTransactions = isEditing && !!defaultValues?.hasTransactions
+  const indexerOption = INDEXER_OPTIONS.find(
+    (option) => option.value === indexer
+  )
+  const isIndexed = isFixedIncome && !!indexerOption
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -128,8 +166,26 @@ export function AssetFormDialog({
       averagePrice.trim() !== '' ? parseValue(averagePrice) : null
     const parsedCurrentClosePrice =
       currentClosePrice.trim() !== '' ? parseValue(currentClosePrice) : null
+    const parsedIndexerRate =
+      indexerRate.trim() !== '' ? Number(indexerRate.replace(',', '.')) : null
+
+    // Só renda fixa tem indexador; nas outras categorias os campos não vão
+    const indexation = isFixedIncome
+      ? {
+          indexer: isIndexed ? (indexer as FixedIncomeIndexer) : null,
+          indexerRate:
+            isIndexed &&
+            parsedIndexerRate != null &&
+            !Number.isNaN(parsedIndexerRate)
+              ? parsedIndexerRate
+              : null,
+          investedAt: isIndexed && investedAt ? investedAt : null,
+          maturityAt: isIndexed && maturityAt ? maturityAt : null
+        }
+      : {}
 
     await onSubmit({
+      ...indexation,
       categoryId,
       name: name.trim(),
       ticker: ticker.trim(),
@@ -233,7 +289,7 @@ export function AssetFormDialog({
                 placeholder="Ex: 10, 0.5..."
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                disabled={isPending}
+                disabled={isPending || hasTransactions}
               />
             </div>
             <div className="space-y-2">
@@ -248,12 +304,117 @@ export function AssetFormDialog({
                 onChange={(e) =>
                   setAveragePrice(formatCurrencyInput(e.target.value))
                 }
-                disabled={isPending}
+                disabled={isPending || hasTransactions}
               />
             </div>
           </div>
 
+          {hasTransactions && (
+            <p className="-mt-2 text-[11px] text-muted-foreground">
+              Quantidade e preço médio são calculados pelas operações do ativo.
+              Para mudar, registre ou edite uma operação no detalhe do ativo.
+            </p>
+          )}
+
           {isFixedIncome && (
+            <div className="space-y-2">
+              <Label htmlFor="asset-indexer" className="font-medium text-xs">
+                Rendimento
+              </Label>
+              <Select
+                value={indexer}
+                onValueChange={(val) => {
+                  if (val) setIndexer(val as FixedIncomeIndexer | typeof MANUAL)
+                }}
+                disabled={isPending}
+              >
+                <SelectTrigger id="asset-indexer">
+                  <SelectValue>
+                    {indexerOption?.label ?? 'Saldo informado manualmente'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="w-full">
+                  <SelectItem value={MANUAL} className="mx-2 py-3">
+                    Saldo informado manualmente
+                  </SelectItem>
+                  {INDEXER_OPTIONS.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      disabled={option.brlOnly && !isBrl}
+                      className="mx-2 py-3"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {isIndexed && indexerOption && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="asset-indexer-rate"
+                    className="font-medium text-xs"
+                  >
+                    {indexerOption.rateLabel} *
+                  </Label>
+                  <Input
+                    id="asset-indexer-rate"
+                    inputMode="decimal"
+                    placeholder={indexerOption.ratePlaceholder}
+                    value={indexerRate}
+                    onChange={(e) =>
+                      setIndexerRate(e.target.value.replace(/[^\d,.-]/g, ''))
+                    }
+                    disabled={isPending}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="asset-invested-at"
+                    className="font-medium text-xs"
+                  >
+                    Aplicação *
+                  </Label>
+                  <Input
+                    id="asset-invested-at"
+                    type="date"
+                    value={investedAt}
+                    onChange={(e) => setInvestedAt(e.target.value)}
+                    disabled={isPending}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="asset-maturity-at"
+                    className="font-medium text-xs"
+                  >
+                    Vencimento
+                  </Label>
+                  <Input
+                    id="asset-maturity-at"
+                    type="date"
+                    value={maturityAt}
+                    min={investedAt || undefined}
+                    onChange={(e) => setMaturityAt(e.target.value)}
+                    disabled={isPending}
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                O saldo bruto (antes do IR) é recalculado todo dia útil a partir
+                do valor aplicado: quantidade × preço médio. Para um CDB, use
+                quantidade 1 e o valor aplicado como preço médio, com um ativo
+                por aplicação.
+              </p>
+            </div>
+          )}
+
+          {isFixedIncome && !isIndexed && (
             <div className="space-y-2">
               <Label
                 htmlFor="asset-current-price"
@@ -319,7 +480,12 @@ export function AssetFormDialog({
             <Button
               type="submit"
               size="sm"
-              disabled={isPending || !name.trim() || !categoryId}
+              disabled={
+                isPending ||
+                !name.trim() ||
+                !categoryId ||
+                (isIndexed && (!indexerRate || !investedAt || !averagePrice))
+              }
               className="text-xs"
             >
               {isPending && <Loader2 className="size-3.5 animate-spin" />}

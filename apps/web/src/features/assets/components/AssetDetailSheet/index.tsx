@@ -2,6 +2,7 @@
 
 import {
   ArrowDownRight,
+  ArrowLeftRight,
   ArrowUpRight,
   BarChart3,
   Building2,
@@ -28,6 +29,7 @@ import {
   CATEGORY_TYPE_LABELS,
   getCategoryCurrency
 } from '@/features/categories/utils'
+import { AssetTransactions } from '@/features/transactions/components/AssetTransactions'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Separator } from '@/shared/components/ui/separator'
@@ -358,6 +360,19 @@ export function AssetDetailSheet({
           </Section>
 
           <Separator />
+
+          {asset.category?.type !== CategoryType.FIXED && (
+            <>
+              <Section
+                title="Operações"
+                icon={<ArrowLeftRight className="size-3.5" />}
+              >
+                <AssetTransactions asset={asset} />
+              </Section>
+
+              <Separator />
+            </>
+          )}
 
           <AssetDividends asset={asset} currency={currency} />
 

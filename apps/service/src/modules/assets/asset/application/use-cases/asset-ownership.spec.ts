@@ -1,6 +1,7 @@
 import { FakeEventPublisher } from '@test/events/fake-event-publisher'
 import { makeAsset } from '@test/factories/make-asset'
 import { makeCategory } from '@test/factories/make-category'
+import { makeRevalueFixedIncome } from '@test/fixed-income/make-revalue-fixed-income'
 import { makeMarketAssetUseCases } from '@test/market-asset/make-market-asset-use-cases'
 import { InMemoryAssetRepository } from '@test/repositories/in-memory-asset.repository'
 import { InMemoryCategoryRepository } from '@test/repositories/in-memory-category.repository'
@@ -49,7 +50,8 @@ describe('Asset use cases ownership', () => {
       assetRepository,
       categoryRepository,
       makeMarketAssetUseCases().resolve,
-      new FakeEventPublisher()
+      new FakeEventPublisher(),
+      makeRevalueFixedIncome(assetRepository).revalue
     )
 
     const result = await sut.execute('user-1', assetId, { name: 'Novo nome' })
@@ -63,7 +65,8 @@ describe('Asset use cases ownership', () => {
       assetRepository,
       categoryRepository,
       makeMarketAssetUseCases().resolve,
-      new FakeEventPublisher()
+      new FakeEventPublisher(),
+      makeRevalueFixedIncome(assetRepository).revalue
     )
 
     const result = await sut.execute('user-2', assetId, { name: 'Invasor' })

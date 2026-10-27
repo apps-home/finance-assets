@@ -10,7 +10,9 @@ import { ResolveMarketAssetUseCase } from '@/modules/assets/market-asset/applica
 
 import { AssetRepository } from '../../domain/asset.repository'
 import { UpdateAssetPayload } from '../../domain/dto/update-asset.dto'
+import { checkIndexerForCategory } from '../../domain/fixed-income-valuation'
 import { AssetNotFoundError } from '../errors/asset-not-found.error'
+import { RevalueFixedIncomeUseCase } from './revalue-fixed-income'
 
 type UpdateAssetResponse = Either<
   AssetNotFoundError | CategoryNotFoundError | PayloadError,
@@ -23,7 +25,8 @@ export class UpdateAssetUseCase {
     private assetRepository: AssetRepository,
     private categoryRepository: CategoryRepository,
     private resolveMarketAsset: ResolveMarketAssetUseCase,
-    private eventPublisher: DomainEventPublisher
+    private eventPublisher: DomainEventPublisher,
+    private revalueFixedIncome: RevalueFixedIncomeUseCase
   ) {}
 
   async execute(
@@ -38,6 +41,23 @@ export class UpdateAssetUseCase {
     }
 
     const previousTicker = existingAsset.ticker
+
+    if (data.indexer) {
+      const category = await this.categoryRepository.findById(
+        existingAsset.categoryId,
+        userId
+      )
+
+      if (!category) {
+        return left(new CategoryNotFoundError())
+      }
+
+      const indexerError = checkIndexerForCategory(data.indexer, category)
+
+      if (indexerError) {
+        return left(new PayloadError(indexerError))
+      }
+    }
 
     try {
       if (
@@ -84,6 +104,11 @@ export class UpdateAssetUseCase {
     }
 
     await this.assetRepository.save(existingAsset)
+
+    // Taxa, data ou valor aplicado podem ter mudado: recalcula o saldo
+    if (existingAsset.indexer) {
+      await this.revalueFixedIncome.tryExecute(existingAsset)
+    }
 
     if (marketAssetToRefresh) {
       this.eventPublisher.publish<AssetEventPayload>(

@@ -5,6 +5,7 @@ import {
   CircleOff,
   Eye,
   Pencil,
+  Percent,
   Trash2,
   TrendingDown,
   TrendingUp
@@ -12,6 +13,7 @@ import {
 
 import type { AssetWithCategory } from '@/features/assets/api/types'
 import { AssetPriceInfo } from '@/features/assets/components/AssetPriceInfo'
+import { formatIndexer } from '@/features/assets/utils/fixed-income'
 import { CategoryType } from '@/features/categories/api/types'
 import {
   CATEGORY_TYPE_COLORS,
@@ -56,6 +58,7 @@ export function AssetCard({
   const isNegativePL = hasPL && asset.profitLoss! < 0
   const catType = asset.category?.type || CategoryType.FIXED
   const currency = getCategoryCurrency(asset.category)
+  const indexerLabel = formatIndexer(asset.indexer, asset.indexerRate)
 
   return (
     <Card
@@ -104,6 +107,12 @@ export function AssetCard({
                 <span className="flex items-center gap-1 text-muted-foreground text-xs">
                   <Building2 className="size-3" />
                   {asset.broker}
+                </span>
+              )}
+              {indexerLabel && (
+                <span className="flex items-center gap-1 text-muted-foreground text-xs">
+                  <Percent className="size-3" />
+                  {indexerLabel}
                 </span>
               )}
             </div>

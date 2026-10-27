@@ -7,6 +7,7 @@ import type {
   PerformancePeriodKey,
   PerformanceScope
 } from '@/features/performance/api/types'
+import { CategoryPerformanceTable } from '@/features/performance/components/CategoryPerformanceTable'
 import { PerformanceChart } from '@/features/performance/components/PerformanceChart'
 import { PerformanceSummary } from '@/features/performance/components/PerformanceSummary'
 import { usePortfolioPerformance } from '@/features/performance/hooks/use-performance'
@@ -115,12 +116,19 @@ export default function PerformanceClient() {
             )}
             <PerformanceChart points={points} />
 
+            <CategoryPerformanceTable
+              categories={data?.byCategory ?? []}
+              period={period}
+            />
+
             <p className="text-muted-foreground text-xs leading-relaxed">
               Retorno mensal pelo método de Modified Dietz: aportes entram na
               metade do mês e proventos somam ao ganho. Para um resultado fiel,
               informe o aporte líquido de cada mês na tabela da página inicial.
-              O Ibovespa e o S&P 500 são índices de preço (sem dividendos).
-              Meses sem registro de todas as categorias são ignorados.
+              Os benchmarks incluem dividendos reinvestidos (Ibovespa, IFIX pelo
+              ETF XFIX11 e S&P 500 Total Return). Na carteira consolidada, meses
+              sem registro de todas as categorias são ignorados; na tabela por
+              categoria, cada uma usa os próprios registros.
             </p>
           </>
         )}

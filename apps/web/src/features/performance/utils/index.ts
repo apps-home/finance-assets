@@ -1,4 +1,5 @@
 import type {
+  BenchmarkType,
   PerformancePeriodKey,
   PerformancePoint,
   PerformanceScope
@@ -22,6 +23,14 @@ export const SERIES_COLORS: Record<SeriesKey, string> = {
 }
 
 export const SERIES_KEYS: SeriesKey[] = ['portfolio', 'cdi', 'ibov', 'sp500']
+
+export const BENCHMARK_LABELS: Record<BenchmarkType, string> = {
+  CDI: '100% do CDI',
+  IBOV: 'Ibovespa',
+  SP500_BRL: 'S&P 500 (R$)',
+  IFIX: 'IFIX',
+  BTC_BRL: 'Bitcoin (R$)'
+}
 
 export const SCOPE_LABELS: Record<PerformanceScope, string> = {
   all: 'Tudo',

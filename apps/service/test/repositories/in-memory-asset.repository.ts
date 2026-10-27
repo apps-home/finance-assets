@@ -66,6 +66,10 @@ export class InMemoryAssetRepository implements AssetRepository {
     return this.items.find((item) => item.id === id) ?? null
   }
 
+  async findAllIndexedFixedIncome(): Promise<Asset[]> {
+    return this.items.filter((item) => item.isActive && item.indexer !== null)
+  }
+
   async delete(id: string): Promise<void> {
     this.items = this.items.filter((item) => item.id !== id)
   }

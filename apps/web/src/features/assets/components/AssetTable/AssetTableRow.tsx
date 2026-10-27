@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react'
 
 import type { AssetWithCategory } from '@/features/assets/api/types'
 import { calcAssetMetrics } from '@/features/assets/utils/asset-metrics'
+import { formatIndexer } from '@/features/assets/utils/fixed-income'
 import { CategoryType } from '@/features/categories/api/types'
 import {
   CATEGORY_TYPE_COLORS,
@@ -41,6 +42,7 @@ export function AssetTableRow({
 }: AssetTableRowProps) {
   const currency = getCategoryCurrency(asset.category)
   const catType = asset.category?.type || CategoryType.VARIABLE_BR
+  const indexerLabel = formatIndexer(asset.indexer, asset.indexerRate)
   const {
     monthChange,
     pmDiffPercent,
@@ -126,13 +128,17 @@ export function AssetTableRow({
                 <span className="max-w-28 truncate">{asset.broker}</span>
               </span>
             )}
-            {asset.broker && asset.quantity != null && (
+            {asset.broker && (indexerLabel || asset.quantity != null) && (
               <span className="text-muted-foreground/40">•</span>
             )}
-            {asset.quantity != null && (
-              <span className="tabular-nums">
-                {formatQuantity(asset.quantity)} cotas
-              </span>
+            {indexerLabel ? (
+              <span>{indexerLabel}</span>
+            ) : (
+              asset.quantity != null && (
+                <span className="tabular-nums">
+                  {formatQuantity(asset.quantity)} cotas
+                </span>
+              )
             )}
           </div>
         </div>

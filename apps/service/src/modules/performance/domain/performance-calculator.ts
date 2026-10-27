@@ -222,6 +222,72 @@ function summarizePeriod(
   }
 }
 
+/** Meses de cada período, contados a partir de `last` (mês mais recente) */
+function periodSlices(
+  returns: MonthlyReturn[],
+  last: MonthRef
+): Array<{ period: PeriodKey; slice: MonthlyReturn[] }> {
+  const lastIndex = monthIndex(last)
+
+  return [
+    { period: 'ytd', slice: returns.filter((r) => r.year === last.year) },
+    {
+      period: '12m',
+      slice: returns.filter((r) => monthIndex(r) > lastIndex - 12)
+    },
+    { period: 'all', slice: returns }
+  ]
+}
+
+export interface BenchmarkedPeriod {
+  period: PeriodKey
+  months: number
+  /** null quando não há nenhum mês no período */
+  portfolio: number | null
+  benchmark: number | null
+  /** Retorno menos benchmark, em pontos percentuais */
+  alpha: number | null
+}
+
+/**
+ * Períodos de uma série (ex.: uma categoria) contra um único benchmark. Os
+ * períodos terminam em `last`, para todas as séries usarem a mesma janela.
+ */
+export function summarizeAgainstBenchmark(
+  returns: MonthlyReturn[],
+  benchmark: MonthlyReturn[],
+  last: MonthRef
+): BenchmarkedPeriod[] {
+  const byMonth = toMap(benchmark)
+  const sorted = [...returns].sort((a, b) => monthIndex(a) - monthIndex(b))
+
+  return periodSlices(sorted, last).map(({ period, slice }) => {
+    if (slice.length === 0) {
+      return {
+        period,
+        months: 0,
+        portfolio: null,
+        benchmark: null,
+        alpha: null
+      }
+    }
+
+    const values = slice.map((r) => byMonth.get(monthIndex(r)))
+    const portfolio = compound(slice.map((r) => r.value))
+    const benchmarkTotal = values.every((v): v is number => v !== undefined)
+      ? compound(values)
+      : null
+
+    return {
+      period,
+      months: slice.length,
+      portfolio,
+      benchmark: benchmarkTotal,
+      alpha: benchmarkTotal === null ? null : portfolio - benchmarkTotal
+    }
+  })
+}
+
 export function buildPerformance(
   portfolioReturns: MonthlyReturn[],
   benchmarkReturns: BenchmarkReturns
@@ -287,22 +353,10 @@ export function buildPerformance(
     series.push(point)
   }
 
-  const last = portfolio[portfolio.length - 1]
-  const lastIndex = monthIndex(last)
-
-  const periods: PeriodSummary[] = [
-    summarizePeriod(
-      'ytd',
-      portfolio.filter((r) => r.year === last.year),
-      benchmarks
-    ),
-    summarizePeriod(
-      '12m',
-      portfolio.filter((r) => monthIndex(r) > lastIndex - 12),
-      benchmarks
-    ),
-    summarizePeriod('all', portfolio, benchmarks)
-  ]
+  const periods: PeriodSummary[] = periodSlices(
+    portfolio,
+    portfolio[portfolio.length - 1]
+  ).map(({ period, slice }) => summarizePeriod(period, slice, benchmarks))
 
   const paired = portfolio.flatMap((r) => {
     const ibov = benchmarks.ibov.get(monthIndex(r))

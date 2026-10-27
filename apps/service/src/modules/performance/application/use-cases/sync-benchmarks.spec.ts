@@ -10,6 +10,7 @@ import {
 import { SyncBenchmarksUseCase } from './sync-benchmarks'
 
 const HOUR = 60 * 60 * 1000
+const BENCHMARKS = Object.values(BenchmarkType).length
 
 function monthly(months: number[], returnPct = 1): BenchmarkMonthlyReturn[] {
   return months.map((month) => ({ year: 2026, month, returnPct }))
@@ -40,8 +41,8 @@ describe('SyncBenchmarksUseCase', () => {
     it('should store the returns of every benchmark', async () => {
       await useCase.execute({ year: 2026, month: 7 })
 
-      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(3)
-      expect(repository.items).toHaveLength(9)
+      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(BENCHMARKS)
+      expect(repository.items).toHaveLength(BENCHMARKS * 3)
       expect(repository.items.map((item) => item.benchmark)).toEqual(
         expect.arrayContaining(Object.values(BenchmarkType))
       )
@@ -51,7 +52,7 @@ describe('SyncBenchmarksUseCase', () => {
       await useCase.execute({ year: 2026, month: 7 })
       await useCase.execute({ year: 2026, month: 7 })
 
-      expect(repository.items).toHaveLength(9)
+      expect(repository.items).toHaveLength(BENCHMARKS * 3)
     })
 
     it('should skip a benchmark whose provider failed', async () => {
@@ -61,7 +62,7 @@ describe('SyncBenchmarksUseCase', () => {
 
       await useCase.execute({ year: 2026, month: 7 })
 
-      expect(repository.items).toHaveLength(6)
+      expect(repository.items).toHaveLength((BENCHMARKS - 1) * 3)
       expect(
         repository.items.some((item) => item.benchmark === BenchmarkType.IBOV)
       ).toBe(false)
@@ -72,8 +73,8 @@ describe('SyncBenchmarksUseCase', () => {
     it('should backfill when nothing is stored', async () => {
       await useCase.ensureCovered({ year: 2026, month: 7 })
 
-      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(3)
-      expect(repository.items).toHaveLength(9)
+      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(BENCHMARKS)
+      expect(repository.items).toHaveLength(BENCHMARKS * 3)
     })
 
     it('should not call the providers when the range is covered', async () => {
@@ -87,9 +88,11 @@ describe('SyncBenchmarksUseCase', () => {
 
     it('should only fetch the benchmarks that have gaps', async () => {
       await repository.upsertMany(
-        [BenchmarkType.CDI, BenchmarkType.IBOV].flatMap((benchmark) =>
-          monthly([7, 8, 9]).map((item) => ({ ...item, benchmark }))
-        )
+        Object.values(BenchmarkType)
+          .filter((benchmark) => benchmark !== BenchmarkType.SP500_BRL)
+          .flatMap((benchmark) =>
+            monthly([7, 8, 9]).map((item) => ({ ...item, benchmark }))
+          )
       )
 
       await useCase.ensureCovered({ year: 2026, month: 7 })
@@ -112,13 +115,13 @@ describe('SyncBenchmarksUseCase', () => {
       const now = Date.now()
 
       await useCase.ensureCovered({ year: 2026, month: 7 }, now)
-      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(3)
+      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(BENCHMARKS)
 
       await useCase.ensureCovered({ year: 2026, month: 7 }, now + 10 * 60_000)
-      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(3)
+      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(BENCHMARKS)
 
       await useCase.ensureCovered({ year: 2026, month: 7 }, now + HOUR + 1)
-      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(6)
+      expect(fetchMonthlyReturns).toHaveBeenCalledTimes(BENCHMARKS * 2)
     })
 
     it('should not throw when the repository fails', async () => {

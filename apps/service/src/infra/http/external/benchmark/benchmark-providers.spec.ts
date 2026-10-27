@@ -168,6 +168,36 @@ describe('benchmark providers', () => {
       expect(result?.[0].returnPct).toBeCloseTo(21)
     })
 
+    it('should use the total return indexes and convert the dollar ones to reais', async () => {
+      const http = httpWith((url) =>
+        url.includes('BRL')
+          ? yahooChart([bar(2026, 8, 5), bar(2026, 9, 5.5)])
+          : yahooChart([bar(2026, 8, 100), bar(2026, 9, 102)])
+      )
+      const provider = new YahooBenchmarkProvider(http)
+      const since = { year: 2026, month: 9 }
+
+      const ifix = await provider.fetchMonthlyReturns(BenchmarkType.IFIX, since)
+      const btc = await provider.fetchMonthlyReturns(
+        BenchmarkType.BTC_BRL,
+        since
+      )
+      await provider.fetchMonthlyReturns(BenchmarkType.SP500_BRL, since)
+
+      const urls = vi.mocked(http.get).mock.calls.map(([url]) => url)
+      expect(urls).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('XFIX11.SA'),
+          expect.stringContaining('BTC-USD'),
+          expect.stringContaining(encodeURIComponent('^SP500TR'))
+        ])
+      )
+      // IFIX em reais: só a variação do ETF
+      expect(ifix?.[0].returnPct).toBeCloseTo(2)
+      // Bitcoin: (1 + 2%) × (1 + 10%) − 1 = 12,2%
+      expect(btc?.[0].returnPct).toBeCloseTo(12.2)
+    })
+
     it('should attribute dollar bars stamped on the last day of the previous month', async () => {
       // Dólar (Londres): a barra de setembro vem às 23:00 UTC de 31/08, a de
       // agosto às 23:00 UTC de 31/07. Os índices vêm às 04:00 UTC do dia 1º.

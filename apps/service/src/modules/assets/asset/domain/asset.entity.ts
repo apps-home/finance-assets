@@ -3,6 +3,8 @@ import { Optional } from '@/core/utils/Optional'
 import { omitUndefined } from '@/core/utils/omit-undefined'
 import type { MarketAsset } from '@/modules/assets/market-asset/domain/market-asset.entity'
 
+import { FixedIncomeIndexer } from './fixed-income-valuation'
+
 export interface AssetProps {
   id: string
   categoryId: string
@@ -18,8 +20,48 @@ export interface AssetProps {
   currentClosePrice: number | null
   lastMonthClosePrice: number | null
   dividendsImportedAt: Date | null
+  /** Renda fixa com saldo calculado pelo indexador; null = saldo manual */
+  indexer: FixedIncomeIndexer | null
+  /** CDI: % do CDI; IPCA: taxa real ao ano; PRE: taxa ao ano */
+  indexerRate: number | null
+  investedAt: Date | null
+  maturityAt: Date | null
+  /**
+   * Com operações registradas, quantidade e preço médio são calculados a
+   * partir delas (não é coluna: vem da contagem de `asset_transactions`)
+   */
+  hasTransactions: boolean
   createdAt: Date
   updatedAt: Date
+}
+
+type IndexationProps = Pick<
+  AssetProps,
+  'indexer' | 'indexerRate' | 'investedAt' | 'maturityAt' | 'averagePrice'
+>
+
+function validateIndexation(props: IndexationProps) {
+  if (!props.indexer) return
+
+  if (props.indexerRate === null || !Number.isFinite(props.indexerRate)) {
+    throw new PayloadError('Indexed fixed income needs a rate')
+  }
+
+  if (props.indexer === FixedIncomeIndexer.CDI && props.indexerRate <= 0) {
+    throw new PayloadError('The percentage of the CDI must be positive')
+  }
+
+  if (!props.investedAt) {
+    throw new PayloadError('Indexed fixed income needs the investment date')
+  }
+
+  if (props.averagePrice === null) {
+    throw new PayloadError('Indexed fixed income needs the invested amount')
+  }
+
+  if (props.maturityAt && props.maturityAt < props.investedAt) {
+    throw new PayloadError('The maturity must be after the investment date')
+  }
 }
 
 export class Asset implements AssetProps {
@@ -42,6 +84,11 @@ export class Asset implements AssetProps {
       | 'currentClosePrice'
       | 'lastMonthClosePrice'
       | 'dividendsImportedAt'
+      | 'indexer'
+      | 'indexerRate'
+      | 'investedAt'
+      | 'maturityAt'
+      | 'hasTransactions'
       | 'createdAt'
       | 'updatedAt'
     >
@@ -50,7 +97,18 @@ export class Asset implements AssetProps {
       throw new PayloadError('Name must be at least 2 characters long')
     }
 
+    const indexation: IndexationProps = {
+      indexer: props.indexer ?? null,
+      indexerRate: props.indexerRate ?? null,
+      investedAt: props.investedAt ?? null,
+      maturityAt: props.maturityAt ?? null,
+      averagePrice: props.averagePrice ?? null
+    }
+
+    validateIndexation(indexation)
+
     return new Asset({
+      ...indexation,
       id: props.id || crypto.randomUUID(),
       categoryId: props.categoryId,
       name: props.name,
@@ -63,6 +121,7 @@ export class Asset implements AssetProps {
       currentClosePrice: props.currentClosePrice ?? null,
       lastMonthClosePrice: props.lastMonthClosePrice ?? null,
       dividendsImportedAt: props.dividendsImportedAt ?? null,
+      hasTransactions: props.hasTransactions ?? false,
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date()
     })
@@ -77,6 +136,7 @@ export class Asset implements AssetProps {
         | 'marketAssetId'
         | 'lastMonthClosePrice'
         | 'dividendsImportedAt'
+        | 'hasTransactions'
         | 'createdAt'
         | 'updatedAt'
       >
@@ -86,13 +146,23 @@ export class Asset implements AssetProps {
       throw new PayloadError('Name must be at least 2 characters long')
     }
 
-    // Com cotação de mercado o preço vem do catálogo, não de edição manual
-    const { currentClosePrice, ...rest } = props
-
-    this._props = {
+    // Com cotação de mercado o preço vem do catálogo e, com indexador, do
+    // cálculo: em nenhum dos dois casos vem de edição manual. Com operações,
+    // quantidade e preço médio também são calculados.
+    const { currentClosePrice, quantity, averagePrice, ...rest } = props
+    const next: AssetProps = {
       ...this._props,
       ...omitUndefined(rest),
-      ...(!this._props.marketAssetId &&
+      ...(!this._props.hasTransactions &&
+        omitUndefined({ quantity, averagePrice }))
+    }
+
+    validateIndexation(next)
+
+    this._props = {
+      ...next,
+      ...(!next.marketAssetId &&
+        !next.indexer &&
         currentClosePrice !== undefined && { currentClosePrice }),
       ...(props.name !== undefined && { name: props.name.trim() }),
       // Outro ticker tem outro histórico de proventos
@@ -100,6 +170,31 @@ export class Asset implements AssetProps {
         props.ticker !== this._props.ticker && { dividendsImportedAt: null }),
       updatedAt: new Date()
     }
+  }
+
+  /**
+   * Posição calculada pelas operações; `null` quando o ativo ficou sem
+   * operações (mantém os últimos valores, que voltam a ser editáveis)
+   */
+  applyPosition(
+    position: { quantity: number; averagePrice: number | null } | null
+  ) {
+    this._props = {
+      ...this._props,
+      ...(position && {
+        quantity: position.quantity,
+        averagePrice: position.averagePrice
+      }),
+      hasTransactions: position !== null,
+      updatedAt: new Date()
+    }
+  }
+
+  /** Saldo por unidade calculado pelo indexador (renda fixa automática) */
+  applyIndexedPrice(price: number) {
+    if (!this._props.indexer) return
+
+    this._props = { ...this._props, currentClosePrice: price }
   }
 
   /**
@@ -174,6 +269,26 @@ export class Asset implements AssetProps {
 
   get dividendsImportedAt(): Date | null {
     return this._props.dividendsImportedAt
+  }
+
+  get indexer(): FixedIncomeIndexer | null {
+    return this._props.indexer
+  }
+
+  get indexerRate(): number | null {
+    return this._props.indexerRate
+  }
+
+  get investedAt(): Date | null {
+    return this._props.investedAt
+  }
+
+  get maturityAt(): Date | null {
+    return this._props.maturityAt
+  }
+
+  get hasTransactions(): boolean {
+    return this._props.hasTransactions
   }
 
   get createdAt(): Date {

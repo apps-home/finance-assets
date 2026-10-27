@@ -87,6 +87,15 @@ export class PrismaAssetRepository implements AssetRepository {
     })
   }
 
+  async findAllIndexedFixedIncome(): Promise<Asset[]> {
+    const assets = await this.prisma.asset.findMany({
+      where: { isActive: true, indexer: { not: null } },
+      include: WITH_MARKET_ASSET
+    })
+
+    return assets.map(PrismaAssetMapper.toDomain)
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.asset.delete({
       where: { id }

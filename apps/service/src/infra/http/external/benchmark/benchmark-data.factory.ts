@@ -27,6 +27,8 @@ export class BenchmarkDataFactory implements BenchmarkDataGateway {
 
       case BenchmarkType.IBOV:
       case BenchmarkType.SP500_BRL:
+      case BenchmarkType.IFIX:
+      case BenchmarkType.BTC_BRL:
         return this.yahooProvider.fetchMonthlyReturns(benchmark, since)
     }
   }

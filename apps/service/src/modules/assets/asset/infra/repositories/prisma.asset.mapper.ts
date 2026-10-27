@@ -4,13 +4,21 @@ import type {
 } from '@lib/db'
 
 import { Asset } from '../../domain/asset.entity'
+import type { FixedIncomeIndexer } from '../../domain/fixed-income-valuation'
 
 export type PrismaAssetWithMarket = PrismaAsset & {
   marketAsset: PrismaMarketAsset | null
+  _count?: { transactions: number }
 }
 
-/** Sempre carregar o ativo com a cotação do catálogo */
-export const WITH_MARKET_ASSET = { marketAsset: true } as const
+/**
+ * Sempre carregar o ativo com a cotação do catálogo e a contagem de operações
+ * (com operações, quantidade e preço médio são calculados)
+ */
+export const WITH_MARKET_ASSET = {
+  marketAsset: true,
+  _count: { select: { transactions: true } }
+} as const
 
 export class PrismaAssetMapper {
   static toDomain(raw: PrismaAssetWithMarket): Asset {
@@ -37,6 +45,11 @@ export class PrismaAssetMapper {
           ? Number(marketAsset.lastMonthClosePrice)
           : null,
       dividendsImportedAt: raw.dividendsImportedAt,
+      indexer: (raw.indexer as FixedIncomeIndexer | null) ?? null,
+      indexerRate: raw.indexerRate != null ? Number(raw.indexerRate) : null,
+      investedAt: raw.investedAt,
+      maturityAt: raw.maturityAt,
+      hasTransactions: (raw._count?.transactions ?? 0) > 0,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     })
@@ -56,6 +69,10 @@ export class PrismaAssetMapper {
       // A coluna guarda só o preço manual; a cotação de mercado fica no catálogo
       currentClosePrice: asset.marketAssetId ? null : asset.currentClosePrice,
       dividendsImportedAt: asset.dividendsImportedAt,
+      indexer: asset.indexer,
+      indexerRate: asset.indexerRate,
+      investedAt: asset.investedAt,
+      maturityAt: asset.maturityAt,
       createdAt: asset.createdAt,
       updatedAt: asset.updatedAt
     }

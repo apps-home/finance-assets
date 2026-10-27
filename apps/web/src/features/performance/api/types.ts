@@ -1,3 +1,5 @@
+import type { CategoryType } from '@/features/categories/api/types'
+
 export type PerformancePeriodKey = 'ytd' | '12m' | 'all'
 
 /** Quais categorias entram no cálculo */
@@ -27,10 +29,33 @@ export interface PerformancePeriodSummary {
   alphaSp500: number | null
 }
 
+export type BenchmarkType = 'CDI' | 'IBOV' | 'SP500_BRL' | 'IFIX' | 'BTC_BRL'
+
+export interface BenchmarkedPeriod {
+  period: PerformancePeriodKey
+  months: number
+  /** null quando a categoria não tem nenhum mês no período */
+  portfolio: number | null
+  benchmark: number | null
+  /** Categoria menos benchmark, em pontos percentuais */
+  alpha: number | null
+}
+
+export interface CategoryPerformance {
+  categoryId: string
+  name: string
+  type: CategoryType
+  /** Saldo do mês mais recente, em R$ */
+  latestAmount: number
+  benchmark: BenchmarkType
+  periods: BenchmarkedPeriod[]
+}
+
 export interface PortfolioPerformance {
   series: PerformancePoint[]
   periods: PerformancePeriodSummary[]
   betaIbov: number | null
+  byCategory: CategoryPerformance[]
 }
 
 export interface GetPerformanceParams {

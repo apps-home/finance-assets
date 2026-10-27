@@ -24,4 +24,6 @@ export abstract class AssetRepository {
   abstract delete(id: string): Promise<void>
   abstract markDividendsImported(assetIds: string[], at: Date): Promise<void>
   abstract findAllActiveWithUserDetails(): Promise<AssetWithUserDetails[]>
+  /** Renda fixa ativa com indexador, de todos os usuários (cron) */
+  abstract findAllIndexedFixedIncome(): Promise<Asset[]>
 }

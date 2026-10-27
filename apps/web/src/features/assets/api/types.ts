@@ -14,9 +14,20 @@ export interface Asset {
   isActive: boolean
   currentClosePrice: number | null
   lastMonthClosePrice: number | null
+  /** Renda fixa com saldo calculado pelo indexador; null = saldo manual */
+  indexer: FixedIncomeIndexer | null
+  /** CDI: % do CDI; IPCA: taxa real ao ano; PRE: taxa ao ano */
+  indexerRate: number | null
+  /** ISO (00:00 UTC) */
+  investedAt: string | null
+  maturityAt: string | null
+  /** Com operações, quantidade e preço médio são calculados (só leitura) */
+  hasTransactions: boolean
   createdAt: Date
   updatedAt: Date
 }
+
+export type FixedIncomeIndexer = 'CDI' | 'IPCA' | 'PRE'
 
 export interface CreateAssetDTO {
   categoryId: string
@@ -27,6 +38,12 @@ export interface CreateAssetDTO {
   broker?: string | null
   isActive?: boolean
   currentClosePrice?: number | null
+  indexer?: FixedIncomeIndexer | null
+  indexerRate?: number | null
+  /** AAAA-MM-DD */
+  investedAt?: string | null
+  /** AAAA-MM-DD */
+  maturityAt?: string | null
 }
 
 export type UpdateAssetDTO = Partial<Omit<CreateAssetDTO, 'categoryId'>>

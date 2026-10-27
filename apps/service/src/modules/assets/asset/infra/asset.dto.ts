@@ -2,6 +2,7 @@ import { OmitType, PartialType } from '@nestjs/mapped-types'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
+  IsDate,
   IsIn,
   IsNotEmpty,
   IsNumber,
@@ -16,6 +17,8 @@ import {
   type PriceHistoryRange
 } from '@/core/http/external/market-data/price-history.gateway'
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+
+import { FixedIncomeIndexer } from '../domain/fixed-income-valuation'
 
 export class CreateAssetDTO {
   @IsNotEmpty({ message: 'A categoria é obrigatória' })
@@ -85,6 +88,46 @@ export class CreateAssetDTO {
     return Number.isNaN(num) ? value : num
   })
   currentClosePrice?: number | null
+
+  /** Renda fixa: saldo calculado pelo indexador (null = saldo manual) */
+  @IsOptional()
+  @ValidateIf((_, val) => val !== null)
+  @IsIn(Object.values(FixedIncomeIndexer), {
+    message: 'O indexador deve ser CDI, IPCA ou PRE'
+  })
+  indexer?: FixedIncomeIndexer | null
+
+  @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined)
+  @IsNumber({}, { message: 'A taxa deve ser um número válido' })
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return null
+    const num = Number(value)
+    return Number.isNaN(num) ? value : num
+  })
+  indexerRate?: number | null
+
+  @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined)
+  @IsDate({ message: 'A data da aplicação deve estar no formato AAAA-MM-DD' })
+  @Transform(({ value }) => toCalendarDate(value))
+  investedAt?: Date | null
+
+  @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined)
+  @IsDate({ message: 'O vencimento deve estar no formato AAAA-MM-DD' })
+  @Transform(({ value }) => toCalendarDate(value))
+  maturityAt?: Date | null
+}
+
+/** "AAAA-MM-DD" vira 00:00 UTC; qualquer outro texto falha no @IsDate */
+function toCalendarDate(value: unknown): unknown {
+  if (value === null || value === '') return null
+  if (typeof value !== 'string') return value
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T00:00:00.000Z`)
+    : value
 }
 
 export class RefreshQuotesDTO {

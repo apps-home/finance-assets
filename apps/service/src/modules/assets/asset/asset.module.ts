@@ -5,8 +5,10 @@ import { CategoryModule } from '@/modules/assets/categories/category.module'
 import { MarketAssetModule } from '@/modules/assets/market-asset/market-asset.module'
 import { WishlistModule } from '@/modules/assets/wishlist/wishlist.module'
 import { BudgetModule } from '@/modules/budgets/budget.module'
+import { IndicatorsModule } from '@/modules/indicators/indicators.module'
 
 import { NotifyAssetVariationsCron } from './adapters/schedules/notify-asset-variations.cron'
+import { RevalueFixedIncomeCron } from './adapters/schedules/revalue-fixed-income.cron'
 import { CreateAssetUseCase } from './application/use-cases/create-asset'
 import { DeleteAssetUseCase } from './application/use-cases/delete-asset'
 import { FindAssetByIdUseCase } from './application/use-cases/find-asset-by-id'
@@ -15,6 +17,7 @@ import { GetAssetPriceHistoryUseCase } from './application/use-cases/get-asset-p
 import { GetPortfolioSummaryUseCase } from './application/use-cases/get-portfolio-summary'
 import { NotifyAssetVariationsUseCase } from './application/use-cases/notify-asset-variations'
 import { RefreshCategoryQuotesUseCase } from './application/use-cases/refresh-category-quotes'
+import { RevalueFixedIncomeUseCase } from './application/use-cases/revalue-fixed-income'
 import { UpdateAssetUseCase } from './application/use-cases/update-asset'
 import { AssetRepository } from './domain/asset.repository'
 import { AssetController } from './infra/asset.controller'
@@ -26,7 +29,8 @@ import { PrismaAssetRepository } from './infra/repositories/prisma.asset.reposit
     MarketAssetModule,
     PriceHistoryModule,
     WishlistModule,
-    BudgetModule
+    BudgetModule,
+    IndicatorsModule
   ],
   controllers: [AssetController],
   providers: [
@@ -39,6 +43,8 @@ import { PrismaAssetRepository } from './infra/repositories/prisma.asset.reposit
     UpdateAssetUseCase,
     DeleteAssetUseCase,
     RefreshCategoryQuotesUseCase,
+    RevalueFixedIncomeUseCase,
+    RevalueFixedIncomeCron,
     NotifyAssetVariationsCron,
     NotifyAssetVariationsUseCase
   ],

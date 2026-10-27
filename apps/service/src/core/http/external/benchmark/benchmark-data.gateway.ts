@@ -1,7 +1,9 @@
 export enum BenchmarkType {
   CDI = 'CDI',
   IBOV = 'IBOV',
-  SP500_BRL = 'SP500_BRL'
+  SP500_BRL = 'SP500_BRL',
+  IFIX = 'IFIX',
+  BTC_BRL = 'BTC_BRL'
 }
 
 export interface MonthKey {

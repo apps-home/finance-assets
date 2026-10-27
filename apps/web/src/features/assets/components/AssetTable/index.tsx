@@ -116,7 +116,11 @@ export function AssetTable({
 
       {!onViewDetails && (
         <AssetDetailSheet
-          asset={internalSelectedAsset}
+          // Versão atual da lista: operações mudam quantidade e preço médio
+          asset={
+            assets.find((item) => item.id === internalSelectedAsset?.id) ??
+            internalSelectedAsset
+          }
           open={internalDetailOpen}
           onOpenChange={setInternalDetailOpen}
           onEdit={onEdit}

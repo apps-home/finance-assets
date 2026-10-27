@@ -22,6 +22,7 @@ import {
   VARIABLE_TYPES
 } from '@/features/dashboard/utils/month-closing'
 import { useDividends } from '@/features/dividends/hooks/use-dividends'
+import { useMonthlyContributions } from '@/features/transactions/hooks/use-transactions'
 import { getCurrencyData } from '@/infrastructure/services/external/get-currency'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -83,8 +84,11 @@ export function MonthClosingDialog({
   const { data: dividends = [], isLoading: isLoadingDividends } = useDividends({
     year
   })
+  const { data: contributions = [], isLoading: isLoadingContributions } =
+    useMonthlyContributions(year, month)
 
-  const isLoading = isLoadingAssets || isLoadingDividends
+  const isLoading =
+    isLoadingAssets || isLoadingDividends || isLoadingContributions
 
   const now = new Date()
   const lastMonth = year === now.getFullYear() ? now.getMonth() + 1 : 12
@@ -152,7 +156,8 @@ export function MonthClosingDialog({
               year,
               month,
               assets,
-              dividends
+              dividends,
+              contributions
             })}
             onDone={() => onOpenChange(false)}
           />
@@ -173,11 +178,22 @@ const toInput = (value: number | null) =>
     ? formatCurrencyInput(Math.round(value * 100).toString())
     : ''
 
+/** Aporte aceita valor negativo (resgate): mantém o sinal na frente */
+const toSignedInput = (value: number | null) =>
+  value != null && value !== 0
+    ? `${value < 0 ? '-' : ''}${toInput(Math.abs(value))}`
+    : ''
+
+function formatSignedInput(raw: string) {
+  const formatted = formatCurrencyInput(raw)
+  return raw.trim().startsWith('-') && formatted ? `-${formatted}` : formatted
+}
+
 function initialValues(row: ClosingRowDefaults): RowValues {
   return {
     amount: toInput(row.amount),
     dividend: toInput(row.dividend),
-    contribution: toInput(row.contribution)
+    contribution: toSignedInput(row.contribution)
   }
 }
 
@@ -214,9 +230,14 @@ function MonthClosingForm({
   )
 
   function update(categoryId: string, field: keyof RowValues, raw: string) {
+    const formatted =
+      field === 'contribution'
+        ? formatSignedInput(raw)
+        : formatCurrencyInput(raw)
+
     setValues((prev) => ({
       ...prev,
-      [categoryId]: { ...prev[categoryId], [field]: formatCurrencyInput(raw) }
+      [categoryId]: { ...prev[categoryId], [field]: formatted }
     }))
   }
 
@@ -225,9 +246,12 @@ function MonthClosingForm({
     field: keyof RowValues,
     value: number
   ) {
+    const formatted =
+      field === 'contribution' ? toSignedInput(value) : toInput(value)
+
     setValues((prev) => ({
       ...prev,
-      [categoryId]: { ...prev[categoryId], [field]: toInput(value) }
+      [categoryId]: { ...prev[categoryId], [field]: formatted }
     }))
   }
 
@@ -299,6 +323,11 @@ function MonthClosingForm({
             isVariable &&
             row.dividendSuggestion != null &&
             Math.abs(row.dividendSuggestion - dividendValue) >= 0.01
+          const showContributionHint =
+            row.contributionSuggestion != null &&
+            Math.abs(
+              row.contributionSuggestion - parseValue(rowValues.contribution)
+            ) >= 0.01
 
           return (
             <div
@@ -393,6 +422,23 @@ function MonthClosingForm({
                   value={rowValues.contribution}
                   disabled={isSaving}
                   onChange={(raw) => update(category.id, 'contribution', raw)}
+                  hint={
+                    showContributionHint ? (
+                      <SuggestionHint
+                        label="Operações"
+                        value={formatCurrency(
+                          row.contributionSuggestion as number
+                        )}
+                        onUse={() =>
+                          applySuggestion(
+                            category.id,
+                            'contribution',
+                            row.contributionSuggestion as number
+                          )
+                        }
+                      />
+                    ) : null
+                  }
                 />
               </div>
             </div>

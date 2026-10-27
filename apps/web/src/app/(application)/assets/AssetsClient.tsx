@@ -291,7 +291,12 @@ export default function AssetsClient() {
                 averagePrice: editingAsset.averagePrice,
                 currentClosePrice: editingAsset.currentClosePrice,
                 broker: editingAsset.broker || '',
-                isActive: editingAsset.isActive
+                isActive: editingAsset.isActive,
+                indexer: editingAsset.indexer,
+                indexerRate: editingAsset.indexerRate,
+                investedAt: editingAsset.investedAt,
+                maturityAt: editingAsset.maturityAt,
+                hasTransactions: editingAsset.hasTransactions
               }
             : undefined
         }
@@ -314,7 +319,10 @@ export default function AssetsClient() {
       />
 
       <AssetDetailSheet
-        asset={viewingAsset}
+        // Versão atual da lista: operações mudam quantidade e preço médio
+        asset={
+          assets.find((item) => item.id === viewingAsset?.id) ?? viewingAsset
+        }
         open={!!viewingAsset}
         onOpenChange={(open) => {
           if (!open) setViewingAsset(null)

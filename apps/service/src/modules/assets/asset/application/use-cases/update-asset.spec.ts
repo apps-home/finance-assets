@@ -1,6 +1,7 @@
 import { FakeEventPublisher } from '@test/events/fake-event-publisher'
 import { makeAsset } from '@test/factories/make-asset'
 import { makeCategory } from '@test/factories/make-category'
+import { makeRevalueFixedIncome } from '@test/fixed-income/make-revalue-fixed-income'
 import { makeMarketAssetUseCases } from '@test/market-asset/make-market-asset-use-cases'
 import { InMemoryAssetRepository } from '@test/repositories/in-memory-asset.repository'
 import { InMemoryCategoryRepository } from '@test/repositories/in-memory-category.repository'
@@ -9,6 +10,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 
+import { FixedIncomeIndexer } from '../../domain/fixed-income-valuation'
 import { AssetNotFoundError } from '../errors/asset-not-found.error'
 import { UpdateAssetUseCase } from './update-asset'
 
@@ -27,7 +29,8 @@ describe('UpdateAssetUseCase', () => {
       assetRepository,
       categoryRepository,
       market.resolve,
-      eventPublisher
+      eventPublisher,
+      makeRevalueFixedIncome(assetRepository).revalue
     )
 
     categoryRepository.items.push(
@@ -151,6 +154,59 @@ describe('UpdateAssetUseCase', () => {
     await sut.execute('user-1', asset.id, { currentClosePrice: 1 })
 
     expect(assetRepository.items[0].currentClosePrice).toBe(40)
+  })
+
+  it('should ignore a manual price when the fixed income has an indexer', async () => {
+    const asset = seed({
+      categoryId: 'category-1',
+      ticker: '',
+      quantity: 1,
+      averagePrice: 1000,
+      currentClosePrice: 1050,
+      indexer: FixedIncomeIndexer.CDI,
+      indexerRate: 100,
+      investedAt: new Date('2026-01-05T00:00:00.000Z')
+    })
+
+    await sut.execute('user-1', asset.id, { currentClosePrice: 1 })
+
+    // Sem CDI gravado o recálculo não acontece, e o saldo calculado fica
+    expect(assetRepository.items[0].currentClosePrice).toBe(1050)
+  })
+
+  it('should ignore quantity and average price when the asset has operations', async () => {
+    const asset = seed({
+      categoryId: 'category-br',
+      ticker: 'WEGE3',
+      quantity: 10,
+      averagePrice: 40,
+      hasTransactions: true
+    })
+
+    await sut.execute('user-1', asset.id, {
+      quantity: 99,
+      averagePrice: 1,
+      broker: 'XP'
+    })
+
+    expect(assetRepository.items[0]).toMatchObject({
+      quantity: 10,
+      averagePrice: 40,
+      broker: 'XP'
+    })
+  })
+
+  it('should reject an indexer in a variable income category', async () => {
+    const asset = seed({ categoryId: 'category-br', ticker: 'WEGE3' })
+
+    const result = await sut.execute('user-1', asset.id, {
+      averagePrice: 40,
+      indexer: FixedIncomeIndexer.PRE,
+      indexerRate: 10,
+      investedAt: new Date('2026-01-05T00:00:00.000Z')
+    })
+
+    expect(result.value).toBeInstanceOf(PayloadError)
   })
 
   it('should return a payload error for an invalid name', async () => {

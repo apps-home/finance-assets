@@ -12,6 +12,9 @@ import { CategoryType } from '@/modules/assets/categories/domain/category.entity
 import { CategoryRepository } from '@/modules/assets/categories/domain/category.repository'
 import { ResolveMarketAssetUseCase } from '@/modules/assets/market-asset/application/use-cases/resolve-market-asset'
 
+import { checkIndexerForCategory } from '../../domain/fixed-income-valuation'
+import { RevalueFixedIncomeUseCase } from './revalue-fixed-income'
+
 type CreateAssetResponse = Either<CategoryNotFoundError | PayloadError, void>
 
 @Injectable()
@@ -20,7 +23,8 @@ export class CreateAssetUseCase {
     private assetRepository: AssetRepository,
     private categoryRepository: CategoryRepository,
     private resolveMarketAsset: ResolveMarketAssetUseCase,
-    private eventPublisher: DomainEventPublisher
+    private eventPublisher: DomainEventPublisher,
+    private revalueFixedIncome: RevalueFixedIncomeUseCase
   ) {}
 
   async execute(
@@ -38,6 +42,11 @@ export class CreateAssetUseCase {
       }
 
       const isFixedIncome = category.type === CategoryType.FIXED
+      const indexerError = checkIndexerForCategory(data.indexer, category)
+
+      if (indexerError) {
+        return left(new PayloadError(indexerError))
+      }
 
       if (!isFixedIncome && (!data.ticker || data.ticker.trim().length === 0)) {
         return left(
@@ -66,6 +75,10 @@ export class CreateAssetUseCase {
       asset.linkMarketAsset(marketAsset)
 
       await this.assetRepository.save(asset)
+
+      if (asset.indexer) {
+        await this.revalueFixedIncome.tryExecute(asset)
+      }
 
       if (marketAsset && !marketAsset.hasFreshQuote()) {
         this.eventPublisher.publish<AssetEventPayload>(

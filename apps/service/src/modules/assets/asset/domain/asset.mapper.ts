@@ -1,4 +1,5 @@
 import { Asset, AssetProps } from './asset.entity'
+import type { FixedIncomeIndexer } from './fixed-income-valuation'
 
 export interface AssetDomainDTO {
   name: string
@@ -8,6 +9,10 @@ export interface AssetDomainDTO {
   broker?: string | null
   isActive?: boolean
   currentClosePrice?: number | null
+  indexer?: FixedIncomeIndexer | null
+  indexerRate?: number | null
+  investedAt?: Date | null
+  maturityAt?: Date | null
   categoryId: string
 }
 
@@ -28,6 +33,10 @@ export class AssetMapper {
       broker: raw.broker ?? null,
       isActive: raw.isActive ?? true,
       currentClosePrice: raw.currentClosePrice ?? null,
+      indexer: raw.indexer ?? null,
+      indexerRate: raw.indexerRate ?? null,
+      investedAt: raw.investedAt ?? null,
+      maturityAt: raw.maturityAt ?? null,
       categoryId: raw.categoryId
     })
   }
@@ -66,6 +75,11 @@ export class AssetMapper {
       currentClosePrice: asset.currentClosePrice ?? currentClosePrice,
       lastMonthClosePrice: asset.lastMonthClosePrice,
       dividendsImportedAt: asset.dividendsImportedAt,
+      indexer: asset.indexer,
+      indexerRate: asset.indexerRate,
+      investedAt: asset.investedAt,
+      maturityAt: asset.maturityAt,
+      hasTransactions: asset.hasTransactions,
       investedValue,
       currentBalance,
       profitLoss,

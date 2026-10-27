@@ -8,6 +8,7 @@ import { WishlistModule } from './modules/assets/wishlist/wishlist.module'
 import { BudgetModule } from './modules/budgets/budget.module'
 import { DividendModule } from './modules/dividends/dividend.module'
 import { PerformanceModule } from './modules/performance/performance.module'
+import { TransactionModule } from './modules/transactions/transaction.module'
 import { UserModule } from './modules/user/user.module'
 
 @Module({
@@ -20,7 +21,8 @@ import { UserModule } from './modules/user/user.module'
     UserModule,
     WishlistModule,
     DividendModule,
-    PerformanceModule
+    PerformanceModule,
+    TransactionModule
   ]
 })
 export class AppModule {}
