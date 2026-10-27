@@ -10,6 +10,7 @@ import type {
 import { CategoryPerformanceTable } from '@/features/performance/components/CategoryPerformanceTable'
 import { PerformanceChart } from '@/features/performance/components/PerformanceChart'
 import { PerformanceSummary } from '@/features/performance/components/PerformanceSummary'
+import { WealthProjection } from '@/features/performance/components/WealthProjection'
 import { usePortfolioPerformance } from '@/features/performance/hooks/use-performance'
 import {
   PERIOD_LABELS,
@@ -130,6 +131,8 @@ export default function PerformanceClient() {
               sem registro de todas as categorias são ignorados; na tabela por
               categoria, cada uma usa os próprios registros.
             </p>
+
+            <WealthProjection />
           </>
         )}
       </div>

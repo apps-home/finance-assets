@@ -42,6 +42,8 @@ interface AssetCardProps {
   onViewDetails?: (asset: AssetWithCategory) => void
   /** Yield on Cost (%) dos últimos 12 meses, vindo do resumo de proventos */
   yieldOnCost?: number | null
+  /** `profitLoss` já soma vendas e proventos (retorno total) */
+  includesDividends?: boolean
   className?: string
 }
 
@@ -51,6 +53,7 @@ export function AssetCard({
   onDelete,
   onViewDetails,
   yieldOnCost,
+  includesDividends = false,
   className
 }: AssetCardProps) {
   const hasPL = asset.profitLoss != null && asset.profitLoss !== 0
@@ -240,7 +243,7 @@ export function AssetCard({
             <Separator />
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-xs">
-                Lucro / Prejuízo
+                {includesDividends ? 'Retorno total' : 'Lucro / Prejuízo'}
               </span>
               <div className="flex items-center gap-2">
                 <Badge

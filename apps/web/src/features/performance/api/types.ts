@@ -65,3 +65,18 @@ export interface GetPerformanceParams {
   to?: string
   scope?: PerformanceScope
 }
+
+/** Retorno total de um ativo, na moeda da categoria */
+export interface AssetTotalReturn {
+  assetId: string
+  /** Resultado de preço da posição atual (o mesmo `profitLoss` do ativo) */
+  unrealizedResult: number
+  /** Lucro ou prejuízo das vendas já feitas */
+  realizedResult: number
+  /** Proventos líquidos já pagos */
+  dividendsReceived: number
+  totalReturn: number
+  /** Base do percentual: custo de tudo o que foi comprado */
+  investedCapital: number | null
+  totalReturnPercentage: number | null
+}

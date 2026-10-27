@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
+import { ASSET_QUERY_KEY } from '@/features/assets/hooks/use-assets'
 import { queryClient } from '@/shared/providers/query-client'
 
 import {
@@ -51,6 +52,9 @@ export function useCreateDividend() {
     mutationFn: (dto: CreateDividendDTO) => createDividend(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DIVIDEND_QUERY_KEY] })
+      queryClient.invalidateQueries({
+        queryKey: [ASSET_QUERY_KEY, 'total-returns']
+      })
       toast.success('Provento registrado com sucesso!')
     },
     onError: (error: any) => {
@@ -68,6 +72,9 @@ export function useBackfillDividends() {
     mutationFn: (months?: number) => backfillDividends(months),
     onSuccess: ({ enqueued }) => {
       queryClient.invalidateQueries({ queryKey: [DIVIDEND_QUERY_KEY] })
+      queryClient.invalidateQueries({
+        queryKey: [ASSET_QUERY_KEY, 'total-returns']
+      })
 
       if (enqueued === 0) {
         toast.info(
@@ -96,6 +103,9 @@ export function useUpdateDividend() {
       updateDividend(id, dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DIVIDEND_QUERY_KEY] })
+      queryClient.invalidateQueries({
+        queryKey: [ASSET_QUERY_KEY, 'total-returns']
+      })
       toast.success('Provento atualizado com sucesso!')
     },
     onError: (error: any) => {
@@ -113,6 +123,9 @@ export function useDeleteDividend() {
     mutationFn: (id: string) => deleteDividend(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DIVIDEND_QUERY_KEY] })
+      queryClient.invalidateQueries({
+        queryKey: [ASSET_QUERY_KEY, 'total-returns']
+      })
       toast.success('Provento excluído com sucesso!')
     },
     onError: (error: any) => {

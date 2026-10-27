@@ -27,6 +27,8 @@ interface AssetTableProps {
   onViewDetails?: (asset: AssetWithCategory) => void
   /** Yield on Cost (%) por id de ativo, vindo do resumo de proventos */
   yieldOnCostByAssetId?: Record<string, number>
+  /** `profitLoss` dos ativos já soma vendas e proventos (retorno total) */
+  includesDividends?: boolean
   className?: string
 }
 
@@ -36,6 +38,7 @@ export function AssetTable({
   onDelete,
   onViewDetails,
   yieldOnCostByAssetId,
+  includesDividends = false,
   className
 }: AssetTableProps) {
   const [internalSelectedAsset, setInternalSelectedAsset] =
@@ -77,7 +80,9 @@ export function AssetTable({
                 Preço Médio & Margem
               </TableHead>
               <TableHead className="text-right font-semibold text-xs">
-                Posição & Retorno Total
+                {includesDividends
+                  ? 'Posição & Retorno Total'
+                  : 'Posição & Lucro'}
               </TableHead>
               <TableHead className="text-right font-semibold text-xs">
                 <Tooltip>

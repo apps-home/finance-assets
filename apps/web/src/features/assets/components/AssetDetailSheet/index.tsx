@@ -51,6 +51,7 @@ import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 import { AssetDividends } from './AssetDividends'
 import { PriceHistoryChart } from './PriceHistoryChart'
 import { DetailItem, MetricCard, PMGauge, Section, Stat } from './parts'
+import { TotalReturn } from './TotalReturn'
 
 interface AssetDetailSheetProps {
   asset: AssetWithCategory | null
@@ -356,6 +357,7 @@ export function AssetDetailSheet({
                   </Badge>
                 )}
               </div>
+              <TotalReturn assetId={asset.id} currency={currency} />
             </div>
           </Section>
 

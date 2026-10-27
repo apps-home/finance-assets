@@ -19,11 +19,14 @@ import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 interface AssetSummaryCardsProps {
   assets: AssetWithCategory[]
+  /** `profitLoss` dos ativos já soma vendas e proventos (retorno total) */
+  includesDividends?: boolean
   className?: string
 }
 
 export function AssetSummaryCards({
   assets,
+  includesDividends = false,
   className
 }: AssetSummaryCardsProps) {
   const { data: dollarQuote } = useDollarRate()
@@ -83,9 +86,7 @@ export function AssetSummaryCards({
   }
 
   const totalProfitPercentage =
-    totalInvested > 0
-      ? ((totalBalance - totalInvested) / totalInvested) * 100
-      : 0
+    totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0
 
   const totalCount = assets.length
   const activeCount = activeAssets.length
@@ -180,7 +181,7 @@ export function AssetSummaryCards({
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <span className="font-medium text-muted-foreground text-xs">
-              Lucro / Prejuízo
+              {includesDividends ? 'Retorno total' : 'Lucro / Prejuízo'}
             </span>
             <div
               className={cn(

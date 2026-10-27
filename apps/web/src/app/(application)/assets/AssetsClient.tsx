@@ -1,6 +1,7 @@
 'use client'
 
 import { Briefcase, FilterX, PlusIcon } from 'lucide-react'
+import { parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useMemo, useState } from 'react'
 
 import {
@@ -24,12 +25,16 @@ import { CategoryType } from '@/features/categories/api/types'
 import { useCategories } from '@/features/categories/hooks/use-category'
 import { CATEGORY_TYPE_OPTIONS } from '@/features/categories/utils'
 import { useDividendsSummary } from '@/features/dividends/hooks/use-dividends'
+import { useAssetTotalReturns } from '@/features/performance/hooks/use-performance'
 import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { DollarRateBadge } from '@/shared/components/DollarRateBadge'
 import { ListFilters } from '@/shared/components/ListFilters'
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { useListFilters } from '@/shared/hooks/use-list-filters'
+
+const RETURN_MODES = ['price', 'total'] as const
 
 const STATUS_OPTIONS = [
   { value: 'ALL', label: 'Todos os Status' },
@@ -39,6 +44,12 @@ const STATUS_OPTIONS = [
 
 export default function AssetsClient() {
   const filters = useListFilters('status')
+  // Padrão: só o preço; "total" soma vendas realizadas e proventos recebidos
+  const [returnMode, setReturnMode] = useQueryState(
+    'retorno',
+    parseAsStringLiteral(RETURN_MODES).withDefault('price')
+  )
+  const includesDividends = returnMode === 'total'
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<AssetWithCategory | null>(
@@ -93,6 +104,27 @@ export default function AssetsClient() {
       ),
     [dividendsSummary]
   )
+
+  const { data: totalReturns } = useAssetTotalReturns()
+
+  // No modo retorno total, o lucro de cada ativo vira preço + vendas + proventos
+  const displayAssets = useMemo(() => {
+    if (!includesDividends || !totalReturns) return assets
+
+    const byId = new Map(totalReturns.map((item) => [item.assetId, item]))
+
+    return assets.map((asset) => {
+      const item = byId.get(asset.id)
+
+      return item
+        ? {
+            ...asset,
+            profitLoss: item.totalReturn,
+            profitabilityPercentage: item.totalReturnPercentage
+          }
+        : asset
+    })
+  }, [assets, includesDividends, totalReturns])
 
   const handleOpenCreate = () => {
     setEditingAsset(null)
@@ -181,7 +213,28 @@ export default function AssetsClient() {
           </div>
         </div>
 
-        <AssetSummaryCards assets={assets} />
+        <div className="flex justify-end">
+          <Tabs
+            value={returnMode}
+            onValueChange={(value) =>
+              setReturnMode(value === 'total' ? 'total' : null)
+            }
+          >
+            <TabsList>
+              <TabsTrigger value="price" className="cursor-pointer text-xs">
+                Só preço
+              </TabsTrigger>
+              <TabsTrigger value="total" className="cursor-pointer text-xs">
+                Com proventos
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <AssetSummaryCards
+          assets={displayAssets}
+          includesDividends={includesDividends}
+        />
 
         <ListFilters
           searchPlaceholder="Buscar por ticker, nome ou corretora..."
@@ -247,7 +300,8 @@ export default function AssetsClient() {
           </div>
         ) : filters.viewMode === 'table' ? (
           <AssetTable
-            assets={assets}
+            assets={displayAssets}
+            includesDividends={includesDividends}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onViewDetails={setViewingAsset}
@@ -255,10 +309,11 @@ export default function AssetsClient() {
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {assets.map((asset) => (
+            {displayAssets.map((asset) => (
               <AssetCard
                 key={asset.id}
                 asset={asset}
+                includesDividends={includesDividends}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onViewDetails={setViewingAsset}
