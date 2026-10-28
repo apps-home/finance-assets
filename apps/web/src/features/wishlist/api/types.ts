@@ -10,6 +10,8 @@ export interface WishlistItem {
   name: string
   ticker: string
   targetPrice: number | null
+  /** Ticker do catálogo de cotações; null sem cotação de mercado */
+  marketAssetId: string | null
   currentClosePrice: number | null
   lastMonthClosePrice: number | null
   notes: string | null

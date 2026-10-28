@@ -12,11 +12,11 @@ import {
 import { Checkbox } from '@lib/ui/components/checkbox'
 import { Input } from '@lib/ui/components/input'
 import { Label } from '@lib/ui/components/label'
-import { Wallet } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { AppLogo } from '@/shared/components/AppLogo'
 import { signIn } from '@/shared/lib/auth-client'
 
 export default function SignInPage() {
@@ -60,7 +60,7 @@ export default function SignInPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary/10">
-            <Wallet className="size-6 text-primary" />
+            <AppLogo className="size-6 text-primary" />
           </div>
           <div>
             <CardTitle className="text-xl">Bem-vindo de volta</CardTitle>

@@ -50,7 +50,9 @@ export class PrismaMarketAssetRepository implements MarketAssetRepository {
       where: {
         OR: [
           { assets: { some: { isActive: true } } },
-          { wishlists: { some: {} } }
+          { wishlists: { some: {} } },
+          // Ticker com alerta segue atualizado mesmo com o ativo inativo
+          { priceAlerts: { some: {} } }
         ]
       },
       orderBy: { ticker: 'asc' }

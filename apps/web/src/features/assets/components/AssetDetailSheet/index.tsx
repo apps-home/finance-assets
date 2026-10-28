@@ -17,6 +17,7 @@ import {
   ArrowLeftRight,
   ArrowUpRight,
   BarChart3,
+  Bell,
   Building2,
   Calendar,
   CheckCircle2,
@@ -41,6 +42,7 @@ import {
   CATEGORY_TYPE_LABELS,
   getCategoryCurrency
 } from '@/features/categories/utils'
+import { PriceAlertsSection } from '@/features/price-alerts/components/PriceAlertsSection'
 import { AssetTransactions } from '@/features/transactions/components/AssetTransactions'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
@@ -307,6 +309,24 @@ export function AssetDetailSheet({
           </Section>
 
           <Separator />
+
+          {asset.marketAssetId && (
+            <>
+              <Section
+                title="Alertas de preço"
+                icon={<Bell className="size-3.5" />}
+              >
+                <PriceAlertsSection
+                  source={{ assetId: asset.id }}
+                  ticker={asset.ticker}
+                  currentPrice={asset.currentClosePrice}
+                  currency={currency}
+                />
+              </Section>
+
+              <Separator />
+            </>
+          )}
 
           <Section title="Posição e desempenho">
             <div className="grid grid-cols-2 gap-2.5">

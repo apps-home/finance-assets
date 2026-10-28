@@ -1,7 +1,12 @@
+import { FakeEventPublisher } from '@test/events/fake-event-publisher'
 import { FakeMarketDataGateway } from '@test/market-asset/fake-market-data-gateway'
 import { InMemoryMarketAssetRepository } from '@test/repositories/in-memory-market-asset.repository'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import {
+  MarketAssetEvent,
+  MarketAssetQuoteUpdatedPayload
+} from '@/core/domain/events/market-asset.event'
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 
 import { MarketAsset } from '../../domain/market-asset.entity'
@@ -11,12 +16,18 @@ import { RefreshMarketAssetQuoteUseCase } from './refresh-market-asset-quote'
 describe('RefreshMarketAssetQuoteUseCase', () => {
   let repository: InMemoryMarketAssetRepository
   let gateway: FakeMarketDataGateway
+  let eventPublisher: FakeEventPublisher
   let sut: RefreshMarketAssetQuoteUseCase
 
   beforeEach(() => {
     repository = new InMemoryMarketAssetRepository()
     gateway = new FakeMarketDataGateway()
-    sut = new RefreshMarketAssetQuoteUseCase(repository, gateway)
+    eventPublisher = new FakeEventPublisher()
+    sut = new RefreshMarketAssetQuoteUseCase(
+      repository,
+      gateway,
+      eventPublisher
+    )
   })
 
   function seed() {
@@ -42,6 +53,36 @@ describe('RefreshMarketAssetQuoteUseCase', () => {
       lastMonthClosePrice: 38
     })
     expect(repository.items[0].priceUpdatedAt).toBeInstanceOf(Date)
+  })
+
+  it('should publish the new quote for the price alerts', async () => {
+    const marketAsset = seed()
+    gateway.withQuote({ currentPrice: 40, lastMonthPrice: 38 })
+
+    await sut.execute(marketAsset.id)
+
+    expect(eventPublisher.published).toEqual([
+      {
+        event: MarketAssetEvent.QUOTE_UPDATED,
+        payload: new MarketAssetQuoteUpdatedPayload(
+          marketAsset.id,
+          40,
+          repository.items[0].priceUpdatedAt as Date
+        )
+      }
+    ])
+  })
+
+  it('should not publish when no new quote is saved', async () => {
+    const fresh = seed()
+    fresh.updateQuote(40, 38)
+    await sut.execute(fresh.id)
+
+    const unavailable = seed()
+    gateway.withQuote(null)
+    await sut.execute(unavailable.id)
+
+    expect(eventPublisher.published).toEqual([])
   })
 
   it('should not call the provider when the quote is fresh', async () => {

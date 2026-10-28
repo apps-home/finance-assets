@@ -1,3 +1,4 @@
+import { FakeEventPublisher } from '@test/events/fake-event-publisher'
 import { makeAsset } from '@test/factories/make-asset'
 import { makeCategory } from '@test/factories/make-category'
 import { FakeMarketDataGateway } from '@test/market-asset/fake-market-data-gateway'
@@ -28,7 +29,11 @@ describe('RefreshCategoryQuotesUseCase', () => {
     sut = new RefreshCategoryQuotesUseCase(
       assetRepository,
       categoryRepository,
-      new RefreshMarketAssetQuoteUseCase(marketAssetRepository, gateway)
+      new RefreshMarketAssetQuoteUseCase(
+        marketAssetRepository,
+        gateway,
+        new FakeEventPublisher()
+      )
     )
   })
 

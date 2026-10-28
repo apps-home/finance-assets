@@ -8,6 +8,9 @@ export abstract class MarketAssetRepository {
    */
   abstract findOrCreate(marketAsset: MarketAsset): Promise<MarketAsset>
   abstract save(marketAsset: MarketAsset): Promise<void>
-  /** Itens do catálogo ainda usados por algum ativo ativo ou item da wishlist */
+  /**
+   * Itens do catálogo ainda usados por algum ativo ativo, item da wishlist ou
+   * alerta de preço
+   */
   abstract findAllInUse(): Promise<MarketAsset[]>
 }

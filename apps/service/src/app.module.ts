@@ -4,6 +4,7 @@ import { InfraModule } from './infra/infra.module'
 import { AssetModule } from './modules/assets/asset/asset.module'
 import { CategoryModule } from './modules/assets/categories/category.module'
 import { CompetenceModule } from './modules/assets/competences/competence.module'
+import { PriceAlertModule } from './modules/assets/price-alert/price-alert.module'
 import { WishlistModule } from './modules/assets/wishlist/wishlist.module'
 import { BudgetModule } from './modules/budgets/budget.module'
 import { DividendModule } from './modules/dividends/dividend.module'
@@ -22,7 +23,8 @@ import { UserModule } from './modules/user/user.module'
     WishlistModule,
     DividendModule,
     PerformanceModule,
-    TransactionModule
+    TransactionModule,
+    PriceAlertModule
   ]
 })
 export class AppModule {}

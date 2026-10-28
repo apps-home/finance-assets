@@ -1,3 +1,4 @@
+import { FakeEventPublisher } from '@test/events/fake-event-publisher'
 import { InMemoryMarketAssetRepository } from '@test/repositories/in-memory-market-asset.repository'
 
 import { RefreshMarketAssetQuoteUseCase } from '@/modules/assets/market-asset/application/use-cases/refresh-market-asset-quote'
@@ -11,14 +12,23 @@ export function makeMarketAssetUseCases() {
   const marketAssetRepository = new InMemoryMarketAssetRepository()
   const gateway = new FakeMarketDataGateway()
   const resolve = new ResolveMarketAssetUseCase(marketAssetRepository)
+  const eventPublisher = new FakeEventPublisher()
   const refresh = new RefreshMarketAssetQuoteUseCase(
     marketAssetRepository,
-    gateway
+    gateway,
+    eventPublisher
   )
   const resolveWithQuote = new ResolveMarketAssetWithQuoteUseCase(
     resolve,
     refresh
   )
 
-  return { marketAssetRepository, gateway, resolve, refresh, resolveWithQuote }
+  return {
+    marketAssetRepository,
+    gateway,
+    eventPublisher,
+    resolve,
+    refresh,
+    resolveWithQuote
+  }
 }

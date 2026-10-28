@@ -5,13 +5,15 @@ import { getMonthDateRange } from '@/shared/utils/get-month-date-range'
 export async function GET(req: NextRequest) {
   const API_KEY = process.env.AWESOME_API_TOKEN
 
+  // Fora do try: no build, ler searchParams interrompe a pré-renderização com um
+  // erro interno do Next, que não pode ser capturado pelo catch abaixo
+  const { searchParams } = req.nextUrl
+
+  const currency = searchParams.get('currency') || 'USD'
+  const month = searchParams.get('month')
+  const year = searchParams.get('year')
+
   try {
-    const { searchParams } = req.nextUrl
-
-    const currency = searchParams.get('currency') || 'USD'
-    const month = searchParams.get('month')
-    const year = searchParams.get('year')
-
     let apiUrl: string
 
     const isHistorical = !!(month && year)

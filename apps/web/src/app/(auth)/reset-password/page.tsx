@@ -11,12 +11,13 @@ import {
 } from '@lib/ui/components/card'
 import { Input } from '@lib/ui/components/input'
 import { Label } from '@lib/ui/components/label'
-import { ArrowLeft, CheckCircle, KeyRound, Wallet } from 'lucide-react'
+import { ArrowLeft, CheckCircle, KeyRound } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useState } from 'react'
 import { toast } from 'sonner'
 
+import { AppLogo } from '@/shared/components/AppLogo'
 import { resetPassword } from '@/shared/lib/auth-client'
 
 function ResetPasswordForm() {
@@ -144,7 +145,7 @@ function ResetPasswordForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary/10">
-            <Wallet className="size-6 text-primary" />
+            <AppLogo className="size-6 text-primary" />
           </div>
           <div>
             <CardTitle className="text-xl">Redefinir senha</CardTitle>

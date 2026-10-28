@@ -11,6 +11,7 @@
     "@finance-assets-web/env": "workspace:*",
     "@lib/db": "workspace:*",
     "@lib/ui": "workspace:*",
+    "@novu/nextjs": "^3.19.2",
     "@sentry/nextjs": "^11.8.0",
     "@tanstack/react-form": "^1.27.7",
     "@tanstack/react-hotkeys": "^0.4.1",

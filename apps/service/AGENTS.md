@@ -49,6 +49,7 @@ O schema é dividido em dois namespaces PostgreSQL: `better-auth` (autenticaçã
 | `asset_category_competences` | Registra em quais **anos** uma categoria possui registros, otimizando queries de filtro temporal. Campos: `id`, `categoryId`, `year`. Único por `(categoryId, year)`. |
 | `asset_dividends` | Provento de um ativo (dividendo, JCP, rendimento). Campos: `id`, `assetId`, `userId`, `type` (`DividendType`), `source` (`MANUAL`\|`SYNC`), `amount` (total **bruto** na moeda da categoria), `taxAmount` (impostos/taxas retidos, opcional), `rateAmount`, `quantity`, `exchangeRate`, `comDate`, `paymentDate`. Único por `(assetId, type, paymentDate)`. |
 | `asset_transactions` | Operação de um ativo. Campos: `id`, `assetId`, `userId`, `type` (`TransactionType`: `OPENING`\|`BUY`\|`SELL`\|`SPLIT`\|`REVERSE_SPLIT`\|`BONUS`), `source` (`MANUAL`\|`IMPORT`), `date` (data do negócio), `quantity`, `price` (unitário, na moeda da categoria; em `BONUS` é o custo atribuído), `fees`, `factor` (desdobramento/grupamento), `exchangeRate`, `notes`. Com operações, `assets.quantity` e `assets.averagePrice` são calculados a partir delas. |
+| `price_alerts` | Alerta de preço de um ativo **ou** de um item da wishlist (`CHECK` exige exatamente um). Campos: `id`, `userId`, `marketAssetId` (ticker vigiado, fixado na criação), `assetId?`, `wishlistId?`, `targetPrice` (na moeda da categoria da origem), `direction` (`PriceAlertDirection`: `ABOVE`\|`BELOW`), `status` (`PriceAlertStatus`: `ARMED`\|`TRIGGERED`), `lastTriggeredAt`, `lastTriggeredPrice`, `triggerCount`. Excluir a origem exclui os alertas. |
 
 > Todas as FKs usam `onDelete: Cascade`: excluir uma categoria remove seus ativos, wishlist, registros e competências.
 
@@ -95,6 +96,7 @@ modules/
 │   ├── categories/     # Categorias de ativos (tipo, moeda, meta de alocação, anos)
 │   ├── competences/    # Competências anuais por categoria (somente leitura de anos + exclusão)
 │   ├── market-asset/   # Catálogo compartilhado de cotações (resolve ticker, atualiza preço, cron e fila)
+│   ├── price-alert/    # Alertas de preço de ativos e itens da wishlist (avaliados a cada cotação nova, aviso pelo Novu)
 │   └── wishlist/       # Lista de desejos / ativos monitorados
 ├── budgets/            # Registros mensais (AssetRecord)
 ├── dividends/          # Proventos por ativo (CRUD, resumos, próximos pagamentos, sync Yahoo/Polygon)
@@ -224,6 +226,8 @@ Todos exigem `Authorization: Bearer <session token>` e respondem apenas com dado
 | **Dividends** | `POST /dividends`, `POST /dividends/backfill`, `GET /dividends`, `GET /dividends/summary`, `GET /dividends/upcoming`, `GET/PATCH/DELETE /dividends/:id` | `assetId`, `categoryId`, `categoryType`, `type`, `year` (em `GET /dividends`); `year` (em `/summary`) |
 | **Transactions** | `POST /transactions` (body com `assetId`), `GET /transactions`, `GET /transactions/contributions`, `PATCH/DELETE /transactions/:id` | `assetId`, `categoryId`, `from`, `to` (em `GET /transactions`); `year`, `month` (em `/contributions`) |
 | **Performance** | `GET /performance`, `GET /performance/assets` | `from`, `to` (`AAAA-MM`, opcionais); `scope` (`all`|`variable`|`fixed`, padrão `all`) |
+| **Price alerts** | `POST /price-alerts` (body com `assetId` **ou** `wishlistId` e `targetPrice`), `GET /price-alerts`, `DELETE /price-alerts/:id` | `assetId`, `wishlistId` |
+| **Notifications** | `GET /notifications/inbox-session` (credenciais do Inbox do Novu; `{ enabled: false }` sem Novu) | — |
 | **Users** | `GET /users/:id`, `PATCH /users/:id/upload-avatar`, `GET /users/:id/download-avatar` (somente o próprio usuário) | — |
 
 Observações:
@@ -265,6 +269,7 @@ infra/
 ├── env/        # Validação e acesso às variáveis de ambiente
 ├── events/     # Publisher de eventos de domínio (EventEmitter)
 ├── http/       # Providers de cotação (Brapi, CoinGecko, Yahoo, Polygon, Alpha Vantage), benchmarks, indicadores do BCB, cliente n8n, toHttpException e AllExceptionsFilter
+├── notifications/ # Novu (@novu/api): DomainNotifier, sessão do Inbox (HMAC) e GET /notifications/inbox-session
 ├── prisma/     # Providers 'prismaFinanceAssets' e 'prismaAuth'
 ├── queue/      # Publisher de jobs BullMQ
 └── storage/    # Integração com Cloudflare R2 (upload de arquivos)
@@ -343,6 +348,17 @@ A wishlist não usa evento: `CreateWishlistUseCase` usa `ResolveMarketAssetWithQ
 - **Quando recalcula:** ao criar e ao editar o ativo (`RevalueFixedIncomeUseCase.tryExecute`, falha só vai para o log) e no `revalue-fixed-income.cron.ts`, de terça a sábado às 10:00 (America/Sao_Paulo), para todos os títulos indexados ativos.
 - **Indicadores** (`modules/indicators`): cache global em `indicator_rates` do CDI diário (SGS 12) e do IPCA mensal (SGS 433). `SyncIndicatorRatesUseCase.ensureCovered(since)` busca só o que falta, um ano por vez (o SGS falha em intervalos longos): para trás do mais novo ao mais antigo e para frente do mais antigo ao mais novo, para a série gravada nunca ter buracos. Busca de dado novo tem cooldown de 6h; intervalo sem dado (`{ erro: 404 }`) é tratado como vazio, não como falha.
 
+### Alertas de Preço e Notificações (`modules/assets/price-alert` + `infra/notifications`)
+
+- **Criação** (`POST /price-alerts`): o alerta pertence a um ativo **ou** a um item da wishlist do usuário (outro usuário: 404) e guarda o `marketAssetId` da origem, então vigia aquele ticker mesmo se a origem trocar de ticker. A direção vem da cotação atual: alvo acima é `ABOVE` ("subir até"), abaixo é `BELOW` ("cair até"). Origem sem cotação de mercado (renda fixa, sem ticker), sem cotação ainda ou alvo igual à cotação: 400.
+- **Avaliação:** o `RefreshMarketAssetQuoteUseCase` publica `market-asset.quote-updated` (`MarketAssetEvent.QUOTE_UPDATED`) sempre que grava uma cotação nova, ou seja, no cron das 19h, no "Atualizar cotações" e no cadastro. O `MarketQuoteUpdatedListener` chama o `EvaluatePriceAlertsUseCase`, que confere todos os alertas do ticker. Não há checagem durante o pregão.
+- **Rearma sozinho:** `ARMED` + cotação na faixa (`ABOVE`: ≥ alvo; `BELOW`: ≤ alvo) notifica e vira `TRIGGERED` (`lastTriggeredAt`, `lastTriggeredPrice`, `triggerCount + 1`); `TRIGGERED` + cotação fora da faixa volta a `ARMED` sem notificar. Cada transição é um `updateMany` condicional ao estado anterior (`PriceAlertRepository.transition`) e só quem a faz notifica, então duas atualizações simultâneas avisam uma vez; o `transactionId` do Novu (`price-alert-{id}-{triggerCount}`) deduplica de novo.
+- **Catálogo:** `findAllInUse` inclui tickers com alerta, que continuam atualizados às 19h mesmo com o ativo inativo.
+- **Envio** (`infra/notifications`): `DomainNotifier` (`core/domain/notifications`) implementado por `NovuNotifier` com o `@novu/api`: `trigger({ workflowId, to: { subscriberId }, payload, transactionId })`, sendo o `subscriberId` o id do usuário do Better Auth (o Novu cria o subscriber no primeiro envio). Nunca lança: sem `NOVU_SECRET_KEY` devolve `skipped` (só log); erro ou trigger não processado (workflow inexistente ou inativo) devolve `failed` com log. O payload do workflow `price-alert` é montado em `domain/price-alert-notification.ts` (`ticker`, `name`, `directionLabel`, preços formatados em pt-BR, `source`, `sourceId`, `url`).
+- **Inbox:** `GET /notifications/inbox-session` devolve `applicationIdentifier`, `subscriberId`, `subscriberHash` (HMAC-SHA256 do `subscriberId` com a secret key, exigido quando o HMAC está ligado no Novu) e as URLs da região EU, ou `{ enabled: false }` sem `NOVU_SECRET_KEY` e `NOVU_APPLICATION_IDENTIFIER`. A web mostra o `<Inbox>` do `@novu/nextjs` no header só quando `enabled`.
+- **Variáveis** (opcionais; vazio = desligado): `NOVU_SECRET_KEY`, `NOVU_APPLICATION_IDENTIFIER`, `NOVU_API_URL` e `NOVU_SOCKET_URL` (região EU: `https://eu.api.novu.co` e `wss://eu.socket.novu.co`).
+- **Configurar no Novu:** criar o workflow com identificador `price-alert` e um passo **In-App** (assunto `{{payload.ticker}} {{payload.directionLabel}} {{payload.currentPriceFormatted}}`, corpo `Seu alerta de {{payload.targetPriceFormatted}} em {{payload.name}} foi atingido.`, redirect `{{payload.url}}`); preencher as variáveis acima (secret `NOVU_SECRET_KEY` e vars `NOVU_*` no GitHub para o deploy); opcionalmente ligar o HMAC na integração In-App.
+
 ### Armazenamento de Arquivos (Cloudflare R2)
 
 O `R2StorageService` (`src/infra/storage`) é responsável pelo upload de arquivos (ex: avatar do usuário) para o bucket Cloudflare R2, retornando a URL pública do objeto armazenado.
@@ -355,7 +371,8 @@ O `R2StorageService` (`src/infra/storage`) é responsável pelo upload de arquiv
 core/
 ├── domain/
 │   ├── errors/    # PayloadError e NotFoundError (base dos erros "não encontrado")
-│   ├── events/    # Interface DomainEventPublisher + AssetEvent
+│   ├── events/    # Interface DomainEventPublisher + AssetEvent e MarketAssetEvent
+│   ├── notifications/ # Interface DomainNotifier + workflows do Novu (NOTIFICATION_WORKFLOWS)
 │   ├── queue/     # Interface DomainJobPublisher + constantes de filas (QUEUES, JOBS)
 │   └── storage/   # Interface DomainStorage + constantes de buckets/pastas
 ├── http/          # Contratos de cotação de mercado (MarketDataGateway/Provider)

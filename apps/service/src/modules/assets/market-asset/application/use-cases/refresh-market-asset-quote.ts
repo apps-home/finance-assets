@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common'
 
+import { DomainEventPublisher } from '@/core/domain/events/domain-event-publisher.interface'
+import {
+  MarketAssetEvent,
+  MarketAssetQuoteUpdatedPayload
+} from '@/core/domain/events/market-asset.event'
 import { MarketDataGateway } from '@/core/http/external/market-data/market-data.gateway'
 import { Either, left, right } from '@/core/utils/Either'
 
@@ -25,6 +30,7 @@ type RefreshMarketAssetQuoteResponse = Either<
 /**
  * Busca a cotação de um ativo do catálogo no provider do seu tipo. Uma única
  * chamada externa atualiza o preço de todos os usuários que têm o ticker.
+ * Cotação nova gravada publica `market-asset.quote-updated` (alertas de preço).
  */
 @Injectable()
 export class RefreshMarketAssetQuoteUseCase {
@@ -32,7 +38,8 @@ export class RefreshMarketAssetQuoteUseCase {
 
   constructor(
     private readonly marketAssetRepository: MarketAssetRepository,
-    private readonly marketDataGateway: MarketDataGateway
+    private readonly marketDataGateway: MarketDataGateway,
+    private readonly eventPublisher: DomainEventPublisher
   ) {}
 
   async execute(
@@ -70,9 +77,19 @@ export class RefreshMarketAssetQuoteUseCase {
       return right(marketAsset)
     }
 
-    marketAsset.updateQuote(quote.currentPrice, quote.lastMonthPrice)
+    const updatedAt = new Date()
+    marketAsset.updateQuote(quote.currentPrice, quote.lastMonthPrice, updatedAt)
 
     await this.marketAssetRepository.save(marketAsset)
+
+    this.eventPublisher.publish(
+      MarketAssetEvent.QUOTE_UPDATED,
+      new MarketAssetQuoteUpdatedPayload(
+        marketAsset.id,
+        quote.currentPrice,
+        updatedAt
+      )
+    )
 
     this.logger.log(
       `Market asset "${marketAsset.ticker}" updated — current: ${quote.currentPrice}, lastMonth: ${quote.lastMonthPrice}`

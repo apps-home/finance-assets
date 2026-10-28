@@ -12,6 +12,8 @@ export interface Asset {
   averagePrice: number | null
   broker: string | null
   isActive: boolean
+  /** Ticker do catálogo de cotações; null sem cotação de mercado (renda fixa) */
+  marketAssetId: string | null
   currentClosePrice: number | null
   lastMonthClosePrice: number | null
   /** Renda fixa com saldo calculado pelo indexador; null = saldo manual */

@@ -103,6 +103,10 @@ jobs:
               -e REDIS_PORT="${{ vars.REDIS_PORT }}" \
               -e REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
               -e N8N_URL="${{ vars.N8N_URL }}" \
+              -e NOVU_SECRET_KEY="${{ secrets.NOVU_SECRET_KEY }}" \
+              -e NOVU_APPLICATION_IDENTIFIER="${{ vars.NOVU_APPLICATION_IDENTIFIER }}" \
+              -e NOVU_API_URL="${{ vars.NOVU_API_URL }}" \
+              -e NOVU_SOCKET_URL="${{ vars.NOVU_SOCKET_URL }}" \
               ghcr.io/${{ github.repository_owner }}/finance-assets-api:${{ inputs.version || 'latest' }}
 
             # 5. Limpeza de imagens antigas sem uso

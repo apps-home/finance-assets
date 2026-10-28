@@ -16,6 +16,7 @@ import { cn } from '@lib/ui/lib/utils'
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Bell,
   BriefcaseBusiness,
   Calendar,
   CheckCircle2,
@@ -46,6 +47,7 @@ import {
   CATEGORY_TYPE_LABELS,
   getCategoryCurrency
 } from '@/features/categories/utils'
+import { PriceAlertsSection } from '@/features/price-alerts/components/PriceAlertsSection'
 import type { WishlistWithCategory } from '@/features/wishlist/api/types'
 import { useWishlistPriceHistory } from '@/features/wishlist/hooks/use-wishlist'
 import {
@@ -358,6 +360,25 @@ export function WishlistDetailSheet({
               />
             </MetricCard>
           </Section>
+
+          {wishlist.marketAssetId && (
+            <>
+              <Separator />
+
+              <Section
+                title="Alertas de preço"
+                icon={<Bell className="size-3.5" />}
+              >
+                <PriceAlertsSection
+                  source={{ wishlistId: wishlist.id }}
+                  ticker={wishlist.ticker}
+                  currentPrice={currentPrice}
+                  currency={currency}
+                  suggestedPrice={targetPrice}
+                />
+              </Section>
+            </>
+          )}
 
           {wishlist.notes && (
             <>

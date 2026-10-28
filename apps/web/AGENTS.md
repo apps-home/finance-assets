@@ -75,7 +75,7 @@ src/
 │   ├── api/          # API client configuration
 │   └── services/     # External services integration
 ├── shared/           # Shared modules
-│   ├── components/   # App-specific shared components (Header, ListFilters, DollarRateBadge); generic ones live in @lib/ui
+│   ├── components/   # App-specific shared components (AppLogo, Header, ListFilters, DollarRateBadge); generic ones live in @lib/ui
 │   ├── config/       # App configuration (menus, constants)
 │   ├── hooks/        # Shared React and custom hooks (use-media-query, use-local-storage, etc.)
 │   ├── lib/          # Core utilities (auth, current-user)
@@ -484,6 +484,31 @@ Crie a rota sob `app/(application)/<feature>/page.tsx`. Se a página for um Serv
 
 ---
 
+## PWA & App Icons
+
+The app is installable on Android and iOS. Everything is generated from code: there is no `favicon.ico` and no icon PNG in the repo.
+
+| File | Purpose |
+| --- | --- |
+| `src/shared/components/AppLogo/index.tsx` | **Single source of the logo** (ascending bars + trend arrow, plain SVG). Inherits the text color (`<AppLogo className="size-6 text-primary" />`). Used by the Header, the auth pages and every generated icon. Use it instead of a lucide icon wherever the brand appears. |
+| `src/shared/lib/app-icon.tsx` | `renderAppIcon(size, { glyphRatio, rounded })`: renders `AppLogo` on an opaque background with `ImageResponse`. `APP_COLORS` holds the theme tokens in hex. |
+| `src/app/icon.tsx` | `generateImageMetadata` serves `/icon/32` (browser tab favicon, rounded tile), `/icon/192` and `/icon/512` (manifest). |
+| `src/app/apple-icon.tsx` | 180×180 `apple-touch-icon` for the iOS home screen (must be opaque: transparency turns black). |
+| `src/app/manifest.ts` | Web app manifest: `standalone`, `pt-BR`, icons, and Android shortcuts for Meus Ativos, Proventos, Rentabilidade and Lista de Desejos. |
+| `src/app/layout.tsx` | `appleWebApp` (iOS title and standalone mode), `formatDetection: { telephone: false }` (stops Safari from linking money values as phone numbers) and `themeColor` per color scheme. |
+
+Rules:
+
+- **Changing the logo:** edit only `AppLogo`. The favicon, PWA icons and Header follow.
+- **Maskable safe zone:** Android crops the icon to the launcher shape and keeps only a centered circle of 80% of the side. Keep `glyphRatio` ≤ ~0.56 for `/icon/192` and `/icon/512` (currently 0.5); the same PNG is declared as `any` and `maskable`.
+- **Icons are square and opaque**, with no rounded corners: Android and iOS apply their own mask. Only the 32px favicon has a rounded background.
+- **Hex colors:** the manifest, the `theme-color` meta and `ImageResponse` cannot read CSS variables, so they use `APP_COLORS`. This is the one exception to "never hardcode colors". Keep it in sync with `--background` / `--primary` in `packages/lib-ui/src/styles/globals.css`.
+- **`basePath`:** Next does not prefix URLs inside the manifest. Every `src`, `start_url`, `scope` and shortcut `url` in `manifest.ts` is built with `env.NEXT_PUBLIC_BASE_PATH`.
+- **iOS status bar:** `statusBarStyle: 'default'`. Switching to `black-translucent` puts content under the clock and requires `viewportFit: 'cover'` plus `env(safe-area-inset-*)` padding (Sheets and Dialogs included).
+- **Not implemented:** iOS splash screens (`apple-touch-startup-image`, one image per device resolution) and a service worker (offline support / install prompt customization).
+
+---
+
 ## Dependency Version & Submodule Verification
 
 The workspace includes a version checker (`scripts/check-version.mjs`) that verifies dependency consistency across:
@@ -529,7 +554,7 @@ pnpm check-versions
 - Don't put app-specific code (features, API calls, `next/*`) in `@lib/ui` — it is shared across projects
 - Don't use `npx` — use `pnpm dlx`
 - Don't use `React.FC` or `React.forwardRef` — use modern function components
-- Don't hardcode hex/rgb colors — use oklch tokens from the design system
+- Don't hardcode hex/rgb colors — use oklch tokens from the design system (only exception: `APP_COLORS` for the manifest and generated icons, see [PWA & App Icons](#pwa--app-icons))
 - Don't use semicolons unless syntactically required
 - Don't use arrow functions for component definitions (use `function` declarations)
 - Don't use `React.useState` fully qualified — just import `{ useState }` from react
@@ -555,3 +580,13 @@ pnpm check-versions
 # Lint & format
 pnpm biome check --write .
 ```
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

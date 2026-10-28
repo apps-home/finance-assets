@@ -15,12 +15,14 @@ import {
   SheetTitle
 } from '@lib/ui/components/sheet'
 import { cn } from '@lib/ui/lib/utils'
-import { ChevronDown, Menu, Wallet } from 'lucide-react'
+import { ChevronDown, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
+import { NotificationInbox } from '@/features/notifications/components/NotificationInbox'
 import { ProfileMenu } from '@/features/profile/components/ProfileMenu'
+import { AppLogo } from '@/shared/components/AppLogo'
 import {
   headerMenu,
   isMenuGroup,
@@ -140,7 +142,7 @@ export default function Header() {
           <SheetContent side="left" className="w-64">
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">
-                <Wallet className="size-5 text-primary" />
+                <AppLogo className="size-5 text-primary" />
                 Finance Assets
               </SheetTitle>
             </SheetHeader>
@@ -173,7 +175,7 @@ export default function Header() {
           </SheetContent>
         </Sheet>
         <Link href="/" className="flex items-center space-x-2 md:mr-6">
-          <Wallet className="h-6 w-6 text-primary" />
+          <AppLogo className="size-6 text-primary" />
           <span className="hidden font-bold sm:inline-block">
             Finance Assets
           </span>
@@ -197,6 +199,7 @@ export default function Header() {
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center gap-4">
             <ModeToggle />
+            <NotificationInbox />
             <ProfileMenu />
           </nav>
         </div>
