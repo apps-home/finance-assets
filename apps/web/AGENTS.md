@@ -75,7 +75,7 @@ src/
 │   ├── api/          # API client configuration
 │   └── services/     # External services integration
 ├── shared/           # Shared modules
-│   ├── components/   # Shared React components (Header, FilterSelect, etc.; shadcn ui lives in @lib/ui)
+│   ├── components/   # App-specific shared components (Header, ListFilters, DollarRateBadge); generic ones live in @lib/ui
 │   ├── config/       # App configuration (menus, constants)
 │   ├── hooks/        # Shared React and custom hooks (use-media-query, use-local-storage, etc.)
 │   ├── lib/          # Core utilities (auth, current-user)
@@ -213,6 +213,8 @@ Import them by package name, e.g. `import { Button } from '@lib/ui/components/bu
 | Tooltip           | `tooltip.tsx`          | `@base-ui/react`    |
 
 ### Custom Components (`src/shared/components/<Name>/`)
+
+Generic custom components (no feature, API or app data) live in `@lib/ui` as `packages/lib-ui/src/components/<Name>/index.tsx` and must be registered in its `package.json` `exports` (see `packages/lib-ui/AGENTS.md`). Already there: `ConfirmDeleteDialog`, `FilterSelect`, `ModeToggle`, plus `ThemeProvider` in `@lib/ui/providers/theme-provider`. Only app-specific components stay in `src/shared/components/`.
 
 When creating a **custom** (non-shadcn) component, follow this pattern:
 

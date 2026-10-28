@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@lib/ui/components/button'
+import { ConfirmDeleteDialog } from '@lib/ui/components/ConfirmDeleteDialog'
 import { Skeleton } from '@lib/ui/components/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
 import {
@@ -35,7 +36,6 @@ import {
   useUpcomingDividends,
   useUpdateDividend
 } from '@/features/dividends/hooks/use-dividends'
-import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { MONTH_NAMES } from '@/shared/utils/month-names'
 

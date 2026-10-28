@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@lib/ui/components/button'
+import { ConfirmDeleteDialog } from '@lib/ui/components/ConfirmDeleteDialog'
 import { Checkbox } from '@lib/ui/components/checkbox'
 import { Input } from '@lib/ui/components/input'
 import { Label } from '@lib/ui/components/label'
@@ -24,7 +25,6 @@ import {
 import { CategoryAllocation } from '@/features/categories/types/allocation'
 import { CATEGORY_TYPE_OPTIONS } from '@/features/categories/utils'
 import { calculateAllocations } from '@/features/categories/utils/calculate-allocations'
-import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { useDollarRate } from '@/shared/hooks/use-dollar-rate'
 
 const FILTER_TABS: { value: CategoryType | 'ALL'; label: string }[] = [

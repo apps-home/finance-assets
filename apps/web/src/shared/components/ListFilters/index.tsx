@@ -1,6 +1,10 @@
 'use client'
 
 import { Button } from '@lib/ui/components/button'
+import {
+  type FilterOption,
+  FilterSelect
+} from '@lib/ui/components/FilterSelect'
 import { Input } from '@lib/ui/components/input'
 import {
   Tooltip,
@@ -10,10 +14,6 @@ import {
 import { cn } from '@lib/ui/lib/utils'
 import { LayoutGrid, RotateCcw, Search, Table as TableIcon } from 'lucide-react'
 
-import {
-  type FilterOption,
-  FilterSelect
-} from '@/shared/components/FilterSelect'
 import { MONTH_SORT_OPTIONS, type MonthSort } from '@/shared/utils/month-sort'
 
 export type ViewMode = 'table' | 'cards'

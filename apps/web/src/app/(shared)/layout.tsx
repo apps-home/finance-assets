@@ -1,8 +1,7 @@
+import { ModeToggle } from '@lib/ui/components/ModeToggle'
 import { Wallet } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-
-import { ModeToggle } from '@/shared/components/ModeToggle'
 
 export const metadata: Metadata = {
   title: 'Finance Assets - Accounts',

@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@lib/ui/components/button'
+import { ConfirmDeleteDialog } from '@lib/ui/components/ConfirmDeleteDialog'
 import { Skeleton } from '@lib/ui/components/skeleton'
 import { Bookmark, FilterX, PlusIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -29,7 +30,6 @@ import {
   useWishlist
 } from '@/features/wishlist/hooks/use-wishlist'
 import { TARGET_STATUS_OPTIONS } from '@/features/wishlist/utils/target-price'
-import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { DollarRateBadge } from '@/shared/components/DollarRateBadge'
 import { ListFilters } from '@/shared/components/ListFilters'
 import { useListFilters } from '@/shared/hooks/use-list-filters'

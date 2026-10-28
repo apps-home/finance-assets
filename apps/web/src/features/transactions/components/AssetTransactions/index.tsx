@@ -2,6 +2,7 @@
 
 import { Badge } from '@lib/ui/components/badge'
 import { Button } from '@lib/ui/components/button'
+import { ConfirmDeleteDialog } from '@lib/ui/components/ConfirmDeleteDialog'
 import { Skeleton } from '@lib/ui/components/skeleton'
 import {
   Tooltip,
@@ -14,7 +15,6 @@ import { useState } from 'react'
 
 import type { AssetWithCategory } from '@/features/assets/api/types'
 import { getCategoryCurrency } from '@/features/categories/utils'
-import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { formatQuantity } from '@/shared/utils/format-number'

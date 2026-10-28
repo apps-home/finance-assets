@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@lib/ui/components/dropdown-menu'
+import { ModeToggle } from '@lib/ui/components/ModeToggle'
 import {
   Sheet,
   SheetContent,
@@ -27,8 +28,6 @@ import {
   type MenuGroup,
   type MenuLink
 } from '@/shared/config/menu'
-
-import { ModeToggle } from '../ModeToggle'
 
 const NAV_ITEM_CLASSES =
   'inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 font-medium text-xs outline-none transition-colors hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring/50'
