@@ -1,5 +1,8 @@
 'use client'
 
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
+import { cn } from '@lib/ui/lib/utils'
 import type { UseQueryResult } from '@tanstack/react-query'
 import { LineChart as LineChartIcon } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
@@ -17,9 +20,6 @@ import type {
   PriceHistory,
   PriceHistoryRange
 } from '@/features/assets/api/types'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
 import { TREND_CLASSES } from '@/shared/utils/trend-classes'

@@ -1,8 +1,8 @@
+import { Card, CardContent } from '@lib/ui/components/card'
+import { cn } from '@lib/ui/lib/utils'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 

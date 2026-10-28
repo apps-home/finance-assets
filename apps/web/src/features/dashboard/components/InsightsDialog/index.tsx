@@ -1,12 +1,6 @@
 'use client'
 
-import { Loader2, RefreshCw, Sparkles } from 'lucide-react'
-import { useCallback, useEffect } from 'react'
-import ReactMarkdown from 'react-markdown'
-
-import type { MonthlyFinancialData } from '@/features/dashboard/api/types'
-import { useGenerateInsights } from '@/features/dashboard/hooks/use-insights'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@lib/ui/components/button'
 import {
   Dialog,
   DialogContent,
@@ -14,7 +8,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from '@/shared/components/ui/dialog'
+} from '@lib/ui/components/dialog'
+import { Loader2, RefreshCw, Sparkles } from 'lucide-react'
+import { useCallback, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+
+import type { MonthlyFinancialData } from '@/features/dashboard/api/types'
+import { useGenerateInsights } from '@/features/dashboard/hooks/use-insights'
 
 type InsightsState =
   | { status: 'idle' }

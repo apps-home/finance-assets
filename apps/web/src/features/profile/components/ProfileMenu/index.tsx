@@ -1,11 +1,7 @@
 'use client'
 
 import { env } from '@finance-assets-web/env/web'
-import { LogOut, Settings, User } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@lib/ui/components/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +10,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from '@/shared/components/ui/dropdown-menu'
+} from '@lib/ui/components/dropdown-menu'
+import { LogOut, Settings, User } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
 import { signOut, useSession } from '@/shared/lib/auth-client'
 import { getInitials } from '@/shared/utils/get-initials'
 

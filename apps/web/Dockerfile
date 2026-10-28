@@ -10,6 +10,7 @@ WORKDIR /app
 # Copia arquivos de configuração da RAIZ e manifestos para cache das dependências
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/lib-db/package.json ./packages/lib-db/
+COPY packages/lib-ui/package.json ./packages/lib-ui/
 COPY packages/env/package.json ./packages/env/
 COPY packages/config/package.json ./packages/config/
 COPY apps/web/package.json ./apps/web/
@@ -38,6 +39,7 @@ COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # Copia código-fonte dos pacotes e da aplicação web
 COPY packages/lib-db ./packages/lib-db
+COPY packages/lib-ui ./packages/lib-ui
 COPY packages/env ./packages/env
 COPY packages/config ./packages/config
 COPY apps/web ./apps/web

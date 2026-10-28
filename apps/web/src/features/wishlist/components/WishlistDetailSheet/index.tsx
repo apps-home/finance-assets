@@ -1,5 +1,18 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { Button } from '@lib/ui/components/button'
+import { Separator } from '@lib/ui/components/separator'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from '@lib/ui/components/sheet'
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { cn } from '@lib/ui/lib/utils'
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -42,19 +55,6 @@ import {
   getBuyVerdict
 } from '@/features/wishlist/utils/buy-signal'
 import { getTargetPriceInfo } from '@/features/wishlist/utils/target-price'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import { Separator } from '@/shared/components/ui/separator'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle
-} from '@/shared/components/ui/sheet'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import {

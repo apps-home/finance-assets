@@ -1,12 +1,13 @@
 'use client'
 
-import { CATEGORY_TYPE_LABELS } from '@/features/categories/utils'
-import { Badge } from '@/shared/components/ui/badge'
+import { Badge } from '@lib/ui/components/badge'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
-} from '@/shared/components/ui/tooltip'
+} from '@lib/ui/components/tooltip'
+
+import { CATEGORY_TYPE_LABELS } from '@/features/categories/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 
 import type { DividendsSummary } from '../../api/types'

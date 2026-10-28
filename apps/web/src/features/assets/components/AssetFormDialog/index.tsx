@@ -1,5 +1,25 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import { Checkbox } from '@lib/ui/components/checkbox'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@lib/ui/components/dialog'
+import { Input } from '@lib/ui/components/input'
+import { Label } from '@lib/ui/components/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@lib/ui/components/select'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -9,26 +29,6 @@ import type {
 } from '@/features/assets/api/types'
 import { INDEXER_OPTIONS } from '@/features/assets/utils/fixed-income'
 import { Category, CategoryType } from '@/features/categories/api/types'
-import { Button } from '@/shared/components/ui/button'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select'
 import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
 import { parseValue } from '@/shared/utils/parse-value'
 

@@ -1,5 +1,7 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import { Skeleton } from '@lib/ui/components/skeleton'
 import { Bookmark, FilterX, PlusIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
@@ -30,8 +32,6 @@ import { TARGET_STATUS_OPTIONS } from '@/features/wishlist/utils/target-price'
 import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { DollarRateBadge } from '@/shared/components/DollarRateBadge'
 import { ListFilters } from '@/shared/components/ListFilters'
-import { Button } from '@/shared/components/ui/button'
-import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useListFilters } from '@/shared/hooks/use-list-filters'
 
 export default function WishlistClient() {

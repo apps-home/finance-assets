@@ -1,5 +1,7 @@
 'use client'
 
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
 import { Activity } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
@@ -18,8 +20,6 @@ import {
   SCOPE_LABELS,
   sliceSeries
 } from '@/features/performance/utils'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 
 const PERIODS: PerformancePeriodKey[] = ['ytd', '12m', 'all']
 const SCOPES: PerformanceScope[] = ['all', 'variable', 'fixed']

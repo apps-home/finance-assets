@@ -1,5 +1,16 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@lib/ui/components/dialog'
+import { Input } from '@lib/ui/components/input'
+import { Label } from '@lib/ui/components/label'
+import { cn } from '@lib/ui/lib/utils'
 import { ArrowRight, Calculator, Info } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
@@ -22,17 +33,6 @@ import {
   getBuyVerdict
 } from '@/features/wishlist/utils/buy-signal'
 import { getTargetPriceInfo } from '@/features/wishlist/utils/target-price'
-import { Badge } from '@/shared/components/ui/badge'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
 import { parseValue } from '@/shared/utils/parse-value'

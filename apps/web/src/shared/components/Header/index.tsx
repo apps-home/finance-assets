@@ -1,24 +1,25 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@lib/ui/components/dropdown-menu'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from '@lib/ui/components/sheet'
+import { cn } from '@lib/ui/lib/utils'
 import { ChevronDown, Menu, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
 import { ProfileMenu } from '@/features/profile/components/ProfileMenu'
-import { Button } from '@/shared/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/shared/components/ui/dropdown-menu'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle
-} from '@/shared/components/ui/sheet'
 import {
   headerMenu,
   isMenuGroup,
@@ -26,7 +27,6 @@ import {
   type MenuGroup,
   type MenuLink
 } from '@/shared/config/menu'
-import { cn } from '@/shared/lib/utils'
 
 import { ModeToggle } from '../ModeToggle'
 

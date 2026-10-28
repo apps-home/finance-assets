@@ -1,12 +1,6 @@
 'use client'
 
-import { ArrowLeft, CheckCircle, KeyRound, Wallet } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
-import { toast } from 'sonner'
-
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@lib/ui/components/button'
 import {
   Card,
   CardContent,
@@ -14,9 +8,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle
-} from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
+} from '@lib/ui/components/card'
+import { Input } from '@lib/ui/components/input'
+import { Label } from '@lib/ui/components/label'
+import { ArrowLeft, CheckCircle, KeyRound, Wallet } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { toast } from 'sonner'
+
 import { resetPassword } from '@/shared/lib/auth-client'
 
 function ResetPasswordForm() {

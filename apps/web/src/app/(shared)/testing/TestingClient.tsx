@@ -1,12 +1,12 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import { Input } from '@lib/ui/components/input'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import { ExternalLink, Send } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { getNode } from '@/infrastructure/api/node'
-import { Button } from '@/shared/components/ui/button'
-import { Input } from '@/shared/components/ui/input'
 
 const FREEDIUM_PREFIX = 'https://freedium-mirror.cfd/'
 

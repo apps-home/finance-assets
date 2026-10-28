@@ -1,5 +1,7 @@
 'use client'
 
+import { Card, CardContent } from '@lib/ui/components/card'
+import { cn } from '@lib/ui/lib/utils'
 import {
   Briefcase,
   DollarSign,
@@ -10,9 +12,7 @@ import {
 
 import type { AssetWithCategory } from '@/features/assets/api/types'
 import { getCategoryCurrency } from '@/features/categories/utils'
-import { Card, CardContent } from '@/shared/components/ui/card'
 import { useDollarRate } from '@/shared/hooks/use-dollar-rate'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
 import { TREND_CLASSES } from '@/shared/utils/trend-classes'

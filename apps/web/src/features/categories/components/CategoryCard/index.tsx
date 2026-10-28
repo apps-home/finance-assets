@@ -1,5 +1,22 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { Button } from '@lib/ui/components/button'
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from '@lib/ui/components/card'
+import { Separator } from '@lib/ui/components/separator'
+import { Skeleton } from '@lib/ui/components/skeleton'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
 import {
   Briefcase,
   Edit2,
@@ -20,23 +37,6 @@ import {
   CATEGORY_TYPE_LABELS,
   CURRENCY_LABELS
 } from '@/features/categories/utils'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '@/shared/components/ui/card'
-import { Separator } from '@/shared/components/ui/separator'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
 import { TREND_CLASSES } from '@/shared/utils/trend-classes'

@@ -1,5 +1,8 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
 import {
   CalendarDays,
   Coins,
@@ -33,9 +36,6 @@ import {
   useUpdateDividend
 } from '@/features/dividends/hooks/use-dividends'
 import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
-import { Button } from '@/shared/components/ui/button'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { MONTH_NAMES } from '@/shared/utils/month-names'
 

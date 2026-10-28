@@ -1,5 +1,15 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { Button } from '@lib/ui/components/button'
+import { Card, CardContent, CardHeader } from '@lib/ui/components/card'
+import { Separator } from '@lib/ui/components/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
 import {
   Building2,
   CircleOff,
@@ -20,16 +30,6 @@ import {
   CATEGORY_TYPE_LABELS,
   getCategoryCurrency
 } from '@/features/categories/utils'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
-import { Separator } from '@/shared/components/ui/separator'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatQuantity } from '@/shared/utils/format-number'
 import { formatPercentage } from '@/shared/utils/format-percentage'

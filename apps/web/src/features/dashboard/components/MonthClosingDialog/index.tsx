@@ -1,5 +1,25 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { Button } from '@lib/ui/components/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@lib/ui/components/dialog'
+import { Input } from '@lib/ui/components/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@lib/ui/components/select'
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { cn } from '@lib/ui/lib/utils'
 import { CalendarCheck, Info, Loader2, Save } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -24,26 +44,6 @@ import {
 import { useDividends } from '@/features/dividends/hooks/use-dividends'
 import { useMonthlyContributions } from '@/features/transactions/hooks/use-transactions'
 import { getCurrencyData } from '@/infrastructure/services/external/get-currency'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
 import { MONTH_NAMES } from '@/shared/utils/month-names'

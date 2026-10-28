@@ -1,10 +1,9 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
 import { AlertTriangle, Home, RotateCcw } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect } from 'react'
-
-import { Button } from '@/shared/components/ui/button'
 
 interface ErrorProps {
   error: Error & { digest?: string }

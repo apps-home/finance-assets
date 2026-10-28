@@ -1,26 +1,22 @@
 'use client'
 
 import { env } from '@finance-assets-web/env/web'
-import type { User } from 'better-auth'
-import { Calendar, Camera, Mail, User2 } from 'lucide-react'
-import { useState } from 'react'
-
-import { UploadAvatarModal } from '@/features/profile/components/UploadAvatarModal'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/shared/components/ui/avatar'
-import { Button } from '@/shared/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@lib/ui/components/avatar'
+import { Button } from '@lib/ui/components/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
+} from '@lib/ui/components/card'
+import { Input } from '@lib/ui/components/input'
+import { Label } from '@lib/ui/components/label'
+import type { User } from 'better-auth'
+import { Calendar, Camera, Mail, User2 } from 'lucide-react'
+import { useState } from 'react'
+
+import { UploadAvatarModal } from '@/features/profile/components/UploadAvatarModal'
 
 interface ProfileTabContentProps {
   user: User

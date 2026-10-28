@@ -1,3 +1,11 @@
+import { Badge } from '@lib/ui/components/badge'
+import { TableCell, TableRow } from '@lib/ui/components/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
 import { Building2, CircleOff, TrendingDown, TrendingUp } from 'lucide-react'
 import type { KeyboardEvent } from 'react'
 
@@ -10,14 +18,6 @@ import {
   CATEGORY_TYPE_LABELS,
   getCategoryCurrency
 } from '@/features/categories/utils'
-import { Badge } from '@/shared/components/ui/badge'
-import { TableCell, TableRow } from '@/shared/components/ui/table'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatQuantity } from '@/shared/utils/format-number'
 import { formatPercentage } from '@/shared/utils/format-percentage'

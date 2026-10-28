@@ -1,4 +1,10 @@
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
+import {
   AlertTriangle,
   CheckCircle2,
   TrendingDown,
@@ -6,12 +12,6 @@ import {
 } from 'lucide-react'
 
 import { CategoryAllocation } from '@/features/categories/types/allocation'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
-import { cn } from '@/shared/lib/utils'
 
 export function AllocationBadge({
   allocation

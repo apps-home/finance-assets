@@ -1,5 +1,9 @@
 'use client'
 
+import { Input } from '@lib/ui/components/input'
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
+import { cn } from '@lib/ui/lib/utils'
 import { HandCoins, Info, Rocket, Target, TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
@@ -22,11 +26,7 @@ import {
   reachDate,
   SAFE_WITHDRAWAL_RATE
 } from '@/features/performance/utils/projection'
-import { Input } from '@/shared/components/ui/input'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { useMediaQuery } from '@/shared/hooks/use-media-query'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
 import { parseValue } from '@/shared/utils/parse-value'

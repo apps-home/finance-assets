@@ -1,14 +1,14 @@
-import { Pencil, Trash2 } from 'lucide-react'
-import type { ReactNode } from 'react'
-
-import type { AssetWithCategory } from '@/features/assets/api/types'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@lib/ui/components/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
-} from '@/shared/components/ui/tooltip'
-import { cn } from '@/shared/lib/utils'
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
+import { Pencil, Trash2 } from 'lucide-react'
+import type { ReactNode } from 'react'
+
+import type { AssetWithCategory } from '@/features/assets/api/types'
 import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 
 interface TrendBadgeProps {

@@ -10,7 +10,12 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   partialPrefetching: true,
-  transpilePackages: ['@t3-oss/env-nextjs', '@t3-oss/env-core', '@lib/db'],
+  transpilePackages: [
+    '@t3-oss/env-nextjs',
+    '@t3-oss/env-core',
+    '@lib/db',
+    '@lib/ui'
+  ],
   // Sentry loads its diagnostics-channel hook dynamically, so file tracing can't detect it
   outputFileTracingIncludes: {
     '/*': [

@@ -407,7 +407,8 @@ finance-assets/
 ├── packages/
 │   ├── config/               # Configurações compartilhadas Biome/TS (@finance-assets-web/config)
 │   ├── env/                  # Schemas de variáveis de ambiente (@finance-assets-web/env)
-│   └── lib-db/               # Submódulo Git compartilhado (package: "@lib/db", Prisma ORM)
+│   ├── lib-db/               # Submódulo Git compartilhado (package: "@lib/db", Prisma ORM)
+│   └── lib-ui/               # Submódulo Git compartilhado (package: "@lib/ui", design system + shadcn)
 ├── package.json              # Configurações e scripts orquestradores da raiz
 ├── pnpm-workspace.yaml       # Configuração de workspaces e permissões de build
 ├── scripts/check-version.mjs # Script de auditoria e validação de dependências do workspace

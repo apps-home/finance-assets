@@ -1,22 +1,22 @@
 'use client'
 
-import { Fragment, useState } from 'react'
-
-import type { AssetWithCategory } from '@/features/assets/api/types'
-import { AssetDetailSheet } from '@/features/assets/components/AssetDetailSheet'
 import {
   Table,
   TableBody,
   TableHead,
   TableHeader,
   TableRow
-} from '@/shared/components/ui/table'
+} from '@lib/ui/components/table'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
-} from '@/shared/components/ui/tooltip'
-import { cn } from '@/shared/lib/utils'
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
+import { Fragment, useState } from 'react'
+
+import type { AssetWithCategory } from '@/features/assets/api/types'
+import { AssetDetailSheet } from '@/features/assets/components/AssetDetailSheet'
 
 import { AssetTableRow } from './AssetTableRow'
 

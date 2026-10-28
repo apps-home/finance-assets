@@ -1,11 +1,11 @@
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { cn } from '@lib/ui/lib/utils'
 import { ChevronDown, HandCoins } from 'lucide-react'
 import { useState } from 'react'
 
 import type { AssetWithCategory } from '@/features/assets/api/types'
 import { useDividends } from '@/features/dividends/hooks/use-dividends'
 import { DIVIDEND_TYPE_LABELS } from '@/features/dividends/utils'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import {

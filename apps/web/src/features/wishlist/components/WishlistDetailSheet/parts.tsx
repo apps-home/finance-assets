@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@lib/ui/lib/utils'
 
 interface RangeGaugeProps {
   /** Posição da cotação entre a mínima (0) e a máxima (100) */

@@ -6,8 +6,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/shared/components/ui/select'
-import { cn } from '@/shared/lib/utils'
+} from '@lib/ui/components/select'
+import { cn } from '@lib/ui/lib/utils'
 
 export interface FilterOption {
   value: string

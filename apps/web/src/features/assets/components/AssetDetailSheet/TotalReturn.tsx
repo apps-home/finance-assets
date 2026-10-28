@@ -1,6 +1,7 @@
+import { Badge } from '@lib/ui/components/badge'
+import { cn } from '@lib/ui/lib/utils'
+
 import { useAssetTotalReturns } from '@/features/performance/hooks/use-performance'
-import { Badge } from '@/shared/components/ui/badge'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
 import { TREND_CLASSES } from '@/shared/utils/trend-classes'

@@ -1,5 +1,23 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@lib/ui/components/dialog'
+import { Input } from '@lib/ui/components/input'
+import { Label } from '@lib/ui/components/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@lib/ui/components/select'
 import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -13,24 +31,6 @@ import {
   CATEGORY_TYPE_OPTIONS,
   CURRENCY_OPTIONS
 } from '@/features/categories/utils'
-import { Button } from '@/shared/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select'
 
 const MIN_YEAR = 2020
 const MAX_YEAR = 2100

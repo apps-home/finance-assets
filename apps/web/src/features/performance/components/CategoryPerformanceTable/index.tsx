@@ -1,5 +1,4 @@
-import { CATEGORY_TYPE_COLORS } from '@/features/categories/utils'
-import { Badge } from '@/shared/components/ui/badge'
+import { Badge } from '@lib/ui/components/badge'
 import {
   Table,
   TableBody,
@@ -7,8 +6,10 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '@/shared/components/ui/table'
-import { cn } from '@/shared/lib/utils'
+} from '@lib/ui/components/table'
+import { cn } from '@lib/ui/lib/utils'
+
+import { CATEGORY_TYPE_COLORS } from '@/features/categories/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatPercentage } from '@/shared/utils/format-percentage'
 

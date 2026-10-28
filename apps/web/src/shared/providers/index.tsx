@@ -1,9 +1,9 @@
 'use client'
 
+import { Toaster } from '@lib/ui/components/sonner'
+import { TooltipProvider } from '@lib/ui/components/tooltip'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
-import { Toaster } from '@/shared/components/ui/sonner'
-import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { QueryClientProvider } from '@/shared/providers/query-client'
 import { ThemeProvider } from '@/shared/providers/theme-provider'
 

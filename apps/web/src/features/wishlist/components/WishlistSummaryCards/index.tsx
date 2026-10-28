@@ -1,11 +1,11 @@
 'use client'
 
+import { Card, CardContent } from '@lib/ui/components/card'
+import { cn } from '@lib/ui/lib/utils'
 import { AlertCircle, CheckCircle2, Eye, TrendingUp } from 'lucide-react'
 
 import type { WishlistWithCategory } from '@/features/wishlist/api/types'
 import { getTargetPriceInfo } from '@/features/wishlist/utils/target-price'
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { cn } from '@/shared/lib/utils'
 
 interface WishlistSummaryCardsProps {
   items: WishlistWithCategory[]

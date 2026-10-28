@@ -1,7 +1,5 @@
 'use client'
 
-import { Loader2, TriangleAlert } from 'lucide-react'
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +9,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from '@/shared/components/ui/alert-dialog'
+} from '@lib/ui/components/alert-dialog'
+import { Loader2, TriangleAlert } from 'lucide-react'
 
 interface ConfirmDeleteDialogProps {
   open: boolean

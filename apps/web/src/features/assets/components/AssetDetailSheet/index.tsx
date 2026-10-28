@@ -1,5 +1,17 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { Button } from '@lib/ui/components/button'
+import { Separator } from '@lib/ui/components/separator'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from '@lib/ui/components/sheet'
+import { cn } from '@lib/ui/lib/utils'
 import {
   ArrowDownRight,
   ArrowLeftRight,
@@ -30,18 +42,6 @@ import {
   getCategoryCurrency
 } from '@/features/categories/utils'
 import { AssetTransactions } from '@/features/transactions/components/AssetTransactions'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import { Separator } from '@/shared/components/ui/separator'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle
-} from '@/shared/components/ui/sheet'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { formatQuantity } from '@/shared/utils/format-number'

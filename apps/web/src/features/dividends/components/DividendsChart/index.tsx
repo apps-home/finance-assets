@@ -1,5 +1,6 @@
 'use client'
 
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
 import { useMemo, useState } from 'react'
 import {
   Bar,
@@ -13,7 +14,6 @@ import {
 
 import type { CategoryType } from '@/features/categories/api/types'
 import { CATEGORY_TYPE_LABELS } from '@/features/categories/utils'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { useMediaQuery } from '@/shared/hooks/use-media-query'
 import { formatCurrency } from '@/shared/utils/format-currency'
 

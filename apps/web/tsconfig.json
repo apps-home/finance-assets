@@ -21,7 +21,8 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@lib/db": ["../../packages/lib-db/src/index.ts"]
+      "@lib/db": ["../../packages/lib-db/src/index.ts"],
+      "@lib/ui/*": ["../../packages/lib-ui/src/*"]
     }
   },
   "include": [

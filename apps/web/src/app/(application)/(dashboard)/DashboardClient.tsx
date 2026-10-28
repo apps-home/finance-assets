@@ -1,5 +1,15 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { Button, buttonVariants } from '@lib/ui/components/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@lib/ui/components/dropdown-menu'
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
+import { cn } from '@lib/ui/lib/utils'
 import {
   ArrowUpRightFromSquare,
   CalendarCheck,
@@ -23,16 +33,6 @@ import { MonthClosingDialog } from '@/features/dashboard/components/MonthClosing
 import { StatCard } from '@/features/dashboard/components/StatCard'
 import { useSaveBudget } from '@/features/dashboard/hooks/use-budget'
 import { useDashboard } from '@/features/dashboard/hooks/use-dashboard'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button, buttonVariants } from '@/shared/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/shared/components/ui/dropdown-menu'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
-import { cn } from '@/shared/lib/utils'
 
 export default function DashboardPageClient() {
   const [selectedYear, setSelectedYear] = useState(

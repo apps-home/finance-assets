@@ -1,5 +1,11 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import { Checkbox } from '@lib/ui/components/checkbox'
+import { Input } from '@lib/ui/components/input'
+import { Label } from '@lib/ui/components/label'
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
 import { Calculator, ChartBarStacked, PlusIcon, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
@@ -19,12 +25,6 @@ import { CategoryAllocation } from '@/features/categories/types/allocation'
 import { CATEGORY_TYPE_OPTIONS } from '@/features/categories/utils'
 import { calculateAllocations } from '@/features/categories/utils/calculate-allocations'
 import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
-import { Button } from '@/shared/components/ui/button'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { useDollarRate } from '@/shared/hooks/use-dollar-rate'
 
 const FILTER_TABS: { value: CategoryType | 'ALL'; label: string }[] = [

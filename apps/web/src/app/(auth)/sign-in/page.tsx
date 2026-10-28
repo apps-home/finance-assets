@@ -1,11 +1,6 @@
 'use client'
 
-import { Wallet } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { toast } from 'sonner'
-
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@lib/ui/components/button'
 import {
   Card,
   CardContent,
@@ -13,10 +8,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle
-} from '@/shared/components/ui/card'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
+} from '@lib/ui/components/card'
+import { Checkbox } from '@lib/ui/components/checkbox'
+import { Input } from '@lib/ui/components/input'
+import { Label } from '@lib/ui/components/label'
+import { Wallet } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'sonner'
+
 import { signIn } from '@/shared/lib/auth-client'
 
 export default function SignInPage() {

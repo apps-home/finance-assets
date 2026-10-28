@@ -1,16 +1,16 @@
 'use client'
 
-import { DollarSign, TrendingDown, TrendingUp } from 'lucide-react'
-
-import { Badge } from '@/shared/components/ui/badge'
-import { Skeleton } from '@/shared/components/ui/skeleton'
+import { Badge } from '@lib/ui/components/badge'
+import { Skeleton } from '@lib/ui/components/skeleton'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
-} from '@/shared/components/ui/tooltip'
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
+import { DollarSign, TrendingDown, TrendingUp } from 'lucide-react'
+
 import { useDollarRate } from '@/shared/hooks/use-dollar-rate'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { TREND_CLASSES } from '@/shared/utils/trend-classes'
 

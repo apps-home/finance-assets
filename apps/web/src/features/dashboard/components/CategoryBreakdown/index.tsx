@@ -1,7 +1,7 @@
+import { Badge } from '@lib/ui/components/badge'
 import { useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
-import { Badge } from '@/shared/components/ui/badge'
 import { formatCurrency } from '@/shared/utils/format-currency'
 
 interface CategoryData {

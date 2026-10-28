@@ -1,5 +1,16 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@lib/ui/components/popover'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@lib/ui/components/tooltip'
 import { Coins, Edit, Loader2, Save, TrendingUp, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
@@ -9,17 +20,6 @@ import type { MonthData } from '@/features/dashboard/types/month-data'
 import { VARIABLE_TYPES } from '@/features/dashboard/utils/month-closing'
 import { calculateMonthTotal } from '@/features/dashboard/utils/month-data'
 import { getCurrencyData } from '@/infrastructure/services/external/get-currency'
-import { Button } from '@/shared/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/shared/components/ui/popover'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
 import { parseValue } from '@/shared/utils/parse-value'

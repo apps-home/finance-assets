@@ -5,6 +5,7 @@
 @apps/service/AGENTS.md
 @apps/web/AGENTS.md
 @packages/lib-db/AGENTS.md
+@packages/lib-ui/AGENTS.md
 
 ---
 
@@ -22,7 +23,8 @@ finance-assets/
 ├── packages/
 │   ├── config/           # Shared Biome/TS configuration (@finance-assets-web/config)
 │   ├── env/              # Environment variable schemas (@finance-assets-web/env)
-│   └── lib-db/           # Prisma database layer (git submodule: @lib/db)
+│   ├── lib-db/           # Prisma database layer (git submodule: @lib/db)
+│   └── lib-ui/           # Design system tokens + shadcn components (git submodule: @lib/ui)
 ├── .github/
 │   └── workflows/
 │       ├── deploy-service.yml # CI/CD for API (GHCR build + SSH deploy to Oracle VM)

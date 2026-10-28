@@ -1,10 +1,6 @@
 'use client'
 
-import { Upload } from 'lucide-react'
-import { useState } from 'react'
-
-import { useUploadAvatar } from '@/features/profile/hooks/use-avatar'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@lib/ui/components/button'
 import {
   Dialog,
   DialogContent,
@@ -12,8 +8,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
+} from '@lib/ui/components/dialog'
+import { Input } from '@lib/ui/components/input'
+import { Upload } from 'lucide-react'
+import { useState } from 'react'
+
+import { useUploadAvatar } from '@/features/profile/hooks/use-avatar'
 
 interface UploadAvatarModalProps {
   open: boolean

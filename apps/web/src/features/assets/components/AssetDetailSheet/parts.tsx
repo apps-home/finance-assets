@@ -1,7 +1,6 @@
+import { Card, CardContent } from '@lib/ui/components/card'
+import { cn } from '@lib/ui/lib/utils'
 import type { ReactNode } from 'react'
-
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { cn } from '@/shared/lib/utils'
 
 interface SectionProps {
   title: string

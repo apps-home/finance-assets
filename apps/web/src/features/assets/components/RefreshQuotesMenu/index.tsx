@@ -1,11 +1,6 @@
 'use client'
 
-import { RefreshCw } from 'lucide-react'
-
-import { useRefreshCategoryQuotes } from '@/features/assets/hooks/use-assets'
-import { type Category, CategoryType } from '@/features/categories/api/types'
-import { CATEGORY_TYPE_LABELS } from '@/features/categories/utils'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@lib/ui/components/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +8,13 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger
-} from '@/shared/components/ui/dropdown-menu'
-import { cn } from '@/shared/lib/utils'
+} from '@lib/ui/components/dropdown-menu'
+import { cn } from '@lib/ui/lib/utils'
+import { RefreshCw } from 'lucide-react'
+
+import { useRefreshCategoryQuotes } from '@/features/assets/hooks/use-assets'
+import { type Category, CategoryType } from '@/features/categories/api/types'
+import { CATEGORY_TYPE_LABELS } from '@/features/categories/utils'
 
 interface RefreshQuotesMenuProps {
   categories: Category[]

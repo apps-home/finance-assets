@@ -1,6 +1,15 @@
 'use client'
 
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '@lib/ui/components/accordion'
+import { Badge } from '@lib/ui/components/badge'
+import { Card, CardContent, CardHeader } from '@lib/ui/components/card'
+import { cn } from '@lib/ui/lib/utils'
+import {
   AlertTriangle,
   CheckCircle2,
   Info,
@@ -17,15 +26,6 @@ import {
   CATEGORY_TYPE_COLORS,
   CATEGORY_TYPE_LABELS
 } from '@/features/categories/utils'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger
-} from '@/shared/components/ui/accordion'
-import { Badge } from '@/shared/components/ui/badge'
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 
 import { AllocationStatusBadge } from '../AllocationStatusBadge'

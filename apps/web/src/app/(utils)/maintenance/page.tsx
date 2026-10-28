@@ -1,8 +1,7 @@
+import { Button } from '@lib/ui/components/button'
 import { Home, ServerCrash } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-
-import { Button } from '@/shared/components/ui/button'
 
 export const metadata: Metadata = {
   title: 'Serviço Indisponível',

@@ -1,10 +1,7 @@
 'use client'
 
-import { Pencil, Trash2 } from 'lucide-react'
-
-import { CATEGORY_TYPE_COLORS } from '@/features/categories/utils'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
+import { Badge } from '@lib/ui/components/badge'
+import { Button } from '@lib/ui/components/button'
 import {
   Table,
   TableBody,
@@ -12,13 +9,16 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '@/shared/components/ui/table'
+} from '@lib/ui/components/table'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
-} from '@/shared/components/ui/tooltip'
-import { cn } from '@/shared/lib/utils'
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
+import { Pencil, Trash2 } from 'lucide-react'
+
+import { CATEGORY_TYPE_COLORS } from '@/features/categories/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 

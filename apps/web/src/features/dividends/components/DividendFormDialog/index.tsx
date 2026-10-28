@@ -1,11 +1,6 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-
-import type { AssetWithCategory } from '@/features/assets/api/types'
-import { getCategoryCurrency } from '@/features/categories/utils'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@lib/ui/components/button'
 import {
   Dialog,
   DialogClose,
@@ -14,16 +9,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
+} from '@lib/ui/components/dialog'
+import { Input } from '@lib/ui/components/input'
+import { Label } from '@lib/ui/components/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/shared/components/ui/select'
+} from '@lib/ui/components/select'
+import { Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import type { AssetWithCategory } from '@/features/assets/api/types'
+import { getCategoryCurrency } from '@/features/categories/utils'
 import { formatCurrencyInput } from '@/shared/utils/format-currency-input'
 import { toDateInputValue } from '@/shared/utils/format-date'
 import { parseValue } from '@/shared/utils/parse-value'

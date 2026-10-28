@@ -1,5 +1,8 @@
 'use client'
 
+import { Button } from '@lib/ui/components/button'
+import { Skeleton } from '@lib/ui/components/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
 import { Briefcase, FilterX, PlusIcon } from 'lucide-react'
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useMemo, useState } from 'react'
@@ -29,9 +32,6 @@ import { useAssetTotalReturns } from '@/features/performance/hooks/use-performan
 import { ConfirmDeleteDialog } from '@/shared/components/ConfirmDeleteDialog'
 import { DollarRateBadge } from '@/shared/components/DollarRateBadge'
 import { ListFilters } from '@/shared/components/ListFilters'
-import { Button } from '@/shared/components/ui/button'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { useListFilters } from '@/shared/hooks/use-list-filters'
 
 const RETURN_MODES = ['price', 'total'] as const

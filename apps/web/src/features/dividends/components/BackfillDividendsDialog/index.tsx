@@ -1,7 +1,5 @@
 'use client'
 
-import { DownloadCloud, Loader2 } from 'lucide-react'
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +9,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from '@/shared/components/ui/alert-dialog'
+} from '@lib/ui/components/alert-dialog'
+import { DownloadCloud, Loader2 } from 'lucide-react'
 
 interface BackfillDividendsDialogProps {
   open: boolean

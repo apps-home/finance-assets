@@ -1,9 +1,9 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { cn } from '@lib/ui/lib/utils'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 
-import { Badge } from '@/shared/components/ui/badge'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import {
   calcMonthChange,

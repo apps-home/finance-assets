@@ -1,8 +1,8 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
 import { CalendarClock } from 'lucide-react'
 
-import { Badge } from '@/shared/components/ui/badge'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 

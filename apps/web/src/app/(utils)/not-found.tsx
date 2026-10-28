@@ -1,7 +1,6 @@
+import { Button } from '@lib/ui/components/button'
 import { FileQuestion, Home } from 'lucide-react'
 import Link from 'next/link'
-
-import { Button } from '@/shared/components/ui/button'
 
 export default function NotFound() {
   return (

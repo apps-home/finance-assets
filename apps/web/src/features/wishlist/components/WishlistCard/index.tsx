@@ -1,5 +1,15 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { Button } from '@lib/ui/components/button'
+import { Card, CardContent, CardHeader } from '@lib/ui/components/card'
+import { Separator } from '@lib/ui/components/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@lib/ui/components/tooltip'
+import { cn } from '@lib/ui/lib/utils'
 import {
   BriefcaseBusiness,
   CheckCircle2,
@@ -17,16 +27,6 @@ import {
 } from '@/features/categories/utils'
 import type { WishlistWithCategory } from '@/features/wishlist/api/types'
 import { getTargetPriceInfo } from '@/features/wishlist/utils/target-price'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
-import { Separator } from '@/shared/components/ui/separator'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import {
   calcMonthChange,

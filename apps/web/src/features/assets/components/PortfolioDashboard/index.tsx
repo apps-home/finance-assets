@@ -1,5 +1,14 @@
 'use client'
 
+import { Badge } from '@lib/ui/components/badge'
+import { Skeleton } from '@lib/ui/components/skeleton'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@lib/ui/components/tabs'
+import { cn } from '@lib/ui/lib/utils'
 import {
   Landmark,
   PiggyBank,
@@ -18,15 +27,6 @@ import type {
 } from '@/features/assets/api/types'
 import { usePortfolioSummary } from '@/features/assets/hooks/use-assets'
 import { StatCard } from '@/features/dashboard/components/StatCard'
-import { Badge } from '@/shared/components/ui/badge'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '@/shared/components/ui/tabs'
-import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/utils/format-currency'
 
 const chartColor = (index: number) => `var(--chart-${(index % 6) + 1})`
