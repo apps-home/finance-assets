@@ -31,7 +31,7 @@ jobs:
               --if-exists \
               --no-owner \
               --no-privileges \
-              personal_db | psql '${{ secrets.NEON_DATABASE_URL }}'"
+              finance_assets_db | psql '${{ secrets.DEVELOPMENT_DATABASE_URL }}'"
 
             echo "=========================================="
             echo "Sincronização concluída com sucesso!"
