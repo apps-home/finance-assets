@@ -4,15 +4,18 @@ import { InMemoryAssetRepository } from '@test/repositories/in-memory-asset.repo
 import { InMemoryCategoryRepository } from '@test/repositories/in-memory-category.repository'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
+
 import { FindAssetsParams } from '../../domain/dto/find-assets-params.dto'
 import { FindAssetsUseCase } from './find-assets'
 
 describe('FindAssetsUseCase', () => {
+  let categoryRepository: InMemoryCategoryRepository
   let assetRepository: InMemoryAssetRepository
   let sut: FindAssetsUseCase
 
   beforeEach(() => {
-    const categoryRepository = new InMemoryCategoryRepository()
+    categoryRepository = new InMemoryCategoryRepository()
     assetRepository = new InMemoryAssetRepository(categoryRepository)
     sut = new FindAssetsUseCase(assetRepository)
 
@@ -52,11 +55,55 @@ describe('FindAssetsUseCase', () => {
     ])
   })
 
-  it('should keep the repository order without sort', async () => {
+  it('should keep the repository order within the same category type without sort', async () => {
     seed('BBBB')
     seed('AAAA')
 
     expect(await tickers({ userId: 'user-1' })).toEqual(['BBBB', 'AAAA'])
+  })
+
+  it('should sort assets by category type order (VARIABLE_BR, FII, VARIABLE_US, CRYPTO, FIXED)', async () => {
+    categoryRepository.items.push(
+      makeCategory({
+        id: 'cat-fixed',
+        userId: 'user-1',
+        type: CategoryType.FIXED
+      }),
+      makeCategory({
+        id: 'cat-crypto',
+        userId: 'user-1',
+        type: CategoryType.CRYPTO
+      }),
+      makeCategory({
+        id: 'cat-us',
+        userId: 'user-1',
+        type: CategoryType.VARIABLE_US
+      }),
+      makeCategory({
+        id: 'cat-fii',
+        userId: 'user-1',
+        type: CategoryType.FII
+      }),
+      makeCategory({
+        id: 'cat-br',
+        userId: 'user-1',
+        type: CategoryType.VARIABLE_BR
+      })
+    )
+
+    seed('CDB', {}, 'cat-fixed')
+    seed('BTC', {}, 'cat-crypto')
+    seed('AAPL', {}, 'cat-us')
+    seed('HGLG11', {}, 'cat-fii')
+    seed('WEGE3', {}, 'cat-br')
+
+    expect(await tickers({ userId: 'user-1' })).toEqual([
+      'WEGE3',
+      'HGLG11',
+      'AAPL',
+      'BTC',
+      'CDB'
+    ])
   })
 
   describe('sort=monthChange', () => {

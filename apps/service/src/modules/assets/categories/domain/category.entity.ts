@@ -10,6 +10,14 @@ export enum CategoryType {
   FIXED = 'FIXED'
 }
 
+export const CATEGORY_TYPE_ORDER: Record<CategoryType, number> = {
+  [CategoryType.VARIABLE_BR]: 0,
+  [CategoryType.FII]: 1,
+  [CategoryType.VARIABLE_US]: 2,
+  [CategoryType.CRYPTO]: 3,
+  [CategoryType.FIXED]: 4
+}
+
 export type CategorySummary = Pick<
   CategoryProps,
   'id' | 'name' | 'type' | 'currency'

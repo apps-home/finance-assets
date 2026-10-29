@@ -5,6 +5,7 @@ import {
   calcMonthChange,
   sortByMonthChange
 } from '@/core/utils/sort-by-month-change'
+import { CATEGORY_TYPE_ORDER } from '@/modules/assets/categories/domain/category.entity'
 
 import { AssetHTTPResponse, AssetMapper } from '../../domain/asset.mapper'
 import {
@@ -44,6 +45,12 @@ export class FindAssetsUseCase {
       )
     }
 
-    return right(assets)
+    return right(
+      assets.sort(
+        (a, b) =>
+          CATEGORY_TYPE_ORDER[a.category.type] -
+          CATEGORY_TYPE_ORDER[b.category.type]
+      )
+    )
   }
 }

@@ -37,16 +37,27 @@
             "groups": [
               ":BUN:",
               ":NODE:",
-              ["npm:*", "npm:*/**"],
+              [
+                "npm:*",
+                "npm:*/**"
+              ],
               ":PACKAGE_WITH_PROTOCOL:",
               ":URL:",
               ":PACKAGE:",
               ":BLANK_LINE:",
-              ["@*/*", "@*/*/**"],
+              [
+                "@*/*",
+                "@*/*/**"
+              ],
               ":BLANK_LINE:",
-              ["/**"],
+              [
+                "/**"
+              ],
               ":BLANK_LINE:",
-              ["#*", "#*/**"],
+              [
+                "#*",
+                "#*/**"
+              ],
               ":BLANK_LINE:",
               ":PATH:"
             ]
@@ -82,7 +93,11 @@
           "level": "warn",
           "fix": "safe",
           "options": {
-            "functions": ["clsx", "cva", "cn"]
+            "functions": [
+              "clsx",
+              "cva",
+              "cn"
+            ]
           }
         }
       },
@@ -105,7 +120,8 @@
         "useNodejsImportProtocol": "off"
       },
       "complexity": {
-        "noStaticOnlyClass": "off"
+        "noStaticOnlyClass": "off",
+        "noBannedTypes": "off"
       }
     }
   },
