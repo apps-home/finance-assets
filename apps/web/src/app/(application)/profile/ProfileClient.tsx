@@ -6,13 +6,13 @@ import {
   TabsList,
   TabsTrigger
 } from '@lib/ui/components/tabs'
-import type { User } from 'better-auth'
 import { Settings, User2 } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { Activity } from 'react'
 
 import { ProfileTabContent } from '@/features/profile/components/ProfileTabContent'
 import { SettingsTabContent } from '@/features/profile/components/SettingsTabContent'
+import type { User } from '@/shared/lib/auth-client'
 
 interface ProfileClientProps {
   user: User

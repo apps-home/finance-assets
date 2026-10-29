@@ -1,6 +1,5 @@
+import { CurrentUserId } from '@lib/auth/nest'
 import { Controller, Get } from '@nestjs/common'
-
-import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
 
 import { NovuInboxService } from './novu-inbox.service'
 

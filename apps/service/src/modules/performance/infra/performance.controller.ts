@@ -1,7 +1,7 @@
+import { CurrentUserId } from '@lib/auth/nest'
 import { Controller, Get, Query } from '@nestjs/common'
 
 import { parseMonthRef } from '@/core/utils/month'
-import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
 import { toHttpException } from '@/infra/http/to-http-exception'
 
 import { GetAssetTotalReturnsUseCase } from '../application/use-cases/get-asset-total-returns'

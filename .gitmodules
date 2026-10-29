@@ -1,8 +1,12 @@
-[submodule "packages/lib-db"]
-	path = packages/lib-db
-	url = https://github.com/apps-home/lib-db
+[submodule "packages/lib-finance-assets-db"]
+	path = packages/lib-finance-assets-db
+	url = https://github.com/apps-home/lib-finance-assets-db
 	branch = main
 [submodule "packages/lib-ui"]
 	path = packages/lib-ui
 	url = https://github.com/apps-home/lib-ui
+	branch = main
+[submodule "packages/lib-auth"]
+	path = packages/lib-auth
+	url = https://github.com/apps-home/lib-auth
 	branch = main

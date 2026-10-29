@@ -1,7 +1,7 @@
 import type {
   AssetWishlists as PrismaAssetWishlists,
   MarketAsset as PrismaMarketAsset
-} from '@lib/db'
+} from '@lib/finance-assets-db'
 
 import { Wishlist } from '../../domain/wishlist.entity'
 

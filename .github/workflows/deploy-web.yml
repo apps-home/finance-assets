@@ -12,7 +12,8 @@ on:
     branches: ["main"]
     paths:
       - 'apps/web/**'
-      - 'packages/lib-db/**'
+      - 'packages/lib-finance-assets-db/**'
+      - 'packages/lib-auth/**'
       - 'packages/lib-ui/**'
       - 'packages/env/**'
       - 'packages/config/**'
@@ -22,7 +23,8 @@ on:
     branches: ["main"]
     paths:
       - 'apps/web/**'
-      - 'packages/lib-db/**'
+      - 'packages/lib-finance-assets-db/**'
+      - 'packages/lib-auth/**'
       - 'packages/lib-ui/**'
       - 'packages/env/**'
       - 'packages/config/**'

@@ -12,11 +12,11 @@ import {
 } from '@lib/ui/components/card'
 import { Input } from '@lib/ui/components/input'
 import { Label } from '@lib/ui/components/label'
-import type { User } from 'better-auth'
 import { Calendar, Camera, Mail, User2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { UploadAvatarModal } from '@/features/profile/components/UploadAvatarModal'
+import type { User } from '@/shared/lib/auth-client'
 
 interface ProfileTabContentProps {
   user: User

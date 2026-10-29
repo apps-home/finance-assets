@@ -1,4 +1,4 @@
-import type { Auth } from '@lib/db'
+import type { Auth } from '@lib/finance-assets-db'
 import { Inject, Injectable } from '@nestjs/common'
 
 import { User } from '../../domain/user.entity'

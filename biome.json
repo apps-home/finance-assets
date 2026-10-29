@@ -15,7 +15,7 @@
       "!**/.turbo",
       "!**/coverage",
       "!**/*.tsbuildinfo",
-      "!packages/lib-db/src/prisma/generated"
+      "!packages/lib-finance-assets-db/src/prisma/generated"
     ]
   },
   "formatter": {

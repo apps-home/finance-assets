@@ -1,4 +1,4 @@
-import type { AssetDividend as PrismaAssetDividend } from '@lib/db'
+import type { AssetDividend as PrismaAssetDividend } from '@lib/finance-assets-db'
 
 import {
   Dividend,

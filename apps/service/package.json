@@ -22,7 +22,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1025.0",
     "@aws-sdk/s3-request-presigner": "^3.1027.0",
-    "@lib/db": "workspace:*",
+    "@lib/auth": "workspace:*",
+    "@lib/finance-assets-db": "workspace:*",
     "@nestjs/axios": "^12.0.0",
     "@nestjs/bullmq": "^12.0.0",
     "@nestjs/common": "^12.0.1",

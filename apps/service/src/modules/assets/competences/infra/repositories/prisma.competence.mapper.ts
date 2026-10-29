@@ -1,4 +1,4 @@
-import type { AssetCategoryCompetence } from '@lib/db'
+import type { AssetCategoryCompetence } from '@lib/finance-assets-db'
 
 import { Competence } from '../../domain/competence.entity'
 

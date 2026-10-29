@@ -1,4 +1,4 @@
-import type { MarketAsset as PrismaMarketAsset } from '@lib/db'
+import type { MarketAsset as PrismaMarketAsset } from '@lib/finance-assets-db'
 
 import { CategoryType } from '@/modules/assets/categories/domain/category.entity'
 

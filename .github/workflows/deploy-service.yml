@@ -12,14 +12,16 @@ on:
     branches: ["main"]
     paths:
       - 'apps/service/**'
-      - 'packages/lib-db/**'
+      - 'packages/lib-finance-assets-db/**'
+      - 'packages/lib-auth/**'
       - '.github/workflows/deploy-service.yml'
 
   pull_request:
     branches: ["main"]
     paths:
       - 'apps/service/**'
-      - 'packages/lib-db/**'
+      - 'packages/lib-finance-assets-db/**'
+      - 'packages/lib-auth/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

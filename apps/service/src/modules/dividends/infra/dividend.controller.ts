@@ -1,3 +1,4 @@
+import { CurrentUserId } from '@lib/auth/nest'
 import {
   Body,
   Controller,
@@ -10,7 +11,6 @@ import {
   Query
 } from '@nestjs/common'
 
-import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
 import { toHttpException } from '@/infra/http/to-http-exception'
 
 import { BackfillDividendsUseCase } from '../application/use-cases/backfill-dividends'

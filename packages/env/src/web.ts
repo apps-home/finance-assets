@@ -9,6 +9,16 @@ export const env = createEnv({
     BETTER_AUTH_URL: z.url({
       error: 'BETTER_AUTH_URL must be a valid URL'
     }),
+    // Origens extras aceitas pelo Better Auth, separadas por vírgula (ex.: IPs da rede local em dev)
+    BETTER_AUTH_TRUSTED_ORIGINS: z
+      .string()
+      .optional()
+      .transform((value) =>
+        value
+          ?.split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean)
+      ),
     DATABASE_URL: z
       .url({
         error: 'DATABASE_URL must be a valid URL'
@@ -43,6 +53,7 @@ export const env = createEnv({
     NEXT_PUBLIC_AVATAR_URL: process.env.NEXT_PUBLIC_AVATAR_URL,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+    BETTER_AUTH_TRUSTED_ORIGINS: process.env.BETTER_AUTH_TRUSTED_ORIGINS,
     DATABASE_URL: process.env.DATABASE_URL,
     N8N_URL: process.env.N8N_URL,
     NODE_API_URL: process.env.NODE_API_URL,

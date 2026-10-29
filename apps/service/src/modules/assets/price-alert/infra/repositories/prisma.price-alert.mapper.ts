@@ -2,7 +2,7 @@ import type {
   AssetCategory as PrismaCategory,
   MarketAsset as PrismaMarketAsset,
   PriceAlert as PrismaPriceAlert
-} from '@lib/db'
+} from '@lib/finance-assets-db'
 
 import {
   PriceAlert,

@@ -1,7 +1,7 @@
 import type {
   Asset as PrismaAsset,
   MarketAsset as PrismaMarketAsset
-} from '@lib/db'
+} from '@lib/finance-assets-db'
 
 import { Asset } from '../../domain/asset.entity'
 import type { FixedIncomeIndexer } from '../../domain/fixed-income-valuation'

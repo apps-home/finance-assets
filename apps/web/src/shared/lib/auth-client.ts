@@ -1,16 +1,11 @@
 import { env } from '@finance-assets-web/env/web'
-import { createAuthClient } from 'better-auth/react'
+import { createAppAuthClient } from '@lib/auth/client'
 
-const getBaseURL = () => {
-  if (typeof window !== 'undefined') {
-    return window.location.origin
-  }
-  return env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-}
-
-export const authClient = createAuthClient({
-  baseURL: getBaseURL()
+export const authClient = createAppAuthClient({
+  fallbackBaseURL: env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 })
+
+export type User = typeof authClient.$Infer.Session.user
 
 export const {
   $ERROR_CODES,

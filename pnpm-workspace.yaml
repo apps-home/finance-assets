@@ -9,6 +9,10 @@ allowBuilds:
   msw: true
   prisma: true
   sharp: true
+# O @lib/auth/nest importa @nestjs/* de dentro de packages/lib-auth. No install de produção
+# (--prod) os devDependencies do lib não entram, então o lib acha a cópia do service aqui na raiz.
+publicHoistPattern:
+  - '@nestjs/*'
 catalog:
   dotenv: ^17.3.1
   zod: ^4.3.6

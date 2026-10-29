@@ -8,9 +8,11 @@
     "dev": "pnpm --filter api --filter web --parallel dev",
     "dev:service": "pnpm --filter api dev",
     "dev:web": "pnpm --filter web dev",
-    "build:service": "pnpm --filter @lib/db build && pnpm --filter api build",
-    "build:web": "pnpm --filter web build",
-    "build:db": "pnpm --filter @lib/db build",
+    "build:service": "pnpm build:libs && pnpm --filter api build",
+    "build:web": "pnpm build:libs && pnpm --filter web build",
+    "build:db": "pnpm --filter @lib/finance-assets-db build",
+    "build:auth": "pnpm --filter @lib/auth build",
+    "build:libs": "pnpm build:db && pnpm build:auth",
     "test": "pnpm --filter api test",
     "test:cov": "pnpm --filter api test:cov",
     "test:e2e": "pnpm --filter api test:e2e",
@@ -21,7 +23,7 @@
   },
   "dependencies": {
     "@finance-assets-web/env": "workspace:*",
-    "@lib/db": "workspace:*",
+    "@lib/finance-assets-db": "workspace:*",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },

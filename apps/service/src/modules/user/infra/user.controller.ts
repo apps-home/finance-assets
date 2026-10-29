@@ -1,4 +1,5 @@
 import { Readable } from 'node:stream'
+import { CurrentUserId } from '@lib/auth/nest'
 import {
   BadRequestException,
   Controller,
@@ -11,7 +12,6 @@ import {
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 
-import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
 import { toHttpException } from '@/infra/http/to-http-exception'
 
 import { DownloadUserAvatarUseCase } from '../application/use-cases/download-avatar'

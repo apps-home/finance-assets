@@ -1,4 +1,4 @@
-import { prismaAuth, prismaFinanceAssets } from '@lib/db'
+import { prismaAuth, prismaFinanceAssets } from '@lib/finance-assets-db'
 import { Global, Module } from '@nestjs/common'
 
 const FinanceAssetsProvider = {

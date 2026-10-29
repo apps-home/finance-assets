@@ -1,4 +1,4 @@
-import type { Prisma } from '@lib/db'
+import type { Prisma } from '@lib/finance-assets-db'
 
 import { Budget } from '../../domain/budget.entity'
 

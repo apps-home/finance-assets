@@ -1,6 +1,6 @@
 # Car Expenses & Maintenance Tracker — Documentação de Conceito e Arquitetura
 
-> Documento de referência arquitetural e funcional para o desenvolvimento do sistema pessoal de gestão de gastos automotivos e controle de manutenções preventivas/periódicas, compartilhando os submódulos `@lib/db` e `@lib/ui`.
+> Documento de referência arquitetural e funcional para o desenvolvimento do sistema pessoal de gestão de gastos automotivos e controle de manutenções preventivas/periódicas. É um sistema independente — repositório, banco, usuários e infraestrutura próprios — que usa os submódulos compartilhados `@lib/auth` e `@lib/ui` apenas como ferramentas e tem o próprio submódulo de banco (`@lib/car-expenses-db`).
 
 ---
 
@@ -21,77 +21,91 @@ O objetivo do sistema é substituir o controle manual atualmente feito no **Appl
 
 ## 2. Pilares Tecnológicos
 
-A aplicação segue exatamente a mesma stack do ecossistema pessoal para maximizar o reaproveitamento de código e infraestrutura:
+A aplicação usa a mesma stack dos outros sistemas pessoais, para reaproveitar código (pelos libs) e servidores (a VM Oracle e o PostgreSQL), sem compartilhar dados:
 
 | Camada | Tecnologia |
 |---|---|
 | **Frontend Framework** | **Next.js 16** (App Router, React 19, Mobile-First) |
 | **Backend Framework** | **NestJS 12** (Arquitetura Modular DDD / Clean Architecture) |
-| **Banco de Dados & ORM** | **PostgreSQL** (Neon em DEV / Oracle VM em PROD) + **Prisma 7** (`@lib/db`) |
+| **Banco de Dados & ORM** | **PostgreSQL** (database próprio no cluster Neon em DEV e na VM Oracle em PROD) + **Prisma 7** (schema, migrations e client no submódulo próprio `@lib/car-expenses-db`) |
 | **Design System & UI** | **Tailwind CSS v4** (`oklch`), **shadcn/ui** (`base-nova` / Base UI) via submódulo `@lib/ui` |
 | **State & Data Fetching** | `@tanstack/react-query`, `@tanstack/react-form`, Zustand (client state) e `nuqs` (URL state) |
-| **Processamento Assíncrono** | **Redis + BullMQ** (filas e Cron Jobs diários de alertas de manutenção) |
-| **Autenticação** | **Better Auth** (sessões independentes por aplicação, OAuth / E-mail) |
-| **Notificações** | **Novu** (Inbox In-App) + **n8n** (alertas de vencimento via e-mail/push/WhatsApp) |
-| **Armazenamento de Arquivos** | **Cloudflare R2** (upload de notas fiscais de oficina, comprovantes e foto do veículo) |
+| **Processamento Assíncrono** | **Redis + BullMQ** (Redis próprio; filas e Cron Jobs diários de alertas de manutenção) |
+| **Autenticação** | **Better Auth** via `@lib/auth` (usuários e sessões próprios, E-mail / OAuth) |
+| **Notificações** | **Novu** (application própria, Inbox In-App) + **n8n** (webhooks próprios para alertas de vencimento via e-mail/push/WhatsApp) |
+| **Armazenamento de Arquivos** | **Cloudflare R2** (bucket próprio para notas fiscais de oficina, comprovantes e foto do veículo) |
 | **Gerenciador & Qualidade** | **pnpm** (workspace monorepo com `catalog:`) + **Biome** (tabs, single quotes, no semicolons) |
 
 ---
 
-## 3. Estratégia de Compartilhamento dos Submódulos (`@lib/db` e `@lib/ui`)
+## 3. Independência do Sistema e Uso dos Libs
 
-### 3.1 Banco de Dados e `@lib/db` (Servidor Compartilhado, Bancos e Schemas Isolados)
+O Car Expenses e o Finance Assets **não se conhecem**: nenhum importa, configura ou menciona o outro, e uma mudança num nunca exige mudança no outro. Os libs compartilhados (`@lib/auth` e `@lib/ui`) são só ferramentas para não duplicar lógica: nenhum contém schema, variável de ambiente ou nome de sistema, e o Car Expenses atualiza o ponteiro de cada submódulo quando quiser. O banco **não** é compartilhado como lib: cada sistema tem o próprio submódulo com schema, migrations e client (`@lib/finance-assets-db` no Finance, `@lib/car-expenses-db` aqui). O estado dos libs está em `PREPARACAO_LIBS_COMPARTILHADAS.md`.
 
-Os usuários **não** são compartilhados entre sistemas diferentes — cada aplicação possui seu próprio cadastro de usuários (`better-auth`) e seu próprio banco de dados lógico dentro do mesmo servidor PostgreSQL:
+| Compartilhado | Próprio do Car Expenses |
+|---|---|
+| Código dos libs: Better Auth (`@lib/auth`) e design system (`@lib/ui`) | Repositório, submódulo de banco (`@lib/car-expenses-db`: schema, migrations e client), usuários e sessões |
+| Servidores: a VM Oracle e o PostgreSQL | Database e role no PostgreSQL, Redis, application do Novu, bucket do R2, webhooks do n8n, projeto do Sentry, imagens e containers |
 
-- **Ambiente DEV (Cluster Neon)**:
-  - Mesmo cluster na Neon, alterando apenas o database na connection string:
-    ```env
-    # Finance Assets (DEV)
-    DATABASE_URL="postgresql://neondb_owner:***@ep-super-bread-acl46x3t-pooler.sa-east-1.aws.neon.tech/personal_db?sslmode=require"
-
-    # Car Expenses (DEV)
-    DATABASE_URL="postgresql://neondb_owner:***@ep-super-bread-acl46x3t-pooler.sa-east-1.aws.neon.tech/car_expenses_db?sslmode=require"
-    ```
-- **Ambiente PROD (VM Oracle)**:
-  - Mesma instância PostgreSQL rodando na VM Oracle (`localhost:5432`), utilizando um database separado:
-    ```env
-    # Car Expenses (PROD)
-    DATABASE_URL="postgresql://postgres:***@localhost:5432/car_expenses_db"
-    ```
-
-#### Como organizar o `@lib/db` sem misturar `schema.prisma`
-
-Para evitar que um único `schema.prisma` acumule tabelas de múltiplos sistemas e gere conflitos de migrations entre projetos diferentes, o submódulo `packages/lib-db` deve separar os schemas por contexto/aplicação:
+### 3.1 Repositório
 
 ```text
-packages/lib-db/
-├── src/
-│   ├── client/
-│   │   └── index.ts                      # Pool pg + PrismaPg adapter
-│   ├── prisma/
-│   │   ├── finance-assets/
-│   │   │   ├── schema.prisma             # Schemas: ["better-auth", "finance-assets"]
-│   │   │   ├── migrations/
-│   │   │   └── generated/
-│   │   └── car-expenses/
-│   │       ├── schema.prisma             # Schemas: ["better-auth", "car-expenses"]
-│   │       ├── migrations/
-│   │       └── generated/
-│   ├── finance-assets.ts                 # Exporta prismaFinanceAssets e prismaAuth (Finance)
-│   ├── car-expenses.ts                   # Exporta prismaCarExpenses e prismaAuth (Car)
-│   └── index.ts
-└── package.json                          # Exports: ".", "./finance-assets", "./car-expenses"
+car-expenses/                          # repositório próprio (monorepo pnpm)
+├── apps/
+│   ├── service/                       # NestJS 12
+│   └── web/                           # Next.js 16 (Mobile-First)
+├── packages/
+│   ├── lib-car-expenses-db/           # submódulo @lib/car-expenses-db: schema, migrations e client do sistema
+│   │   ├── prisma.config.ts           # lê DATABASE_URL (car_expenses_db)
+│   │   └── src/
+│   │       ├── client/index.ts        # getDriver(): PrismaPg sobre um Pool do pg
+│   │       ├── prisma/
+│   │       │   ├── schema.prisma      # schemas: ["better-auth", "car-expenses"] (seção 4)
+│   │       │   └── migrations/
+│   │       └── index.ts               # prisma, prismaCarExpenses e prismaAuth
+│   ├── lib-auth/                      # submódulo @lib/auth (compartilhado)
+│   └── lib-ui/                        # submódulo @lib/ui (compartilhado)
+└── pnpm-workspace.yaml                # publicHoistPattern: ['@nestjs/*'] (seção 3.3)
 ```
 
-Dessa forma:
-1. Cada sistema roda `migrate` apenas sobre a sua própria pasta (`--schema=./src/prisma/car-expenses/schema.prisma`).
-2. Cada banco (`personal_db` e `car_expenses_db`) possui sua própria tabela `better-auth.user` independente.
-3. O driver de conexão (`src/client/index.ts`) e a governança de versões do Prisma 7 continuam centralizados no submódulo `@lib/db`.
+### 3.2 Banco de Dados (`@lib/car-expenses-db`)
 
----
+Os usuários **não** são compartilhados entre sistemas: o Car Expenses tem o próprio database, com o próprio schema `better-auth`, no mesmo servidor PostgreSQL dos outros sistemas. Schema, migrations, `prisma.config.ts` e client ficam no submódulo `lib-car-expenses-db` (repositório `apps-home/lib-car-expenses-db`), no mesmo formato do `lib-finance-assets-db` do Finance:
 
-### 3.2 Design System e `@lib/ui`
+- `build`: `prisma generate && tsc` para `dist/` (CommonJS), consumido pelo `dist` no service e no web.
+- `src/client/index.ts`: `getDriver()` com `PrismaPg` sobre um `Pool` do `pg`, lendo `DATABASE_URL` no primeiro acesso.
+- `src/index.ts`: `prisma` (um client por processo, guardado no `globalThis` fora de produção por causa do hot reload do Next), mais os recortes `prismaCarExpenses` (models de `car-expenses`) e `prismaAuth` (models de `better-auth`), usados como providers no NestJS, e os tipos `CarExpenses` e `Auth`.
+- Scripts `migrate`, `migrate:deploy`, `migrate:status`, `push` e `studio`.
+
+Não existe lib de banco genérico: o driver é copiado do `lib-finance-assets-db` (cerca de 20 linhas) e evolui no repositório do Car Expenses.
+
+`DATABASE_URL` (no `.env` do `lib-car-expenses-db`, para o CLI do Prisma, e no ambiente de cada app):
+
+```env
+# DEV (cluster Neon)
+DATABASE_URL="postgresql://car_expenses:***@<host-neon>/car_expenses_db?sslmode=verify-full"
+
+# PROD (PostgreSQL da VM Oracle)
+DATABASE_URL="postgresql://car_expenses:***@<host>:5432/car_expenses_db"
+```
+
+- **Role próprio** (`car_expenses`), dono só do `car_expenses_db`: as credenciais do Car Expenses não abrem outros databases do servidor.
+- O `migrate` roda no `lib-car-expenses-db`, que só tem a URL do `car_expenses_db`: não há como aplicar as tabelas no banco de outro sistema.
+- `@prisma/client`, `@prisma/adapter-pg`, `pg` e `prisma` ficam no `package.json` do `lib-car-expenses-db`, com versões fixadas (sem `catalog:`, como nos outros submódulos).
+- `sslmode=verify-full` no Neon: com `require`, o `pg` avisa que o modo muda de sentido na próxima versão major.
+- Sync PROD → DEV, se for usado: workflow próprio, só do `car_expenses_db`.
+
+### 3.3 Autenticação (`@lib/auth`)
+
+- **Web:** `shared/lib/auth.ts` chama `createAuth({ appName: 'Car Expenses', cookiePrefix: 'car-expenses', secret, baseURL, trustedOrigins, prisma, sendResetPassword })` de `@lib/auth/server`; `auth-client.ts`, `current-user.ts` e a rota `api/auth/[...all]` usam `createAppAuthClient`, `createSessionHelpers` e `createAuthRouteHandler`.
+- **Cookies:** o `cookiePrefix` próprio (`car-expenses.session_token`) evita colisão com a sessão de outro sistema no mesmo host.
+- **Service:** `AuthModule.forRoot({ sessionStore: PrismaSessionStore })` e `@CurrentUserId()` de `@lib/auth/nest`; o `PrismaSessionStore` lê o `prismaAuth` do `@lib/car-expenses-db` (igual ao `apps/service/src/infra/auth/prisma-session-store.ts` do Finance).
+- **`pnpm-workspace.yaml`:** `publicHoistPattern: ['@nestjs/*']`. Sem isso, a imagem de produção (`pnpm install --prod`) não encontra o `@nestjs/common` a partir de `packages/lib-auth` e o service não sobe (detalhes no `AGENTS.md` do `lib-auth`).
+- **Variáveis do web:** `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` e, opcional, `BETTER_AUTH_TRUSTED_ORIGINS` (origens extras separadas por vírgula, ex.: IPs da rede local em dev).
+- **Schema:** `User`, `Session`, `Account` e `Verification` copiados de `@lib/auth/prisma/better-auth.prisma`, com as relações inversas do domínio no `User` (seção 4.2).
+- **Redefinição de senha:** o `sendResetPassword` chama um webhook do n8n só do Car Expenses.
+
+### 3.4 Design System (`@lib/ui`)
 
 O submódulo `packages/lib-ui` é consumido diretamente como código-fonte (`transpilePackages: ['@lib/ui']`):
 
@@ -100,14 +114,25 @@ O submódulo `packages/lib-ui` é consumido diretamente como código-fonte (`tra
   - Primitivos shadcn (`base-nova`): `Button`, `Card`, `Dialog`, `Sheet`, `Tabs`, `Table`, `Select`, `Badge`, `Input`, `Label`, `Tooltip`, `Popover`, `DropdownMenu`, `Skeleton`, `Sonner`.
   - Customizados do `@lib/ui`: `ConfirmDeleteDialog`, `FilterSelect`, `ModeToggle`, `ThemeProvider`.
 - **Evolução do `@lib/ui` durante o projeto**:
-  - Componentes 100% genéricos que surgirem na construção do sistema automotivo (ex.: `DatePicker` com locale `pt-BR`, `CurrencyInput` ou `EmptyState`) podem ser adicionados ao `@lib/ui` e registrados no `exports` do `package.json`, ficando disponíveis automaticamente para o *Finance Assets* e futuros sistemas.
+  - Componentes 100% genéricos que surgirem na construção do sistema automotivo (ex.: `DatePicker` com locale `pt-BR`, `CurrencyInput` ou `EmptyState`) podem ser adicionados ao `@lib/ui` e registrados no `exports` do `package.json`. Ficam disponíveis para qualquer sistema que atualizar o ponteiro do submódulo, e nenhum é obrigado a atualizar.
+
+### 3.5 Infraestrutura Própria
+
+| Recurso | No Car Expenses |
+|---|---|
+| **Redis / BullMQ** | Redis próprio (outro container na VM). Para dividir a instância, use outro banco lógico (opção `db` da conexão), e as chaves nunca se misturam |
+| **Novu** | Application própria: workflows, Inbox e subscribers separados |
+| **Cloudflare R2** | Bucket próprio, com token de API restrito a ele |
+| **n8n** | Workflows e webhooks próprios (ex.: `/webhook/car-expenses/send-reset-password`) |
+| **Sentry** | Projeto próprio |
+| **Deploy** | Imagens no GHCR, containers, domínio, secrets e variáveis próprios |
 
 ---
 
-## 4. Modelagem do Banco de Dados (`car-expenses/schema.prisma`)
+## 4. Modelagem do Banco de Dados (`packages/lib-car-expenses-db/src/prisma/schema.prisma`)
 
 O banco `car_expenses_db` utiliza dois schemas PostgreSQL:
-- `better-auth`: `user`, `session`, `account`, `verification` (idêntico ao padrão já utilizado).
+- `better-auth`: `user`, `session`, `account`, `verification`, copiados do modelo de referência do `@lib/auth` (os usuários são só deste sistema).
 - `car-expenses`: tabelas do domínio automotivo.
 
 ### 4.1 Visão Geral das Tabelas (`car-expenses`)
@@ -133,6 +158,21 @@ datasource db {
   provider = "postgresql"
   schemas  = ["better-auth", "car-expenses"]
 }
+
+// ==========================================
+// SCHEMA: better-auth
+// ==========================================
+// User, Session, Account e Verification copiados de @lib/auth/prisma/better-auth.prisma.
+// O User ganha as relações inversas do domínio (trecho):
+//
+// model User {
+//   ...
+//   vehicles             Vehicle[]
+//   fuelLogs             FuelLog[]
+//   expenses             VehicleExpense[]
+//   maintenanceRecords   MaintenanceRecord[]
+//   maintenanceSchedules MaintenanceSchedule[]
+// }
 
 // ==========================================
 // SCHEMA: car-expenses
@@ -438,7 +478,7 @@ Ao criar um novo carro, o usuário pode selecionar quais planos preventivos dese
 
 ## 6. Arquitetura Backend (`apps/service` — NestJS 12)
 
-Segue o padrão de módulos DDD / Clean Architecture, retornando `Either<Left, Right>`, validação de escopo por `userId` via `@CurrentUserId()` e conversão de erros com `toHttpException`:
+Segue o mesmo padrão de módulos DDD / Clean Architecture do Finance Assets: `Either<Left, Right>` nos casos de uso, escopo por `userId` via `@CurrentUserId()` (de `@lib/auth/nest`) e conversão de erros com `toHttpException`. O `Either`, os erros base e o `toHttpException` são código do próprio Car Expenses, escrito no mesmo padrão (não vêm de lib nem do Finance):
 
 ```text
 src/modules/
@@ -503,9 +543,10 @@ Para cada manutenção periódica (ex.: *Troca de Óleo — 6 meses ou 10.000 km
 ## 8. Roteiro de Implementação (Roadmap)
 
 ### Fase 1: Fundação e Submódulos
-1. Configurar o novo schema `src/prisma/car-expenses/schema.prisma` no `@lib/db` e exportar o cliente `prismaCarExpenses`.
-2. Criar o banco `car_expenses_db` no cluster Neon (DEV) e na VM Oracle (PROD).
-3. Inicializar o monorepo do projeto (ou apps dedicados) conectando `@lib/db` e `@lib/ui`.
+Pré-requisito: `@lib/auth` publicado (feito; ver `PREPARACAO_LIBS_COMPARTILHADAS.md`).
+1. Criar o repositório `apps-home/lib-car-expenses-db` (schema da seção 4, no formato da seção 3.2) e o repositório do Car Expenses (monorepo pnpm) com os submódulos `lib-car-expenses-db`, `lib-auth` e `lib-ui`.
+2. Criar o database `car_expenses_db` e o role `car_expenses` no cluster Neon (DEV) e na VM Oracle (PROD).
+3. Configurar a autenticação com o `@lib/auth` (seção 3.3) e os recursos próprios da seção 3.5 (Redis, Novu, R2, n8n, Sentry e deploy).
 
 ### Fase 2: Core & Lançamentos do Dia a Dia (Substituição do iPhone Notes)
 1. Módulo `vehicles` (cadastro do carro e sincronização automática de odômetro).

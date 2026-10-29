@@ -9,7 +9,8 @@ WORKDIR /app
 
 # Copia arquivos de configuração da RAIZ e manifestos para cache das dependências
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages/lib-db/package.json ./packages/lib-db/
+COPY packages/lib-finance-assets-db/package.json ./packages/lib-finance-assets-db/
+COPY packages/lib-auth/package.json ./packages/lib-auth/
 COPY packages/lib-ui/package.json ./packages/lib-ui/
 COPY packages/env/package.json ./packages/env/
 COPY packages/config/package.json ./packages/config/
@@ -19,8 +20,8 @@ COPY apps/service/package.json ./apps/service/
 RUN pnpm install --frozen-lockfile
 
 # Copia schema do Prisma e gera o Prisma Client (CRITICO: Sem isso o build falha)
-COPY packages/lib-db/src/prisma ./packages/lib-db/src/prisma
-WORKDIR /app/packages/lib-db
+COPY packages/lib-finance-assets-db/src/prisma ./packages/lib-finance-assets-db/src/prisma
+WORKDIR /app/packages/lib-finance-assets-db
 RUN pnpm exec prisma generate --schema=./src/prisma/schema.prisma
 WORKDIR /app
 
@@ -32,17 +33,22 @@ RUN corepack enable && corepack prepare pnpm@11.0.9 --activate
 
 # Copia node_modules e artefatos do Prisma do estágio deps
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/lib-db/src/prisma/generated ./packages/lib-db/src/prisma/generated
+COPY --from=deps /app/packages/lib-finance-assets-db/src/prisma/generated ./packages/lib-finance-assets-db/src/prisma/generated
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # Copia código-fonte dos pacotes e da aplicação web
-COPY packages/lib-db ./packages/lib-db
+COPY packages/lib-finance-assets-db ./packages/lib-finance-assets-db
+COPY packages/lib-auth ./packages/lib-auth
 COPY packages/lib-ui ./packages/lib-ui
 COPY packages/env ./packages/env
 COPY packages/config ./packages/config
 COPY apps/web ./apps/web
+
+# lib-auth é consumido pelo dist (ESM): compila antes do Next
+COPY --from=deps /app/packages/lib-auth/node_modules ./packages/lib-auth/node_modules
+RUN cd /app/packages/lib-auth && pnpm build
 
 # Recebe os argumentos do GitHub Actions
 ARG NEXT_PUBLIC_SERVER_URL

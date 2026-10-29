@@ -13,11 +13,11 @@ O **Finance Assets** é uma plataforma robusta para gestão de patrimônio pesso
 | **Backend** | NestJS (Node.js) com arquitetura modular e workers |
 | **Banco de Dados** | PostgreSQL gerenciado via Prisma ORM |
 | **Processamento Assíncrono** | Redis + BullMQ (filas e cron jobs) |
-| **Autenticação** | Better Auth (sessões, OAuth, tokens) |
+| **Autenticação** | Better Auth via submódulo `@lib/auth` (sessões, OAuth, tokens) |
 | **Armazenamento de Arquivos** | Cloudflare R2 (S3-compatible) |
 | **Infraestrutura** | Docker + Portainer, exposto via Nginx Proxy Manager com Cloudflare Zero Trust |
 | **Automação Externa** | n8n para disparos de e-mail e geração de insights de IA |
-| **Monorepo & Submódulos** | PNPM Workspaces com Git Submodules (`packages/lib-db`) |
+| **Monorepo & Submódulos** | PNPM Workspaces com Git Submodules (`packages/lib-finance-assets-db`, `packages/lib-auth`, `packages/lib-ui`) |
 | **Qualidade & Governança** | Biome (linting/formatação) e script de auditoria de dependências (`scripts/check-version.mjs`) |
 
 ---
@@ -128,11 +128,12 @@ Cada módulo segue a arquitetura em camadas (DDD / Clean Architecture):
 
 ### Autenticação e Escopo por Usuário
 
-**Todas as rotas exigem sessão.** O `SessionAuthGuard` (`src/infra/auth`) é registrado como `APP_GUARD`, então a proteção é o padrão e não depende de cada controller:
+**Todas as rotas exigem sessão.** O `SessionAuthGuard` vem do `@lib/auth/nest`: `InfraModule` importa `AuthModule.forRoot({ sessionStore: PrismaSessionStore })`, que o registra como `APP_GUARD`, então a proteção é o padrão e não depende de cada controller:
 
 - O cliente envia `Authorization: Bearer <session.token>` (token da sessão do Better Auth, que o web obtém com `authClient.getSession()`).
-- O guard busca o token na tabela `session` (via `prismaAuth`). Token ausente, inexistente ou expirado responde **401**.
-- O `userId` vem **somente** da sessão. Nos controllers, use o decorator `@CurrentUserId()`. Não existe mais header `user-id` e nenhum controller deve ler `request.headers`.
+- O guard busca o token pelo `PrismaSessionStore` (`src/infra/auth/prisma-session-store.ts`, tabela `session` via `prismaAuth`). Token ausente, inexistente ou expirado responde **401**.
+- O `@nestjs/*` precisa ficar no `publicHoistPattern` do `pnpm-workspace.yaml`: é por ele que o lib encontra o `@nestjs/common` do service na imagem de produção (ver `packages/lib-auth/AGENTS.md`).
+- O `userId` vem **somente** da sessão. Nos controllers, use o decorator `@CurrentUserId()` de `@lib/auth/nest`. Não existe mais header `user-id` e nenhum controller deve ler `request.headers`.
 
 **Cada usuário só enxerga e altera o que é dele.** Isso vale por padrão, sem métodos "ByUser" paralelos:
 
@@ -242,7 +243,7 @@ Observações:
 
 ### Passo a Passo para Criar um Novo Módulo no Backend
 
-1. **Modelagem:** Se necessário, adicione a tabela em `packages/lib-db/src/prisma/schema.prisma` e execute `pnpm --filter @lib/db build`.
+1. **Modelagem:** Se necessário, adicione a tabela em `packages/lib-finance-assets-db/src/prisma/schema.prisma` e execute `pnpm --filter @lib/finance-assets-db build`.
 2. **Camada Domain (`src/modules/<nome>/domain`):**
    - Crie a entidade (`create()` com defaults e `update()` parcial) e o contrato do repositório (`abstract class <Nome>Repository`) com `userId` obrigatório nos métodos que acessam dado do usuário.
 3. **Camada Application (`src/modules/<nome>/application`):**
@@ -264,7 +265,7 @@ Observações:
 
 ```
 infra/
-├── auth/       # SessionAuthGuard (APP_GUARD global) e decorator @CurrentUserId()
+├── auth/       # PrismaSessionStore (o guard e o @CurrentUserId() vêm do @lib/auth/nest)
 ├── cron/       # CronModule (os crons ficam em modules/assets/asset/adapters/schedules)
 ├── env/        # Validação e acesso às variáveis de ambiente
 ├── events/     # Publisher de eventos de domínio (EventEmitter)
@@ -412,7 +413,7 @@ core/
 
 ## 10. Estrutura do Monorepo & Scripts (`package.json`)
 
-O projeto adota uma arquitetura monorepo gerenciada via **pnpm workspaces** (`pnpm-workspace.yaml`), integrando a API backend (`apps/service`), o frontend Next.js (`apps/web`) e bibliotecas compartilhadas versionadas via Git Submodule (`packages/lib-db`).
+O projeto adota uma arquitetura monorepo gerenciada via **pnpm workspaces** (`pnpm-workspace.yaml`), integrando a API backend (`apps/service`), o frontend Next.js (`apps/web`) e bibliotecas versionadas via Git Submodule (`packages/lib-finance-assets-db`, `packages/lib-auth` e `packages/lib-ui`).
 
 ### Estrutura de Pacotes
 
@@ -424,7 +425,8 @@ finance-assets/
 ├── packages/
 │   ├── config/               # Configurações compartilhadas Biome/TS (@finance-assets-web/config)
 │   ├── env/                  # Schemas de variáveis de ambiente (@finance-assets-web/env)
-│   ├── lib-db/               # Submódulo Git compartilhado (package: "@lib/db", Prisma ORM)
+│   ├── lib-auth/             # Submódulo Git (package: "@lib/auth", Better Auth: web e NestJS)
+│   ├── lib-finance-assets-db/ # Submódulo Git (package: "@lib/finance-assets-db", schema e client Prisma do Finance)
 │   └── lib-ui/               # Submódulo Git compartilhado (package: "@lib/ui", design system + shadcn)
 ├── package.json              # Configurações e scripts orquestradores da raiz
 ├── pnpm-workspace.yaml       # Configuração de workspaces e permissões de build
@@ -438,7 +440,8 @@ finance-assets/
 |---|---|---|
 | `dev` | `pnpm --filter api dev` | Inicia a API NestJS em modo de desenvolvimento (watch). |
 | `start` | `pnpm --filter api start` | Inicia a API NestJS em modo padrão. |
-| `build` | `pnpm --filter @lib/db build && pnpm --filter api build` | Executa o build da biblioteca `@lib/db` (Prisma generate + tsc) e depois o build da aplicação `api`. |
+| `build:libs` | `pnpm build:db && pnpm build:auth` | Compila `@lib/finance-assets-db` (Prisma generate + tsc) e `@lib/auth` (tsc). Os dois são consumidos pelo `dist`: rode depois de clonar ou de mudar um deles. |
+| `build:service` | `pnpm build:libs && pnpm --filter api build` | Compila os libs e depois a aplicação `api`. |
 | `lint` | `pnpm --filter api lint` | Executa a verificação e correção de linting com Biome na API. |
 | `format` | `pnpm --filter api format` | Formata o código com Biome na API. |
 | `check` | `pnpm --filter api check` | Executa verificação completa de linting e formatação com auto-correção. |
@@ -465,7 +468,7 @@ O arquivo `scripts/check-version.mjs` (executado via `pnpm check-versions`) é u
    - Localiza e analisa automaticamente todos os `package.json` presentes no monorepo (raiz, apps e pacotes).
 
 2. **Reconhecimento de Git Submodules**:
-   - Faz o parse do arquivo `.gitmodules` para mapear submódulos Git vinculados (ex: `packages/lib-db`).
+   - Faz o parse do arquivo `.gitmodules` para mapear submódulos Git vinculados (ex: `packages/lib-finance-assets-db`).
    - Categoriza cada projeto escaneado com tags explícitas: `[ROOT]`, `[APP/PKG]` ou `[SUBMODULE]`.
 
 3. **Suporte ao Catalog do PNPM (`catalog:`)**:

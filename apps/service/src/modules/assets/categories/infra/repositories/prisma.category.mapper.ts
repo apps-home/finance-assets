@@ -1,7 +1,7 @@
 import type {
   AssetCategoryCompetence,
   AssetCategory as PrismaAssetCategory
-} from '@lib/db'
+} from '@lib/finance-assets-db'
 
 import { Category, CategoryType } from '../../domain/category.entity'
 

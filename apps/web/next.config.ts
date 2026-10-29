@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     '@t3-oss/env-nextjs',
     '@t3-oss/env-core',
-    '@lib/db',
+    '@lib/finance-assets-db',
     '@lib/ui'
   ],
   // Sentry loads its diagnostics-channel hook dynamically, so file tracing can't detect it

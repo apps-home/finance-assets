@@ -142,7 +142,7 @@ As factories ficam centralizadas na pasta `test/factories/` e permitem sobrescre
 
 ```typescript
 import { faker } from '@faker-js/faker'
-import { CategoryType } from '@lib/db'
+import { CategoryType } from '@lib/finance-assets-db'
 import { CreateCategoryPayload } from '@/modules/assets/categories/domain/dto/create-category.dto'
 
 export function makeCategoryPayload(
@@ -278,7 +278,7 @@ import { BadRequestException } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { faker } from '@faker-js/faker'
-import { CategoryType } from '@lib/db'
+import { CategoryType } from '@lib/finance-assets-db'
 import { left, right } from '@/core/utils/Either'
 import { PayloadError } from '@/core/domain/errors/payload-error'
 import { CategoryController } from './category.controller'
@@ -400,7 +400,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { faker } from '@faker-js/faker'
 import { AppModule } from '@/app.module'
 import { AllExceptionsFilter } from '@/infra/http/all-exceptions.filter'
-import { CategoryType } from '@lib/db'
+import { CategoryType } from '@lib/finance-assets-db'
 
 describe('Categories (E2E)', () => {
   let app: INestApplication

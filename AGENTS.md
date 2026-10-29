@@ -4,7 +4,8 @@
 
 @apps/service/AGENTS.md
 @apps/web/AGENTS.md
-@packages/lib-db/AGENTS.md
+@packages/lib-finance-assets-db/AGENTS.md
+@packages/lib-auth/AGENTS.md
 @packages/lib-ui/AGENTS.md
 
 ---
@@ -23,7 +24,8 @@ finance-assets/
 ├── packages/
 │   ├── config/           # Shared Biome/TS configuration (@finance-assets-web/config)
 │   ├── env/              # Environment variable schemas (@finance-assets-web/env)
-│   ├── lib-db/           # Prisma database layer (git submodule: @lib/db)
+│   ├── lib-auth/         # Better Auth: createAuth, Next helpers, React client, NestJS guard (git submodule: @lib/auth)
+│   ├── lib-finance-assets-db/ # Finance schema, migrations and Prisma client (git submodule: @lib/finance-assets-db)
 │   └── lib-ui/           # Design system tokens + shadcn components (git submodule: @lib/ui)
 ├── .github/
 │   └── workflows/
@@ -42,11 +44,11 @@ finance-assets/
 | Layer | Technology |
 |---|---|
 | **Frontend Framework** | **Next.js 16** (App Router, React 19) |
-| **Backend Framework** | **NestJS 11** (Modular Architecture, BullMQ, Redis) |
-| **Database & ORM** | **PostgreSQL** with **Prisma 7** (`packages/lib-db`) |
+| **Backend Framework** | **NestJS 12** (Modular Architecture, BullMQ, Redis) |
+| **Database & ORM** | **PostgreSQL** with **Prisma 7** (`packages/lib-finance-assets-db`) |
 | **Styling** | **Tailwind CSS v4**, `tw-animate-css`, shadcn/ui |
 | **State & Data Fetching**| `@tanstack/react-query`, `@tanstack/react-form`, `nuqs` |
-| **Authentication** | **Better Auth** |
+| **Authentication** | **Better Auth** via `@lib/auth` |
 | **Storage** | **Cloudflare R2** |
 | **Quality & Linter** | **Biome** (tabs, single quotes, no semicolons) |
 | **Package Manager** | **pnpm** (workspace monorepo with catalog) |

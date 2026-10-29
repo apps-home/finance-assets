@@ -18,7 +18,8 @@ finance-assets/
 ├── packages/
 │   ├── config/           # Shared Biome/TS config (@finance-assets-web/config)
 │   ├── env/              # Environment variable schemas (@finance-assets-web/env)
-│   ├── lib-db/           # Prisma database layer (git submodule: @lib/db)
+│   ├── lib-auth/         # Better Auth: server, Next helpers, React client (git submodule: @lib/auth)
+│   ├── lib-finance-assets-db/ # Finance schema and Prisma client (git submodule: @lib/finance-assets-db)
 │   └── lib-ui/           # Design system tokens + shadcn components (git submodule: @lib/ui)
 ├── pnpm-workspace.yaml   # Workspace configuration and shared catalogs
 ├── biome.json            # Root linter/formatter config
@@ -41,7 +42,7 @@ finance-assets/
 | State Mgmt     | `@tanstack/react-query` (server state)                    |
 | Forms          | `@tanstack/react-form`                                    |
 | URL State      | `nuqs`                                                    |
-| Auth           | `better-auth`                                             |
+| Auth           | `better-auth` via `@lib/auth` (do not add `better-auth` to the app) |
 | HTTP Client    | `axios`                                                   |
 | Charts         | `recharts`                                                |
 | Toasts         | `sonner`                                                  |
@@ -78,7 +79,7 @@ src/
 │   ├── components/   # App-specific shared components (AppLogo, Header, ListFilters, DollarRateBadge); generic ones live in @lib/ui
 │   ├── config/       # App configuration (menus, constants)
 │   ├── hooks/        # Shared React and custom hooks (use-media-query, use-local-storage, etc.)
-│   ├── lib/          # Core utilities (auth, current-user)
+│   ├── lib/          # Core utilities: auth.ts, auth-client.ts and current-user.ts configure @lib/auth (createAuth, createAppAuthClient, createSessionHelpers)
 │   ├── providers/    # React context providers
 │   ├── store/        # Zustand global stores (auth, theme, etc.)
 │   └── utils/        # General-purpose utilities
@@ -519,7 +520,7 @@ The workspace includes a version checker (`scripts/check-version.mjs`) that veri
 It flags:
 - **Version Mismatches**: When packages/submodules use different versions of the same library (e.g. `typescript`, `@types/node`).
 - **Catalog Inconsistencies**: When a dependency defined in `catalog:` is hardcoded or differs in a package/submodule.
-- **Submodule Discrepancies**: Highlights differences specifically originating from Git submodules like `packages/lib-db`.
+- **Submodule Discrepancies**: Highlights differences specifically originating from Git submodules like `packages/lib-finance-assets-db`.
 
 Run verification at any time:
 

@@ -1,3 +1,4 @@
+import { CurrentUserId } from '@lib/auth/nest'
 import {
   Controller,
   Delete,
@@ -7,7 +8,6 @@ import {
   Query
 } from '@nestjs/common'
 
-import { CurrentUserId } from '@/infra/auth/current-user-id.decorator'
 import { toHttpException } from '@/infra/http/to-http-exception'
 
 import { DeleteCompetenceUseCase } from '../application/use-cases/delete-competence'

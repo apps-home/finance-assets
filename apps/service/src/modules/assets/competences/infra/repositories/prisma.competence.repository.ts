@@ -1,4 +1,4 @@
-import type { FinanceAssets } from '@lib/db'
+import type { FinanceAssets } from '@lib/finance-assets-db'
 import { Inject, Injectable } from '@nestjs/common'
 
 import { Competence } from '../../domain/competence.entity'

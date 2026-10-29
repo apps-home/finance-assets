@@ -1,4 +1,4 @@
-import type { AssetTransaction as PrismaTransaction } from '@lib/db'
+import type { AssetTransaction as PrismaTransaction } from '@lib/finance-assets-db'
 
 import {
   Transaction,

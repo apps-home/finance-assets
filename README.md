@@ -12,7 +12,9 @@ finance-assets/
 │   ├── service/           # Backend API (NestJS, Prisma, BullMQ, Redis)
 │   └── web/               # Frontend (Next.js 16, React 19, Tailwind CSS v4, shadcn/ui)
 ├── packages/
-│   ├── lib-db/            # Prisma ORM & Database Layer (Git Submodule)
+│   ├── lib-auth/          # Autenticação Better Auth: web e NestJS (Git Submodule)
+│   ├── lib-finance-assets-db/ # Schema, migrations e client Prisma do Finance (Git Submodule)
+│   ├── lib-ui/            # Design system e componentes shadcn (Git Submodule)
 │   ├── config/            # Configurações compartilhadas (@finance-assets-web/config)
 │   └── env/               # Validação de variáveis de ambiente (@finance-assets-web/env)
 ├── .github/

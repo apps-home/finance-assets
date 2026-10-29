@@ -21,7 +21,9 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@lib/db": ["../../packages/lib-db/src/index.ts"],
+      "@lib/finance-assets-db": [
+        "../../packages/lib-finance-assets-db/src/index.ts"
+      ],
       "@lib/ui/*": ["../../packages/lib-ui/src/*"]
     }
   },
