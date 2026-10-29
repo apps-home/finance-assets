@@ -15,8 +15,8 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 
 interface ChartData {
   month: string
-  total: number
-  [key: string]: string | number
+  total: number | null
+  [key: string]: string | number | null | undefined
 }
 
 interface FinancialChartProps {
@@ -26,7 +26,7 @@ interface FinancialChartProps {
 interface CustomTooltipProps {
   active?: boolean
   payload?: Array<{
-    value: number
+    value: number | null
     dataKey: string
     payload: ChartData
   }>
@@ -37,6 +37,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null
 
   const data = payload[0]
+  if (data.value == null) return null
 
   return (
     <div
@@ -69,7 +70,10 @@ export function FinancialChart({ data }: FinancialChartProps) {
 
   if (!data || data.length === 0) return null
 
-  const monthsWithData = data.filter((item) => item.total > 0)
+  const monthsWithData = data.filter(
+    (item): item is ChartData & { total: number } =>
+      item.total != null && item.total > 0
+  )
   const firstMonth = monthsWithData[0] ?? data[0]
   const lastMonth =
     monthsWithData[monthsWithData.length - 1] ?? data[data.length - 1]
@@ -171,6 +175,7 @@ export function FinancialChart({ data }: FinancialChartProps) {
           <Area
             type="monotone"
             dataKey="total"
+            connectNulls={false}
             stroke="var(--primary)"
             strokeWidth={2}
             fill="url(#colorTotalGradient)"

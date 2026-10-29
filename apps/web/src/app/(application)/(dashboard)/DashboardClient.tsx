@@ -59,6 +59,8 @@ export default function DashboardPageClient() {
     dashboardData,
     stats,
     categoryChartData,
+    typeChartData,
+    currencyChartData,
     mainChartData
   } = useDashboard(parseInt(selectedYear, 10))
 
@@ -146,6 +148,8 @@ export default function DashboardPageClient() {
           <FinancialChart data={mainChartData} />
           <CategoryBreakdown
             data={categoryChartData}
+            typeData={typeChartData}
+            currencyData={currencyChartData}
             subtitle={stats.referenceMonth}
           />
         </div>

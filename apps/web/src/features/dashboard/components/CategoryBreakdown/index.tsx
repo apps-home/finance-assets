@@ -1,4 +1,5 @@
 import { Badge } from '@lib/ui/components/badge'
+import { Tabs, TabsList, TabsTrigger } from '@lib/ui/components/tabs'
 import { useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
@@ -10,8 +11,18 @@ interface CategoryData {
   color: string
 }
 
+type BreakdownMode = 'category' | 'type' | 'currency'
+
+const BREAKDOWN_TITLES: Record<BreakdownMode, string> = {
+  category: 'Distribuição por Categoria',
+  type: 'Distribuição por Classe',
+  currency: 'Exposição por Moeda'
+}
+
 interface CategoryBreakdownProps {
   data: CategoryData[]
+  typeData?: CategoryData[]
+  currencyData?: CategoryData[]
   subtitle?: string
 }
 
@@ -59,10 +70,24 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   )
 }
 
-export function CategoryBreakdown({ data, subtitle }: CategoryBreakdownProps) {
+export function CategoryBreakdown({
+  data,
+  typeData,
+  currencyData,
+  subtitle
+}: CategoryBreakdownProps) {
+  const [mode, setMode] = useState<BreakdownMode>('category')
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined)
 
-  const total = data.reduce((sum, item) => sum + item.value, 0)
+  const activeData =
+    mode === 'type' && typeData
+      ? typeData
+      : mode === 'currency' && currencyData
+        ? currencyData
+        : data
+
+  const total = activeData.reduce((sum, item) => sum + item.value, 0)
+  const hasMultipleModes = Boolean(typeData?.length || currencyData?.length)
 
   const onPieEnter = (_: unknown, index: number) => {
     setActiveIndex(index)
@@ -74,12 +99,43 @@ export function CategoryBreakdown({ data, subtitle }: CategoryBreakdownProps) {
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
-      <div className="mb-2 flex flex-wrap items-center gap-2 sm:gap-4">
-        <h3 className="font-semibold text-xl">Distribuição por Categoria</h3>
-        {subtitle && (
-          <Badge className="bg-primary/10 text-primary text-xs">
-            {subtitle}
-          </Badge>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <h3 className="font-semibold text-xl">{BREAKDOWN_TITLES[mode]}</h3>
+          {subtitle && (
+            <Badge className="bg-primary/10 text-primary text-xs">
+              {subtitle}
+            </Badge>
+          )}
+        </div>
+
+        {hasMultipleModes && (
+          <Tabs
+            value={mode}
+            onValueChange={(value) => {
+              setMode(value as BreakdownMode)
+              setActiveIndex(undefined)
+            }}
+          >
+            <TabsList>
+              <TabsTrigger value="category" className="cursor-pointer text-xs">
+                Categoria
+              </TabsTrigger>
+              {typeData && typeData.length > 0 && (
+                <TabsTrigger value="type" className="cursor-pointer text-xs">
+                  Classe
+                </TabsTrigger>
+              )}
+              {currencyData && currencyData.length > 0 && (
+                <TabsTrigger
+                  value="currency"
+                  className="cursor-pointer text-xs"
+                >
+                  Moeda
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </Tabs>
         )}
       </div>
 
@@ -88,7 +144,7 @@ export function CategoryBreakdown({ data, subtitle }: CategoryBreakdownProps) {
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
-                data={data.map((item, idx) => ({
+                data={activeData.map((item, idx) => ({
                   ...item,
                   percent: item.value / total,
                   isActive: activeIndex === idx
@@ -106,7 +162,7 @@ export function CategoryBreakdown({ data, subtitle }: CategoryBreakdownProps) {
                 animationDuration={800}
                 animationEasing="ease-out"
               >
-                {data.map((entry, index) => (
+                {activeData.map((entry, index) => (
                   <Cell
                     key={entry.name}
                     fill={entry.color}
@@ -132,7 +188,7 @@ export function CategoryBreakdown({ data, subtitle }: CategoryBreakdownProps) {
         </div>
 
         <div className="flex flex-col justify-center gap-2 lg:min-w-45">
-          {data.map((item, index) => {
+          {activeData.map((item, index) => {
             const percent = ((item.value / total || 0) * 100).toFixed(1)
             const isActive = activeIndex === index
 

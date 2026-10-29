@@ -4,7 +4,9 @@ import { useCategories } from '@/features/categories/hooks/use-category'
 
 import {
   buildCategoryChartData,
-  buildMainChartData
+  buildCurrencyChartData,
+  buildMainChartData,
+  buildTypeChartData
 } from '../utils/build-chart-data'
 import { buildDashboardData } from '../utils/build-dashboard-data'
 import { calculateDashboardStats } from '../utils/calculate-dashboard-stats'
@@ -34,6 +36,16 @@ export function useDashboard(year: number) {
     [dashboardData, categories]
   )
 
+  const typeChartData = useMemo(
+    () => buildTypeChartData(dashboardData, categories),
+    [dashboardData, categories]
+  )
+
+  const currencyChartData = useMemo(
+    () => buildCurrencyChartData(dashboardData, categories),
+    [dashboardData, categories]
+  )
+
   const mainChartData = useMemo(
     () => buildMainChartData(dashboardData),
     [dashboardData]
@@ -45,6 +57,8 @@ export function useDashboard(year: number) {
     dashboardData,
     stats,
     categoryChartData,
+    typeChartData,
+    currencyChartData,
     mainChartData
   }
 }
