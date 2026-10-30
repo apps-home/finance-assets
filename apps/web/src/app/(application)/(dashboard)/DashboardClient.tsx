@@ -30,9 +30,11 @@ import { FinancialChart } from '@/features/dashboard/components/FinancialChart'
 import { FinancialTable } from '@/features/dashboard/components/FinancialTable'
 import { InsightsDialog } from '@/features/dashboard/components/InsightsDialog'
 import { MonthClosingDialog } from '@/features/dashboard/components/MonthClosingDialog'
+import { PatrimonyMilestoneBanner } from '@/features/dashboard/components/PatrimonyMilestoneBanner'
 import { StatCard } from '@/features/dashboard/components/StatCard'
 import { useSaveBudget } from '@/features/dashboard/hooks/use-budget'
 import { useDashboard } from '@/features/dashboard/hooks/use-dashboard'
+import type { ChartPeriod } from '@/features/dashboard/utils/build-patrimony-series'
 
 export default function DashboardPageClient() {
   const [selectedYear, setSelectedYear] = useState(
@@ -41,6 +43,7 @@ export default function DashboardPageClient() {
   const [insightsOpen, setInsightsOpen] = useState(false)
   const [insightsMode, setInsightsMode] = useState<'month' | 'year'>('month')
   const [closingOpen, setClosingOpen] = useState(false)
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('year')
   const hasInitializedYear = useRef(false)
 
   const { data: availableYears } = useAvailableYears()
@@ -61,8 +64,9 @@ export default function DashboardPageClient() {
     categoryChartData,
     typeChartData,
     currencyChartData,
-    mainChartData
-  } = useDashboard(parseInt(selectedYear, 10))
+    mainChartData,
+    wealthBridge
+  } = useDashboard(parseInt(selectedYear, 10), chartPeriod)
 
   const { mutateAsync: saveBudget } = useSaveBudget()
 
@@ -144,8 +148,15 @@ export default function DashboardPageClient() {
           />
         </div>
 
+        <PatrimonyMilestoneBanner />
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <FinancialChart data={mainChartData} />
+          <FinancialChart
+            data={mainChartData}
+            wealthBridge={wealthBridge}
+            period={chartPeriod}
+            onPeriodChange={setChartPeriod}
+          />
           <CategoryBreakdown
             data={categoryChartData}
             typeData={typeChartData}

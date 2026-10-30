@@ -77,9 +77,10 @@ export function buildCurrencyChartData(
     .sort((a, b) => b.value - a.value)
 }
 
-export function buildMainChartData(data: MonthData[]) {
+export function buildMainChartData(data: MonthData[], year: number) {
   return data.map((row) => ({
     ...row,
+    year,
     total: hasMonthData(row) ? calculateMonthTotal(row) : null
   }))
 }

@@ -18,10 +18,10 @@ Enquanto os módulos de ativos (`/assets`), proventos (`/dividends`) e rentabili
 
 | Fase | Entrega | Status | Precisa de Migration? |
 |---|---|---|---|
-| **Fase 1** | Correção dos meses futuros (`null`), Prévia Estimada do mês atual e Visão Multi-Anual (`Ano` \| `12M` \| `24M` \| `Tudo`) | 🟡 Em andamento (Corte de meses futuros concluído) | Não |
-| **Fase 2** | Decomposição do Crescimento: **Aportes Acumulados vs. Ganho de Mercado (Bola de Neve)** + Card de Ponte Patrimonial | ⚪ Pendente | Não |
+| **Fase 1** | Correção dos meses futuros (`null`), Prévia Estimada do mês atual e Visão Multi-Anual (`Ano` \| `12M` \| `24M` \| `Tudo`) | 🟢 Concluído | Não |
+| **Fase 2** | Decomposição do Crescimento: **Aportes Acumulados vs. Ganho de Mercado (Bola de Neve)** + Card de Ponte Patrimonial | 🟢 Concluído | Não |
 | **Fase 3** | Raio-X no `CategoryBreakdown`: alternar entre **Categoria**, **Classe (`CategoryType`)** e **Moeda (`BRL` vs. `USD`)** | 🟢 Concluído | Não |
-| **Fase 4** | **Marcos Patrimoniais (*Milestones*)** e projeção de data para atingir o próximo degrau | ⚪ Pendente | Não |
+| **Fase 4** | **Marcos Patrimoniais (*Milestones*)** e projeção de data para atingir o próximo degrau | 🟢 Concluído | Não |
 | **Fase 5** | **Bens Imobilizados e Passivos (*Net Worth*)**: cadastro de bens físicos/dívidas e consolidação no Dashboard | ⚪ Pendente | Sim (`patrimony_items`) |
 
 ---
@@ -46,14 +46,16 @@ Implementado em `buildMainChartData` (`apps/web/src/features/dashboard/utils/bui
 - No `AreaChart` do Recharts, `connectNulls={false}` faz a linha parar exatamente no último mês fechado (ex.: Setembro), eliminando a queda para zero e mantendo os meses futuros legíveis no eixo X.
 - O tooltip customizado foi protegido para não renderizar card vazio em meses sem dados.
 
-### 3.2 Ponto "Estimado Hoje" (Prévia do Mês Corrente)
+### 3.2 Ponto "Estimado Hoje" (Prévia do Mês Corrente) `[CONCLUÍDO]`
+Implementado em `calculateCurrentMonthEstimate` / `withCurrentMonthEstimate` (`apps/web/src/features/dashboard/utils/build-patrimony-series.ts`), consumido em `useDashboard`. Usa a mesma regra do fechamento (posições ativas × cotação atual, câmbio atual; categorias manuais repetem o último saldo), calculada sobre todo o histórico para funcionar em qualquer visão.
 Quando o usuário está visualizando o ano corrente e o mês atual ainda não foi fechado:
 - Calcular o valor estimado atual somando as sugestões de `buildClosingDefaults` (posições ativas pela cotação atual convertidas pelo câmbio + saldo anterior das categorias manuais).
 - No `FinancialChart`:
   - Adicionar uma segunda `<Area>` ou `<Line strokeDasharray="4 4" />` conectando o último mês fechado ao mês atual com o valor estimado.
   - No Tooltip do mês atual, exibir a tag `Prévia em tempo real (não fechado)`.
 
-### 3.3 Visão Multi-Anual (`Ano` | `12M` | `24M` | `Tudo`)
+### 3.3 Visão Multi-Anual (`Ano` | `12M` | `24M` | `Tudo`) `[CONCLUÍDO]`
+Implementado em `buildMultiYearChartData` e no seletor do `FinancialChart`.
 Adicionar um seletor compacto no cabeçalho do `FinancialChart`:
 - **`Ano`** (padrão): Mostra `Jan–Dez` do `selectedYear` (comportamento atual).
 - **`12M` / `24M` / `Tudo`**:
@@ -62,7 +64,9 @@ Adicionar um seletor compacto no cabeçalho do `FinancialChart`:
 
 ---
 
-## 4. Fase 2: Decomposição "Esforço (Aportes) vs. Bola de Neve (Rendimentos)"
+## 4. Fase 2: Decomposição "Esforço (Aportes) vs. Bola de Neve (Rendimentos)" `[CONCLUÍDO]`
+
+Implementado em `utils/build-wealth-decomposition.ts` (`withWealthDecomposition`, `buildWealthBridge`), exposto por `useDashboard` e renderizado no `FinancialChart` (toggle `Total | Aportes vs. Rendimentos` + ponte patrimonial `WealthBridgeSummary`). O gráfico usa duas áreas sobrepostas (não empilhadas) para suportar ganho de mercado negativo; meses sem registro têm os aportes somados no próximo mês fechado.
 
 ### 4.1 Conceito e Matemática (`utils/build-wealth-decomposition.ts`)
 Para qualquer janela de meses fechados $m_1, m_2, \dots, m_n$:
@@ -117,7 +121,9 @@ Implementado no componente `CategoryBreakdown` (`apps/web/src/features/dashboard
 
 ---
 
-## 6. Fase 4: Marcos Patrimoniais (*Milestones*) e Projeção
+## 6. Fase 4: Marcos Patrimoniais (*Milestones*) e Projeção `[CONCLUÍDO]`
+
+Implementado em `utils/milestones.ts` (`PATRIMONY_MILESTONES`, `getMilestoneProgress`, `projectMilestone`) e `components/PatrimonyMilestoneBanner`, renderizado no `DashboardClient`. **Em vez de criar `calculate-milestone-projection.ts`**, a projeção reaproveita `monthsToReach` (`features/performance/utils/projection.ts`) e `useProjectionBaseline` (aporte médio dos últimos 12 meses e rentabilidade histórica, com padrão de 10% a.a. quando há menos de 12 meses), garantindo o mesmo cálculo da página `/performance`. O card traz também a simulação "+R$ 500/mês antecipa X meses".
 
 ### 6.1 Escada de Marcos (*Milestones*)
 Definir os degraus naturais de evolução patrimonial em BRL:
