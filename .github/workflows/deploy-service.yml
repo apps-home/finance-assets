@@ -94,6 +94,7 @@ jobs:
               --label "com.docker.compose.service=service" \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               -e PORT=3333 \
+              -e CORS_ORIGINS="${{ vars.CORS_ORIGINS }}" \
               -e R2_ACCOUNT_ID="${{ secrets.R2_ACCOUNT_ID }}" \
               -e R2_ACCESS_KEY_ID="${{ secrets.R2_ACCESS_KEY_ID }}" \
               -e R2_SECRET_ACCESS_KEY="${{ secrets.R2_SECRET_ACCESS_KEY }}" \

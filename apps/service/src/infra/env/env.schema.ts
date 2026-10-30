@@ -4,8 +4,26 @@ import { z } from 'zod'
 const optional = <T extends z.ZodType>(schema: T) =>
   z.preprocess((value) => (value === '' ? undefined : value), schema.optional())
 
+/** Origens padrão do web em dev; produção e IPs da rede entram por CORS_ORIGINS */
+const DEFAULT_CORS_ORIGINS = [
+  'http://localhost:3000',
+  'http://local.dev.terraviva:3000'
+]
+
 export const envSchema = z.object({
   PORT: z.coerce.number().default(3333),
+  // Origens do web separadas por vírgula (ex.: https://car.exemplo.app,http://192.168.0.4:3000)
+  CORS_ORIGINS: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const origins = value
+        ?.split(',')
+        .map((origin) => origin.trim().replace(/\/+$/, ''))
+        .filter(Boolean)
+
+      return origins?.length ? origins : DEFAULT_CORS_ORIGINS
+    }),
   DATABASE_URL: z.string('DATABASE_URL is required'),
 
   // Redis

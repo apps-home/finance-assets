@@ -10,7 +10,6 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "ignoreDeprecations": "6.0",
     "outDir": "./dist",
     "rootDir": ".",
     "incremental": true,

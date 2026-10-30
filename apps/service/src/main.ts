@@ -14,11 +14,7 @@ async function bootstrap() {
   const PORT = env.get('PORT')
 
   app.enableCors({
-    origin: [
-      'https://finance.apps-store.app',
-      'http://localhost:3000', // se precisar rodar dev local
-      'http://local.dev.terraviva:3000'
-    ],
+    origin: env.get('CORS_ORIGINS'),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
