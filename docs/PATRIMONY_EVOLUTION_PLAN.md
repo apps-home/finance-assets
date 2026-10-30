@@ -22,7 +22,7 @@ Enquanto os módulos de ativos (`/assets`), proventos (`/dividends`) e rentabili
 | **Fase 2** | Decomposição do Crescimento: **Aportes Acumulados vs. Ganho de Mercado (Bola de Neve)** + Card de Ponte Patrimonial | 🟢 Concluído | Não |
 | **Fase 3** | Raio-X no `CategoryBreakdown`: alternar entre **Categoria**, **Classe (`CategoryType`)** e **Moeda (`BRL` vs. `USD`)** | 🟢 Concluído | Não |
 | **Fase 4** | **Marcos Patrimoniais (*Milestones*)** e projeção de data para atingir o próximo degrau | 🟢 Concluído | Não |
-| **Fase 5** | **Bens Imobilizados e Passivos (*Net Worth*)**: cadastro de bens físicos/dívidas e consolidação no Dashboard | ⚪ Pendente | Sim (`patrimony_items`) |
+| **Fase 5** | **Bens Imobilizados e Passivos (*Net Worth*)**: cadastro de bens físicos/dívidas e consolidação no Dashboard | 🟢 Concluído | Sim (`patrimony_items`) |
 
 ---
 
@@ -165,7 +165,12 @@ Com base nos últimos $k$ meses fechados (padrão: até 6 meses mais recentes):
 
 ---
 
-## 7. Fase 5: Bens Físicos e Passivos — Patrimônio Líquido Completo (*Net Worth*)
+## 7. Fase 5: Bens Físicos e Passivos — Patrimônio Líquido Completo (*Net Worth*) `[CONCLUÍDO]`
+
+Implementado de ponta a ponta:
+- **Banco de Dados (`@lib/finance-assets-db`)**: Tabela `patrimony_items` e enum `PatrimonyItemType`, com migration `20261102120000_add_patrimony_items` e exportação em `prismaFinanceAssets.patrimonyItem`.
+- **Backend (`apps/service/src/modules/patrimony-items`)**: Módulo DDD completo com `PatrimonyItem` (`isAsset`, `isLiability`, `signedValue`), use-cases (`Create`, `FindAll` com `summary`, `Update`, `Delete`), repositório Prisma e rotas em `/patrimony-items`.
+- **Frontend (`apps/web/src/features/dashboard`)**: Seletor de escopo no topo do Dashboard (`Patrimônio Financeiro (Líquido)` vs. `Patrimônio Completo (Net Worth)`), cálculo do Índice de Liquidez (`calculateNetWorthBreakdown`), integração no `PatrimonyMilestoneBanner` e seção `PatrimonyItemsSection` + `PatrimonyItemDialog`.
 
 Para que o sistema represente 100% da sua vida patrimonial (e não apenas a carteira de investimentos em corretoras/bancos), adicionamos o suporte a **Bens Não-Financeiros (Imobilizados)** e **Passivos (Dívidas/Financiamentos)**.
 
@@ -228,16 +233,9 @@ Seguindo o padrão DDD / Clean Architecture do `apps/service`:
 ## 8. Status e Ordem de Execução
 
 1. **Entregas Concluídas**:
-   - ✅ **Fase 1 (Item 1)**: Fim da queda para R$ 0 nos meses futuros no `FinancialChart` (`null` + `connectNulls={false}`).
+   - ✅ **Fase 1 (Completa)**: Fim da queda para R$ 0 nos meses futuros (`null` + `connectNulls={false}`), linha pontilhada de **"Estimado Hoje"** para o mês corrente e seletor de período multi-anual (`Ano | 12M | 24M | Tudo`).
+   - ✅ **Fase 2 (Completa)**: Decomposição **Aportes vs. Rendimentos (Bola de Neve)** no `FinancialChart` e resumo de **Ponte Patrimonial**.
    - ✅ **Fase 3 (Completa)**: Raio-X de alocação no `CategoryBreakdown` com abas `Categoria | Classe | Moeda` e helpers `buildTypeChartData` / `buildCurrencyChartData`.
-
-2. **Próximas Entregas**:
-   - **Entrega 1.2 (Fase 1 restante & Fase 2)**:
-     - Ponto pontilhado "Estimado Hoje" para o mês corrente no gráfico.
-     - Seletor de período multi-anual (`Ano | 12M | 24M | Tudo`).
-     - Decomposição **Aportes vs. Rendimentos (Bola de Neve)** no gráfico e card de Ponte Patrimonial.
-   - **Entrega 2 (Fase 4 — Milestones)**:
-     - Card de **Marcos Patrimoniais + Projeção de data**.
-   - **Entrega 3 (Fase 5 — Bens Físicos e Passivos)**:
-     - Migration `patrimony_items` no `@lib/finance-assets-db`, módulo `patrimony-items` no NestJS e visão consolidada de *Net Worth* no frontend.
+   - ✅ **Fase 4 (Completa)**: Card `PatrimonyMilestoneBanner` com escada de marcos, progresso e projeção de data reaproveitando a simulação de `/performance`.
+   - ✅ **Fase 5 (Completa)**: Migration `patrimony_items`, módulo `patrimony-items` no NestJS, seletor de escopo *Net Worth* + Índice de Liquidez e seção `PatrimonyItemsSection` no Dashboard.
 

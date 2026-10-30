@@ -8,6 +8,7 @@ import { PriceAlertModule } from './modules/assets/price-alert/price-alert.modul
 import { WishlistModule } from './modules/assets/wishlist/wishlist.module'
 import { BudgetModule } from './modules/budgets/budget.module'
 import { DividendModule } from './modules/dividends/dividend.module'
+import { PatrimonyItemModule } from './modules/patrimony-items/patrimony-item.module'
 import { PerformanceModule } from './modules/performance/performance.module'
 import { TransactionModule } from './modules/transactions/transaction.module'
 import { UserModule } from './modules/user/user.module'
@@ -24,7 +25,8 @@ import { UserModule } from './modules/user/user.module'
     DividendModule,
     PerformanceModule,
     TransactionModule,
-    PriceAlertModule
+    PriceAlertModule,
+    PatrimonyItemModule
   ]
 })
 export class AppModule {}

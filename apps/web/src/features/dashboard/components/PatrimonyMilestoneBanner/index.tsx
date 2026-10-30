@@ -28,25 +28,35 @@ const compactCurrency = (value: number) =>
     maximumFractionDigits: 1
   }).format(value)
 
-export function PatrimonyMilestoneBanner() {
+interface PatrimonyMilestoneBannerProps {
+  /** Saldo físico líquido somado quando o escopo está em "Patrimônio Completo (Net Worth)" */
+  extraNetBalance?: number
+}
+
+export function PatrimonyMilestoneBanner({
+  extraNetBalance = 0
+}: PatrimonyMilestoneBannerProps) {
   const baseline = useProjectionBaseline()
 
   if (baseline.isLoading) {
     return <Skeleton className="h-40 w-full rounded-xl" />
   }
 
-  const wealth = baseline.currentWealth
+  const wealth = baseline.currentWealth + extraNetBalance
   if (wealth <= 0) return null
 
   const progress = getMilestoneProgress(wealth)
   const returnPct = baseline.historicalReturnPct ?? DEFAULT_MILESTONE_RETURN_PCT
   const contribution = Math.max(baseline.averageContribution, 0)
 
+  const financialTarget =
+    progress.next === null ? null : Math.max(progress.next - extraNetBalance, 0)
+
   const projection =
-    progress.next === null
+    financialTarget === null
       ? null
-      : projectMilestone(progress.next, {
-          initial: wealth,
+      : projectMilestone(financialTarget, {
+          initial: baseline.currentWealth,
           monthlyContribution: contribution,
           annualReturnPct: returnPct
         })

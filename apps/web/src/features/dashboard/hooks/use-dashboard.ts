@@ -23,7 +23,15 @@ import {
   withWealthDecomposition
 } from '../utils/build-wealth-decomposition'
 import { calculateDashboardStats } from '../utils/calculate-dashboard-stats'
+import { calculateNetWorthBreakdown } from '../utils/patrimony-items'
 import { useBudgets } from './use-budget'
+import { usePatrimonyItems } from './use-patrimony-items'
+
+const EMPTY_PATRIMONY_SUMMARY = {
+  totalPhysicalAssets: 0,
+  totalLiabilities: 0,
+  netPhysicalBalance: 0
+}
 
 export function useDashboard(year: number, period: ChartPeriod = 'year') {
   const { data: budgets = [], isLoading: isLoadingBudgets } = useBudgets({
@@ -123,6 +131,15 @@ export function useDashboard(year: number, period: ChartPeriod = 'year') {
     [decomposedRows]
   )
 
+  const { data: patrimonyData } = usePatrimonyItems()
+  const patrimonyItems = patrimonyData?.items ?? []
+  const patrimonySummary = patrimonyData?.summary ?? EMPTY_PATRIMONY_SUMMARY
+
+  const netWorthBreakdown = useMemo(
+    () => calculateNetWorthBreakdown(stats.total, patrimonySummary),
+    [stats.total, patrimonySummary]
+  )
+
   return {
     isLoading,
     categories,
@@ -132,6 +149,9 @@ export function useDashboard(year: number, period: ChartPeriod = 'year') {
     typeChartData,
     currencyChartData,
     mainChartData,
-    wealthBridge
+    wealthBridge,
+    patrimonyItems,
+    patrimonySummary,
+    netWorthBreakdown
   }
 }

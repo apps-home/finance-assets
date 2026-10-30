@@ -50,9 +50,7 @@ export function buildMultiYearChartData(
   const keys = Array.from(totals.keys())
   const endKey = Math.max(nowKey, ...keys)
   const startKey =
-    period === 'all'
-      ? Math.min(...keys)
-      : endKey - (PERIOD_MONTHS[period] - 1)
+    period === 'all' ? Math.min(...keys) : endKey - (PERIOD_MONTHS[period] - 1)
 
   const rows: PatrimonyChartRow[] = []
 
@@ -133,8 +131,7 @@ export function calculateCurrentMonthEstimate({
       const rate =
         category.currency === 'BRL'
           ? 1
-          : (rates[category.currency] ??
-            (Number(previous?.exchangeRate) || 1))
+          : (rates[category.currency] ?? (Number(previous?.exchangeRate) || 1))
 
       total += balances.reduce((sum, value) => sum + value, 0) * rate
     } else if (previous) {

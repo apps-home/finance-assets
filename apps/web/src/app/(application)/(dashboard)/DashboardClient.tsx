@@ -25,11 +25,13 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 import { useAvailableYears } from '@/features/categories/hooks/use-competence'
+import type { PatrimonyScope } from '@/features/dashboard/api/types'
 import { CategoryBreakdown } from '@/features/dashboard/components/CategoryBreakdown'
 import { FinancialChart } from '@/features/dashboard/components/FinancialChart'
 import { FinancialTable } from '@/features/dashboard/components/FinancialTable'
 import { InsightsDialog } from '@/features/dashboard/components/InsightsDialog'
 import { MonthClosingDialog } from '@/features/dashboard/components/MonthClosingDialog'
+import { PatrimonyItemsSection } from '@/features/dashboard/components/PatrimonyItemsSection'
 import { PatrimonyMilestoneBanner } from '@/features/dashboard/components/PatrimonyMilestoneBanner'
 import { StatCard } from '@/features/dashboard/components/StatCard'
 import { useSaveBudget } from '@/features/dashboard/hooks/use-budget'
@@ -44,6 +46,8 @@ export default function DashboardPageClient() {
   const [insightsMode, setInsightsMode] = useState<'month' | 'year'>('month')
   const [closingOpen, setClosingOpen] = useState(false)
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('year')
+  const [patrimonyScope, setPatrimonyScope] =
+    useState<PatrimonyScope>('financial')
   const hasInitializedYear = useRef(false)
 
   const { data: availableYears } = useAvailableYears()
@@ -65,8 +69,13 @@ export default function DashboardPageClient() {
     typeChartData,
     currencyChartData,
     mainChartData,
-    wealthBridge
+    wealthBridge,
+    patrimonyItems,
+    patrimonySummary,
+    netWorthBreakdown
   } = useDashboard(parseInt(selectedYear, 10), chartPeriod)
+
+  const isNetWorthScope = patrimonyScope === 'net-worth'
 
   const { mutateAsync: saveBudget } = useSaveBudget()
 
@@ -95,7 +104,29 @@ export default function DashboardPageClient() {
               </p>
             </div>
           </div>
-          <div className="flex min-w-0 items-center gap-6 overflow-x-auto pb-1.5">
+          <div className="flex flex-wrap items-center gap-4 overflow-x-auto pb-1.5">
+            <Tabs
+              value={patrimonyScope}
+              onValueChange={(value) =>
+                setPatrimonyScope(value as PatrimonyScope)
+              }
+            >
+              <TabsList>
+                <TabsTrigger
+                  value="financial"
+                  className="cursor-pointer text-xs"
+                >
+                  Patrimônio Financeiro (Líquido)
+                </TabsTrigger>
+                <TabsTrigger
+                  value="net-worth"
+                  className="cursor-pointer text-xs"
+                >
+                  Patrimônio Completo (Net Worth)
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
             <Tabs
               value={selectedYear}
               onValueChange={(value) => {
@@ -121,9 +152,17 @@ export default function DashboardPageClient() {
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Patrimônio Total"
-            subtitle={stats.referenceMonth}
-            value={stats.total}
+            title={
+              isNetWorthScope
+                ? 'Patrimônio Líquido (Net Worth)'
+                : 'Patrimônio Total'
+            }
+            subtitle={
+              isNetWorthScope && netWorthBreakdown.grossAssets > 0
+                ? `${netWorthBreakdown.liquidSharePct.toFixed(0)}% líquido · ${netWorthBreakdown.immobilizedSharePct.toFixed(0)}% imobilizado`
+                : stats.referenceMonth
+            }
+            value={isNetWorthScope ? netWorthBreakdown.netWorth : stats.total}
             icon={Wallet}
             trend={`${stats.growth >= 0 ? '+' : ''}${stats.growth.toFixed(1)}%`}
             trendUp={stats.growth > 0}
@@ -148,7 +187,11 @@ export default function DashboardPageClient() {
           />
         </div>
 
-        <PatrimonyMilestoneBanner />
+        <PatrimonyMilestoneBanner
+          extraNetBalance={
+            isNetWorthScope ? patrimonySummary.netPhysicalBalance : 0
+          }
+        />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <FinancialChart
@@ -283,6 +326,12 @@ export default function DashboardPageClient() {
             data={dashboardData}
           />
         )}
+
+        <PatrimonyItemsSection
+          items={patrimonyItems}
+          summary={patrimonySummary}
+          financialTotal={stats.total}
+        />
 
         <InsightsDialog
           open={insightsOpen}

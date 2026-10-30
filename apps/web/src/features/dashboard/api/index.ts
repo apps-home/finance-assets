@@ -3,12 +3,17 @@ import { apiClient } from '@/infrastructure/services/api-client'
 import type {
   Budget,
   CreateBudgetDTO,
+  CreatePatrimonyItemDTO,
   GenerateInsightsPayload,
   ListBudgetsParams,
-  UpdateBudgetDTO
+  ListPatrimonyItemsParams,
+  ListPatrimonyItemsResponse,
+  UpdateBudgetDTO,
+  UpdatePatrimonyItemDTO
 } from './types'
 
 const BASE_URL = '/budgets'
+const PATRIMONY_ITEMS_URL = '/patrimony-items'
 
 /**
  * Lista todos os budgets com filtros opcionais
@@ -83,4 +88,43 @@ export async function generateInsights(
   return typeof data === 'string'
     ? data
     : data.message || data.output || JSON.stringify(data, null, 2)
+}
+
+/**
+ * Lista os bens físicos e passivos do usuário + resumo consolidado
+ */
+export async function listPatrimonyItems(
+  params?: ListPatrimonyItemsParams
+): Promise<ListPatrimonyItemsResponse> {
+  const response = await apiClient.get<ListPatrimonyItemsResponse>(
+    PATRIMONY_ITEMS_URL,
+    { params }
+  )
+  return response.data
+}
+
+/**
+ * Cadastra um bem físico ou passivo
+ */
+export async function createPatrimonyItem(
+  data: CreatePatrimonyItemDTO
+): Promise<void> {
+  await apiClient.post(PATRIMONY_ITEMS_URL, data)
+}
+
+/**
+ * Atualiza um bem físico ou passivo
+ */
+export async function updatePatrimonyItem(
+  id: string,
+  data: UpdatePatrimonyItemDTO
+): Promise<void> {
+  await apiClient.patch(`${PATRIMONY_ITEMS_URL}/${id}`, data)
+}
+
+/**
+ * Remove um bem físico ou passivo
+ */
+export async function deletePatrimonyItem(id: string): Promise<void> {
+  await apiClient.delete(`${PATRIMONY_ITEMS_URL}/${id}`)
 }
