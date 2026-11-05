@@ -5,6 +5,12 @@ import { EnvService } from '../env/env.service'
 /** Token do client do Novu; `null` quando as notificações estão desligadas */
 export const NOVU_CLIENT = Symbol('NOVU_CLIENT')
 
+export const NOVU_SUBSCRIBER_PREFIX = 'finance-assets'
+
+export function toSubscriberId(userId: string): string {
+  return `${NOVU_SUBSCRIBER_PREFIX}:${userId}`
+}
+
 export function createNovuClient(env: EnvService): Novu | null {
   const secretKey = env.get('NOVU_SECRET_KEY')
 

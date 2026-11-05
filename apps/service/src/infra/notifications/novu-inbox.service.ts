@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto'
 import { Injectable } from '@nestjs/common'
 
 import { EnvService } from '../env/env.service'
+import { toSubscriberId } from './novu.client'
 
 export type InboxSession =
   | { enabled: false }
@@ -24,13 +25,15 @@ export type InboxSession =
 export class NovuInboxService {
   constructor(private readonly env: EnvService) {}
 
-  getSession(subscriberId: string): InboxSession {
+  getSession(userId: string): InboxSession {
     const secretKey = this.env.get('NOVU_SECRET_KEY')
     const applicationIdentifier = this.env.get('NOVU_APPLICATION_IDENTIFIER')
 
     if (!secretKey || !applicationIdentifier) {
       return { enabled: false }
     }
+
+    const subscriberId = toSubscriberId(userId)
 
     return {
       enabled: true,

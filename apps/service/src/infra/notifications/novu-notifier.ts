@@ -7,7 +7,7 @@ import {
   type NotificationResult
 } from '@/core/domain/notifications/domain-notifier.interface'
 
-import { NOVU_CLIENT } from './novu.client'
+import { NOVU_CLIENT, toSubscriberId } from './novu.client'
 
 /**
  * Dispara workflows do Novu. Sem `NOVU_SECRET_KEY` vira no-op (`skipped`);
@@ -32,11 +32,13 @@ export class NovuNotifier implements DomainNotifier {
       return 'skipped'
     }
 
+    const subscriberId = toSubscriberId(to.subscriberId)
+
     try {
       const { result } = await this.novu.trigger({
         workflowId: workflow,
         to: {
-          subscriberId: to.subscriberId,
+          subscriberId,
           ...(to.email && { email: to.email }),
           ...(to.name && { firstName: to.name })
         },
